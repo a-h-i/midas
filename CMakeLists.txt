@@ -11,7 +11,7 @@ project(
 # set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 # add_compile_options(-Wall -Wextra -Wpedantic)
-# add_subdirectory(third-party)
+add_subdirectory(third-party)
 
 
 
