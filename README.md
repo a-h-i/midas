@@ -1,0 +1,10 @@
+# Midas
+
+An attempt at algorithmic day trading, with the intention of supplementing one's income by a small yet steady daily amount.
+
+## Requirements
+
+This application has some dependencies such as intel's decimal floating point library and the IBKR API. These dependencies are packaged here for convenience but they each have their own license and user agreements which are included with the source code.
+Outside of these third party libraries the GNU AGPLv3 license applies to all other works.
+Third party libraries are contained in the subfolder `third-party`
+
