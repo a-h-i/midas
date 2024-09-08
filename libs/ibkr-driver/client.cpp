@@ -17,10 +17,17 @@ ibkr::internal::Client::Client(const boost::asio::ip::tcp::endpoint &endpoint)
     host << "port: " << endpoint.port();
     throw NetworkError("IBKR Driver Can not connect to host at " + host.str());
   }
+  // Reader initialized after connection due to api version negotiation
+  reader = std::make_unique<EReader>(clientSocket.get(), &readerSignal);
+  reader->start();
 }
 
 ibkr::internal::Client::~Client() {
   if (clientSocket->isConnected()) {
     clientSocket->eDisconnect();
   }
+}
+
+void ibkr::internal::Client::nextValidId(OrderId order) {
+  nextValidOrderId = order;
 }
