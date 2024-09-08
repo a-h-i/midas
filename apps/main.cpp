@@ -2,7 +2,6 @@
 #include <boost/program_options.hpp>
 #include <iostream>
 
-
 #include "midas/version.h"
 
 namespace po = boost::program_options;
@@ -14,7 +13,7 @@ int main(int argc, char *argv[]) {
 
   po::variables_map vm;
   po::store(po::parse_command_line(argc, argv, appOptionsDesc), vm);
-
+  po::notify(vm);
   if (vm.empty() || vm.count("help")) {
     std::cout << appOptionsDesc << '\n';
   }

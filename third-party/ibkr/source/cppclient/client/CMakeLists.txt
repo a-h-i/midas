@@ -23,4 +23,5 @@ set_target_properties(twsapi
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
     PUBLIC_HEADER "${HEADERS}"
 )
+target_include_directories(twsapi PUBLIC .)
 install(TARGETS twsapi EXPORT twsapi-targets PUBLIC_HEADER DESTINATION include/twsapi LIBRARY DESTINATION lib)

@@ -2,6 +2,7 @@ list(APPEND SOURCES_LIST main.cpp)
 add_executable(midas ${SOURCES_LIST} ${PROJECT_SOURCE_DIR}/include/midas/version.h.in )
 
 target_compile_features(midas PRIVATE cxx_std_23 )
+target_compile_options(midas PRIVATE -Wall -Wextra -Wpedantic)
 
 
 find_package(Boost 1.83 COMPONENTS program_options REQUIRED)
