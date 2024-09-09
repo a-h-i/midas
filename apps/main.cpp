@@ -8,13 +8,15 @@
 #include <boost/log/trivial.hpp>
 namespace po = boost::program_options;
 
-
-
-
 int main(int argc, char *argv[]) {
   logging::initialize_logging();
-  boost::log::sources::severity_channel_logger<logging::SeverityLevel, std::string> lg(boost::log::keywords::channel =
-                                                              "cmdline", boost::log::keywords::severity = logging::SeverityLevel::info);
+
+  boost::log::sources::severity_channel_logger<logging::SeverityLevel,
+                                               std::string>
+      lg(boost::log::keywords::channel = "cmdline",
+         boost::log::keywords::severity = logging::SeverityLevel::info);
+  LOG(lg, logging::SeverityLevel::info)
+      << "Midas v" << MIDAS_VERSION << " starting";
   po::options_description appOptionsDesc("Midas AlgoTrading options");
   appOptionsDesc.add_options()("help,h", "prints this message")(
       "version,v", "prints program version");
@@ -27,7 +29,7 @@ int main(int argc, char *argv[]) {
   }
 
   if (vm.count("version")) {
-    std::cout << "Midas version " << MIDAS_VERSION << '\n';
+    std::cout << "Midas version v" << MIDAS_VERSION << '\n';
   }
 
   return 0;
