@@ -29,7 +29,6 @@ int main(int argc, char *argv[]) {
   if (vm.count("version")) {
     std::cout << "Midas version " << MIDAS_VERSION << '\n';
   }
-  LOG(lg, logging::SeverityLevel::error) << "wtf";
 
   return 0;
 }
