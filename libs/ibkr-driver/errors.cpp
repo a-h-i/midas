@@ -7,4 +7,7 @@ void ibkr::internal::Client::error(int id, int errorCode,
   std::cerr << "Error: " << id << " With Code " << errorCode << "\n"
             << errorString << "\nAdvanced order reject"
             << advancedOrderRejectJson << std::endl;
+
+
+  
 }

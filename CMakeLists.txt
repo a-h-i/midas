@@ -10,7 +10,6 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 add_subdirectory(third-party)
 add_subdirectory(apps)
 add_subdirectory(libs)
-
 configure_file (
     "include/midas/version.h.in"
     "include/midas/version.h"

@@ -28,9 +28,9 @@ target_link_libraries(ibkr_driver PUBLIC Threads::Threads)
 
 
 # Boost
-find_package(Boost 1.83 COMPONENTS system REQUIRED)
+find_package(Boost 1.83 COMPONENTS system log REQUIRED)
 
-target_include_directories(ibkr_driver PUBLIC ${Boost_LIBRARIES})
+target_include_directories(ibkr_driver PUBLIC ${Boost_INCLUDE_DIR})
 target_link_libraries(ibkr_driver PUBLIC ${Boost_LIBRARIES})
 
 target_link_libraries(ibkr_driver PUBLIC exceptions)

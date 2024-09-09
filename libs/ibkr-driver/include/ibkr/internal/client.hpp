@@ -18,7 +18,21 @@ public:
 
   // Event Handling
   virtual void nextValidId(OrderId order);
-  virtual void error(int id, int errorCode, const std::string& errorString, const std::string& advancedOrderRejectJson);
+  virtual void error(int id, int errorCode, const std::string &errorString,
+                     const std::string &advancedOrderRejectJson);
+
+  // Ticks
+  virtual void tickPrice(TickerId tickerId, TickType field, double price,
+                         const TickAttrib &attrib);
+  virtual void tickSize(TickerId tickerId, TickType field, Decimal size);
+  virtual void tickString(TickerId tickerId, TickType tickType,
+                          const std::string &value);
+  virtual void tickOptionComputation(TickerId tickerId, TickType tickType,
+                                     int tickAttrib, double impliedVol,
+                                     double delta, double optPrice,
+                                     double pvDividend, double gamma,
+                                     double vega, double theta,
+                                     double undPrice);
 
 private:
   /**
