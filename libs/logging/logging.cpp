@@ -12,6 +12,7 @@
 
 namespace keywords = boost::log::keywords;
 namespace expr = boost::log::expressions;
+namespace src = boost::log::sources;
 
 void logging::initialize_logging() {
   boost::shared_ptr<boost::log::core> core = boost::log::core::get();
@@ -26,15 +27,27 @@ void logging::initialize_logging() {
   boost::shared_ptr<sink_t> sink(new sink_t(backend));
   sink->set_formatter(
       expr::stream
-      << "[File: " << a_file << ":" << a_line << "] "
-      << "[TimeStamp: "
-      << expr::attr<boost::log::attributes::local_clock::value_type>(
-             "TimeStamp")
-      << "] "
-      << "[Severity: " << expr::attr<logging::SeverityLevel>("Severity") << "] "
-      << expr::smessage);
+          << "[File: " << a_file << ":" << a_line << "] "
+          << "[TimeStamp: "
+          << expr::attr<boost::log::attributes::local_clock::value_type>(
+                 "TimeStamp")
+          << "] "
+          << "[Severity: " << expr::attr<logging::SeverityLevel>("Severity")
+          << "] "
+          << "[Channel: " << expr::attr<std::string>("Channel") << "] "
+          << expr::smessage
+
+  );
 
   core->add_sink(sink);
   core->add_global_attribute("TimeStamp",
                              boost::log::attributes::local_clock());
+}
+
+logging::thread_safe_logger_t
+logging::create_channel_logger(const std::string &channel) {
+  auto logger =
+      src::severity_channel_logger_mt<logging::SeverityLevel, std::string>();
+  logger.channel(channel);
+  return logger;
 }

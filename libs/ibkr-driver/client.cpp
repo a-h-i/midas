@@ -5,7 +5,8 @@
 
 ibkr::internal::Client::Client(const boost::asio::ip::tcp::endpoint &endpoint)
     : readerSignal(2000), clientSocket(new EClientSocket(this, &readerSignal)),
-      endpoint(endpoint) {
+      endpoint(endpoint),
+      logger(logging::create_channel_logger("ibkr-driver")) {
 
   std::ostringstream host;
   host << endpoint.address();
