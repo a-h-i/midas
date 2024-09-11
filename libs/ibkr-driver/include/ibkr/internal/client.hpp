@@ -6,8 +6,8 @@
 #include "EWrapper.h"
 
 #include "logging/logging.hpp"
+#include "observers/observers.hpp"
 #include <boost/asio.hpp>
-#include <concepts>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -16,29 +16,6 @@
 
 namespace ibkr::internal {
 
-template <std::invocable HandlerT> class ClientEventSubject {
-
-public:
-  struct ClientEventObserver {
-    std::string observerId;
-    HandlerT observer;
-  };
-  void add_listener(ClientEventObserver observer) {
-    listeners.push_back(observer);
-  }
-  template <class... Args> void emplace_listener(Args &&...args) {
-    add_listener(ClientEventObserver(std::forward<Args>(args)...));
-  }
-  template <class... Args> void notify(Args &&...args) {
-    std::for_each(std::begin(listeners), std::end(listeners),
-                  [&](ClientEventObserver obs) {
-                    obs.observer(std::forward<Args>(args)...);
-                  });
-  }
-
-private:
-  std::vector<ClientEventObserver> listeners;
-};
 
 class Client : public EWrapper {
 
@@ -46,7 +23,7 @@ public:
   Client(const boost::asio::ip::tcp::endpoint &endpoint);
   virtual ~Client();
   void addConnectListener(
-      const ClientEventSubject<std::function<void()>>::ClientEventObserver
+      const EventSubject<std::function<void()>>::EventObserver
           &obs) {
     connectionSubject.add_listener(obs);
   }
@@ -1189,10 +1166,7 @@ Returns “Last” or “AllLast” tick-by-tick real-time ti
     ERROR_LOG(logger) << "unsupported feature";
   }
 
-  void processLoop() {
-    readerSignal.waitForSignal();
-    reader->processMsgs();
-  }
+  bool process_cycle();
 
 private:
   /**
@@ -1211,7 +1185,7 @@ private:
 
   logging::thread_safe_logger_t logger;
 
-  ClientEventSubject<std::function<void()>> connectionSubject;
+  EventSubject<std::function<void()>> connectionSubject;
 };
 
 } // namespace ibkr::internal

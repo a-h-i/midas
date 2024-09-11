@@ -39,13 +39,11 @@ void ibkr::internal::Client::connect() {
   // Reader initialized after connection due to api version negotiation
   reader = std::make_unique<EReader>(clientSocket.get(), &readerSignal);
   reader->start();
-	Contract contract;
-	contract.symbol = "SPY";
-	contract.secType = "STK";
-	contract.currency = "USD";
-	contract.exchange = "ARCA";
-  connectionSubject.notify();
+}
 
 
 
+bool ibkr::internal::Client::process_cycle() {
+  reader->processMsgs();
+  return false;
 }

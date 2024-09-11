@@ -14,5 +14,5 @@ target_include_directories(midas PRIVATE ${PROJECT_BINARY_DIR}/include )
 
 target_link_libraries(midas PRIVATE logging)
 # Temp testing until we implement higher level driver bridge
-target_link_libraries(midas PRIVATE ibkr_driver)
+target_link_libraries(midas PRIVATE broker)
 
