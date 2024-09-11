@@ -22,9 +22,10 @@ target_include_directories(ibkr_driver PRIVATE include)
 
 # ibkr tws api
 target_link_libraries(ibkr_driver PRIVATE twsapi)
+add_dependencies(ibkr_driver IntelFloatingPointDownload)
 
 # intel decimal floating point libs
-target_link_libraries(ibkr_driver PUBLIC inteldecimalfp)
+target_link_libraries(ibkr_driver PUBLIC IntelFloatingPoint)
 # Thread support
 find_package(Threads REQUIRED)
 target_link_libraries(ibkr_driver PUBLIC Threads::Threads)
@@ -36,4 +37,4 @@ find_package(Boost 1.83 COMPONENTS system log REQUIRED)
 target_include_directories(ibkr_driver PUBLIC ${Boost_INCLUDE_DIR})
 target_link_libraries(ibkr_driver PUBLIC ${Boost_LIBRARIES})
 
-target_link_libraries(ibkr_driver PUBLIC exceptions)
+target_link_libraries(ibkr_driver INTERFACE exceptions)

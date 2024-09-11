@@ -16,6 +16,6 @@ Make sure you have boost libraries installed.
 
 Executing the following commands in the project's root directory. Will build the application and related libraries
 ```bash
-cmake -S . -B build
+cmake -DCMAKE_BUILD_TYPE=Debug -S . -B build
 cmake --build build
 ```

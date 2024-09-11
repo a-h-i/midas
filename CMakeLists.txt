@@ -7,15 +7,9 @@ project(
         LANGUAGES CXX C
     )
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-add_subdirectory(third-party)
-add_subdirectory(apps)
-add_subdirectory(libs)
-configure_file (
-    "include/midas/version.h.in"
-    "include/midas/version.h"
-)
 
-ExternalProject_Add(inteldecimalfp
+ExternalProject_Add(IntelFloatingPointDownload
+    PREFIX third-party
     SOURCE_DIR "${CMAKE_SOURCE_DIR}/third-party/inteldecimalfp"
     DOWNLOAD_COMMAND ""
     CONFIGURE_COMMAND ""
@@ -24,6 +18,21 @@ ExternalProject_Add(inteldecimalfp
     BUILD_IN_SOURCE 1
 )
 
+
+
+SET(INTEL_LIB_DIR ${CMAKE_SOURCE_DIR}/third-party/inteldecimalfp)
+
+add_library(IntelFloatingPoint STATIC IMPORTED)
+set_target_properties(IntelFloatingPoint PROPERTIES IMPORTED_LOCATION ${INTEL_LIB_DIR}/libbid.a)
+
+
+add_subdirectory(third-party)
+add_subdirectory(apps)
+add_subdirectory(libs)
+configure_file (
+    "include/midas/version.h.in"
+    "include/midas/version.h"
+)
 
 
 source_group(
