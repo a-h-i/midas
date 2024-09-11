@@ -22,11 +22,57 @@ void ibkr::internal::Client::updateAccountTime(const std::string &timestamp) {
   DEBUG_LOG(logger) << "UpdateAccountTime " << timestamp;
 }
 
- void ibkr::internal::Client::accountDownloadEnd(const std::string &accountName) {
+void ibkr::internal::Client::accountDownloadEnd(
+    const std::string &accountName) {
   DEBUG_LOG(logger) << "AccountDownloadEnd " << accountName;
- }
+}
 
- 
- void ibkr::internal::Client::managedAccounts(const std::string &accountsList) {
+void ibkr::internal::Client::managedAccounts(const std::string &accountsList) {
   DEBUG_LOG(logger) << "Received managed accounts list " << accountsList;
+}
+
+void ibkr::internal::Client::position(const std::string &account,
+                                      const Contract &contract,
+                                      Decimal position, double avgCost) {
+  ERROR_LOG(logger)
+      << "Unsupported event, driver does not track account positions atm";
+}
+
+void ibkr::internal::Client::positionEnd() {
+  ERROR_LOG(logger)
+      << "Unsupported event, driver does not track account positions atm";
+}
+
+void ibkr::internal::Client::accountSummary(int reqId,
+                                            const std::string &account,
+                                            const std::string &tag,
+                                            const std::string &value,
+                                            const std::string &currency) {
+  DEBUG_LOG(logger) << "Account summary received reqId: " << reqId
+                    << " account: " << account << " value: " << value
+                    << " currency " << currency;
+}
+
+void ibkr::internal::Client::accountSummaryEnd(int reqId) {
+  DEBUG_LOG(logger) << "Received account summary end: " << reqId;
+}
+
+
+void ibkr::internal::Client::pnlSingle(int reqId, Decimal pos, double dailyPnL, double unrealizedPnL, double realizedPnL, double value) {
+
+DEBUG_LOG(logger) << "Received pnl " << reqId <<
+    " pos " << pos <<
+    " Daily pnl " << dailyPnL
+    << " unrealized pnl " << unrealizedPnL
+    << " realized " << realizedPnL
+    << " value " << value;  
+
+}
+
+
+ void ibkr::internal::Client::pnl(int reqId, double dailyPnL, double unrealizedPnL, double realizedPnL) {
+  DEBUG_LOG(logger) << "Received pnl " << reqId <<
+    " Daily pnl " << dailyPnL
+    << " unrealized pnl " << unrealizedPnL
+    << " realized " << realizedPnL;  
  }

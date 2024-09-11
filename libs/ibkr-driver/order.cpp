@@ -1,4 +1,5 @@
 #include "Order.h"
+#include "CommissionReport.h"
 #include "Execution.h"
 #include "OrderState.h"
 #include "ibkr/internal/client.hpp"
@@ -46,3 +47,16 @@ void ibkr::internal::Client::execDetails(int reqId, const Contract &contract,
 void ibkr::internal::Client::execDetailsEnd(int reqId) {
   DEBUG_LOG(logger) << "ExecDetailsEnd " << reqId;
 }
+
+void ibkr::internal::Client::commissionReport(
+    const CommissionReport &commissionReport) {
+  DEBUG_LOG(logger) << "Received commission report" << commissionReport.execId
+                    << " commission " << commissionReport.commission << " pnl "
+                    << commissionReport.realizedPNL;
+}
+
+
+void ibkr::internal::Client::completedOrdersEnd() {
+  DEBUG_LOG(logger) << "Completed order end";
+}
+
