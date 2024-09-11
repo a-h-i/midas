@@ -30,7 +30,7 @@ public:
   /**
    * Singleton factory
    */
-  friend Exchange exchange_from_symbol(SupportedExchanges symbol);
+  friend std::shared_ptr<Exchange> exchange_from_symbol(SupportedExchanges symbol);
   const SupportedExchanges exchange_t;
 
 private:
@@ -68,11 +68,13 @@ operator<<(std::basic_ostream<CharT, TraitsT> &stream, Exchange exchange) {
  */
 struct FinancialInstrument {
 
-  const std::string name;
-  const InstrumentType sub_type;
-  const SupportedInstruments symbol;
-  const std::shared_ptr<const Exchange> exchange;
+  std::string name;
+  InstrumentType sub_type;
+  SupportedInstruments symbol;
+  std::shared_ptr<const Exchange> exchange;
   virtual ~FinancialInstrument() = default;
 };
 
+
+std::shared_ptr<Exchange> exchange_from_symbol(SupportedExchanges symbol);
 } // namespace midas

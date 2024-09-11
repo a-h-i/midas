@@ -21,3 +21,4 @@ find_package(Boost 1.83 COMPONENTS date_time REQUIRED)
 target_include_directories(ibkr_driver PUBLIC ${Boost_INCLUDE_DIR})
 target_link_libraries(ibkr_driver PUBLIC ${Boost_LIBRARIES})
 
+add_subdirectory(tests)

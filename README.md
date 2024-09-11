@@ -8,14 +8,20 @@ This application has some dependencies such as intel's decimal floating point li
 Outside of these third party libraries the GNU AGPLv3 license applies to all other works.
 Third party libraries are contained in the subfolder `third-party`
 
-
-
-
 ## Build instructions
+
 Make sure you have boost libraries installed.
 
 Executing the following commands in the project's root directory. Will build the application and related libraries
+
 ```bash
 cmake -DCMAKE_BUILD_TYPE=Debug -S . -B build
 cmake --build build
+```
+
+## Testing instructions
+
+After building run 
+```bash
+ctest --test-dir build
 ```

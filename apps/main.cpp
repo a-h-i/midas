@@ -6,6 +6,7 @@
 #include "midas/version.h"
 #include <boost/log/sources/severity_channel_logger.hpp>
 #include <boost/log/trivial.hpp>
+#include "midas/instruments.hpp"
 
 #include "ibkr-driver/ibkr.hpp"
 namespace po = boost::program_options;
@@ -33,7 +34,6 @@ int main(int argc, char *argv[]) {
   if (vm.count("version")) {
     std::cout << "Midas version v" << MIDAS_VERSION << '\n';
   }
-
 try {
   ibkr::test();
 } catch (NetworkError &e) {

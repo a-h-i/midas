@@ -47,3 +47,8 @@ local_time_period midas::Exchange::todays_extended_period() const {
   }
   throw std::runtime_error("Unsupported exchange : " + exchange_name());
 }
+
+std::shared_ptr<midas::Exchange>
+midas::exchange_from_symbol(SupportedExchanges symbol) {
+  return std::shared_ptr<Exchange>(new Exchange(symbol));
+}
