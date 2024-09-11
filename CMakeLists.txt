@@ -18,6 +18,14 @@ ExternalProject_Add(IntelFloatingPointDownload
     BUILD_IN_SOURCE 1
 )
 
+ExternalProject_Add(
+    TechnicalAnalysisDownload
+    PREFIX third-party
+    GIT_REPOSITORY "git@github.com:TA-Lib/ta-lib.git"
+    GIT_TAG origin/main
+    INSTALL_COMMAND ""
+)
+
 
 
 SET(INTEL_LIB_DIR ${CMAKE_SOURCE_DIR}/third-party/inteldecimalfp)
@@ -25,6 +33,8 @@ SET(INTEL_LIB_DIR ${CMAKE_SOURCE_DIR}/third-party/inteldecimalfp)
 add_library(IntelFloatingPoint STATIC IMPORTED)
 set_target_properties(IntelFloatingPoint PROPERTIES IMPORTED_LOCATION ${INTEL_LIB_DIR}/libbid.a)
 
+SET(TA_LIB_DIR ${CMAKE_BINARY_DIR}/third-party/src/TechnicalAnalysisDownload-build/)
+link_directories(${TA_LIB_DIR})
 
 add_subdirectory(third-party)
 add_subdirectory(apps)
