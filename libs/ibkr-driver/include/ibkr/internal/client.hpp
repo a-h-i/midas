@@ -7,16 +7,50 @@
 
 #include "logging/logging.hpp"
 #include <boost/asio.hpp>
+#include <concepts>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace ibkr::internal {
+
+template <std::invocable HandlerT> class ClientEventSubject {
+
+public:
+  struct ClientEventObserver {
+    std::string observerId;
+    HandlerT observer;
+  };
+  void add_listener(ClientEventObserver observer) {
+    listeners.push_back(observer);
+  }
+  template <class... Args> void emplace_listener(Args &&...args) {
+    add_listener(ClientEventObserver(std::forward<Args>(args)...));
+  }
+  template <class... Args> void notify(Args &&...args) {
+    std::for_each(std::begin(listeners), std::end(listeners),
+                  [&](ClientEventObserver obs) {
+                    obs.observer(std::forward<Args>(args)...);
+                  });
+  }
+
+private:
+  std::vector<ClientEventObserver> listeners;
+};
+
 class Client : public EWrapper {
 
 public:
   Client(const boost::asio::ip::tcp::endpoint &endpoint);
   virtual ~Client();
+  void addConnectListener(
+      const ClientEventSubject<std::function<void()>>::ClientEventObserver
+          &obs) {
+    connectionSubject.add_listener(obs);
+  }
+  void connect();
 
   virtual void nextValidId(OrderId order);
   /**
@@ -105,7 +139,9 @@ Market data tick size callback. Handles all size-related ticks.
                                      double delta, double optPrice,
                                      double pvDividend, double gamma,
                                      double vega, double theta,
-                                     double undPrice);
+                                     double undPrice) {
+    ERROR_LOG(logger) << "Unsupported options";
+  }
 
   /**
    *  EWrapper.tickGeneric (
@@ -406,11 +442,10 @@ multiple matches, they will each be returned individually to the function
    *  */
   virtual void execDetailsEnd(int reqId);
 
-  virtual void updateMktDepth([[maybe_unused]] TickerId id,
-                              [[maybe_unused]] int position,
-                              [[maybe_unused]] int operation,
-                              [[maybe_unused]] int side, double price,
-                              [[maybe_unused]] Decimal size) {
+  virtual void
+  updateMktDepth([[maybe_unused]] TickerId id, [[maybe_unused]] int position,
+                 [[maybe_unused]] int operation, [[maybe_unused]] int side,
+                 [[maybe_unused]] double price, [[maybe_unused]] Decimal size) {
     ERROR_LOG(logger) << "No support for market depth at the moment";
   }
   virtual void
@@ -496,7 +531,7 @@ automatically on initial API client connection.
                              [[maybe_unused]] double avgCost) {
     ERROR_LOG(logger) << "Unsupported feature";
   }
-  virtual void positionMultiEnd(int reqId) {
+  virtual void positionMultiEnd([[maybe_unused]] int reqId) {
     ERROR_LOG(logger) << "Unsupported feature";
   }
 
@@ -553,7 +588,7 @@ in TWS on the login screen.
     ERROR_LOG(logger) << "Scanner functionality is currently unsupported";
   }
   virtual void
-  scannerData([[maybe_unused]] int reqId, int rank,
+  scannerData([[maybe_unused]] int reqId, [[maybe_unused]] int rank,
               [[maybe_unused]] const ContractDetails &contractDetails,
               [[maybe_unused]] const std::string &distance,
               [[maybe_unused]] const std::string &benchmark,
@@ -561,7 +596,7 @@ in TWS on the login screen.
               [[maybe_unused]] const std::string &legsStr) {
     ERROR_LOG(logger) << "Scanner functionality is currently unsupported";
   }
-  virtual void scannerDataEnd(int reqId) {
+  virtual void scannerDataEnd([[maybe_unused]] int reqId) {
     ERROR_LOG(logger) << "Scanner functionality is currently unsupported";
   };
 
@@ -778,11 +813,12 @@ regular (1) as default, delayed (3) and delayed-frozen (4) market data.
                         &depthMktDataDescriptions) {
     ERROR_LOG(logger) << "Unsupported feature";
   };
-  virtual void tickNews(int tickerId, time_t timeStamp,
-                        const std::string &providerCode,
-                        const std::string &articleId,
-                        const std::string &headline,
-                        const std::string &extraData) {
+  virtual void tickNews([[maybe_unused]] int tickerId,
+                        [[maybe_unused]] time_t timeStamp,
+                        [[maybe_unused]] const std::string &providerCode,
+                        [[maybe_unused]] const std::string &articleId,
+                        [[maybe_unused]] const std::string &headline,
+                        [[maybe_unused]] const std::string &extraData) {
     ERROR_LOG(logger) << "Unsupported feature";
   };
   /**
@@ -1153,6 +1189,11 @@ Returns “Last” or “AllLast” tick-by-tick real-time ti
     ERROR_LOG(logger) << "unsupported feature";
   }
 
+  void processLoop() {
+    readerSignal.waitForSignal();
+    reader->processMsgs();
+  }
+
 private:
   /**
    * Signal / mutex pthreads based
@@ -1169,5 +1210,8 @@ private:
   std::optional<OrderId> nextValidOrderId;
 
   logging::thread_safe_logger_t logger;
+
+  ClientEventSubject<std::function<void()>> connectionSubject;
 };
+
 } // namespace ibkr::internal

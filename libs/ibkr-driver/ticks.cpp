@@ -119,7 +119,7 @@ void ibkr::internal::Client::tickByTickAllLast(
     const std::string &specialConditions) {
   DEBUG_LOG(logger) << " tickByTickAllLast " << reqId << " type " << tickType
                     << " at " << time << " is " << price << " on exchange "
-                    << exchange << " with conditions " << conditions;
+                    << exchange << " with conditions " << specialConditions;
 }
 
 void ibkr::internal::Client::historicalTicks(
