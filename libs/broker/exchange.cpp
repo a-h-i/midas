@@ -31,10 +31,10 @@ local_time_period midas::Exchange::todays_regular_period() const {
 
   switch (exchange_t) {
   case SupportedExchanges::COMEX: {
-    auto startDay = today.day() != Sunday ? today - days(1) : today;
-    const auto startTime = ptime(startDay, hours(18));
+    const auto startTime = ptime(today, time_duration(8, 30, 0));
+    const auto endTime = ptime(today, hours(16));
     return local_time_period(local_date_time(startTime, tz),
-                             time_duration(23, 0, 0));
+                             endTime - startTime);
   }
   default:
     throw std::runtime_error("Unsupported exchange : " + exchange_name());
@@ -42,10 +42,23 @@ local_time_period midas::Exchange::todays_regular_period() const {
 }
 
 local_time_period midas::Exchange::todays_extended_period() const {
-  if (exchange_t == SupportedExchanges::COMEX) {
-    return todays_regular_period(); // periods are the same for comex
+  const auto now = local_sec_clock::local_time(tz);
+  const auto today = now.date();
+
+  if (today.day() == Saturday) {
+    return local_time_period(now, time_duration(0, 0, 0));
   }
-  throw std::runtime_error("Unsupported exchange : " + exchange_name());
+
+  switch (exchange_t) {
+  case SupportedExchanges::COMEX: {
+    auto startDay = today.day() != Sunday ? today - days(1) : today;
+    const auto startTime = ptime(startDay, hours(17));
+    return local_time_period(local_date_time(startTime, tz),
+                             time_duration(23, 0, 0));
+  }
+  default:
+    throw std::runtime_error("Unsupported exchange : " + exchange_name());
+  }
 }
 
 std::shared_ptr<midas::Exchange>
