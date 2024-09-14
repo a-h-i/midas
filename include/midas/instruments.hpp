@@ -1,8 +1,10 @@
 #pragma once
-#include "boost/date_time/local_time/local_time.hpp"
+#include <boost/date_time/local_time/local_time.hpp>
+#include <boost/date_time/gregorian/greg_date.hpp>
 #include <memory>
 #include <ostream>
 #include <string>
+#include <optional>
 
 namespace midas {
 
@@ -17,6 +19,16 @@ enum SupportedCurrencies { USD };
 
 enum SupportedExchanges { COMEX };
 
+/**
+ * The object contains hours (if any)
+ * associated with the date
+ */
+struct TradingHours {
+  boost::gregorian::date date;
+  std::optional<boost::local_time::local_time_period> regular_period;
+  std::optional<boost::local_time::local_time_period> extended_period;
+};
+
 class Exchange {
 
 public:
@@ -25,8 +37,10 @@ public:
   inline SupportedCurrencies supported_currency() const { return currency; };
   inline const std::string &exchange_name() const { return name; }
   inline const std::string &exchange_symbol() const { return symbol; }
-  boost::local_time::local_time_period todays_regular_period() const;
-  boost::local_time::local_time_period todays_extended_period() const;
+  /**
+   * Returns the trading hours (if any) for the date specified
+   */
+  TradingHours days_trading_hours(const boost::gregorian::date &date) const;
   /**
    * Singleton factory
    */

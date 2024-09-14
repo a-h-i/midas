@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.28)
 enable_testing()
 include(ExternalProject)
 include(FetchContent)
+set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "")
 project(
         Midas
         VERSION 0.1.0
