@@ -1,17 +1,17 @@
 #pragma once
-#include <boost/date_time/local_time/local_time.hpp>
 #include <boost/date_time/gregorian/greg_date.hpp>
+#include <boost/date_time/local_time/local_time.hpp>
 #include <memory>
+#include <optional>
 #include <ostream>
 #include <string>
-#include <optional>
 
 namespace midas {
 
 /**
  * Not all instruments are supported
  */
-enum SupportedInstruments { MicroNasdaqFutures };
+enum InstrumentEnum { MicroNasdaqFutures };
 
 enum InstrumentType { IndexFuture };
 
@@ -44,7 +44,8 @@ public:
   /**
    * Singleton factory
    */
-  friend std::shared_ptr<Exchange> exchange_from_symbol(SupportedExchanges symbol);
+  friend std::shared_ptr<Exchange>
+  exchange_from_symbol(SupportedExchanges symbol);
   const SupportedExchanges exchange_t;
 
 private:
@@ -84,11 +85,10 @@ struct FinancialInstrument {
 
   std::string name;
   InstrumentType sub_type;
-  SupportedInstruments symbol;
+  InstrumentEnum symbol;
   std::shared_ptr<const Exchange> exchange;
   virtual ~FinancialInstrument() = default;
 };
-
 
 std::shared_ptr<Exchange> exchange_from_symbol(SupportedExchanges symbol);
 } // namespace midas
