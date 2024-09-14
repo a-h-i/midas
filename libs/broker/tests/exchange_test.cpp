@@ -44,8 +44,24 @@ TEST(ComexTradingHoursTest, ExchangeAssertions) {
         comex->timezone(),
         boost::local_time::local_date_time::EXCEPTION_ON_ERROR);
     EXPECT_EQ(hours.regular_period.value().begin(), expected_regular_start);
-    auto expected_regular_end = expected_regular_start + boost::posix_time::time_duration(8, 30, 0);
-    EXPECT_TRUE(hours.regular_period.value().contains(expected_regular_end - boost::posix_time::millisec(1)));
+    auto expected_regular_end =
+        expected_regular_start + boost::posix_time::time_duration(8, 30, 0);
+    EXPECT_TRUE(hours.regular_period.value().contains(
+        expected_regular_end - boost::posix_time::millisec(1)));
     EXPECT_FALSE(hours.regular_period.value().contains(expected_regular_end));
+
+    auto expected_extended_start = boost::local_time::local_date_time(
+        offset_date - boost::gregorian::days(1),
+        boost::posix_time::time_duration(17, 0, 0), comex->timezone(),
+        boost::local_time::local_date_time::EXCEPTION_ON_ERROR);
+    EXPECT_EQ(hours.extended_period.value().begin(), expected_extended_start);
+    auto expected_extended_end = boost::local_time::local_date_time(
+        offset_date, boost::posix_time::time_duration(16, 0, 0),
+        comex->timezone(),
+        boost::local_time::local_date_time::EXCEPTION_ON_ERROR);
+
+    EXPECT_TRUE(hours.extended_period.value().contains(
+        expected_extended_end - boost::posix_time::millisec(1)));
+    EXPECT_FALSE(hours.extended_period.value().contains(expected_extended_end));
   }
 }
