@@ -27,7 +27,15 @@ public:
           &obs) {
     connectionSubject.add_listener(obs);
   }
+  /**
+   * Does nothing if not connected
+   */
   void connect();
+  /**
+   * Does nothing if connected
+   */
+  void disconnect();
+  bool is_connected() const;
 
   virtual void nextValidId(OrderId order);
   /**
