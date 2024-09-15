@@ -1,10 +1,10 @@
 #include "ibkr/internal/build_contracts.hpp"
 #include <exception>
 Contract
-ibkr::internal::build_futures_contract(const Futures &future) {
+ibkr::internal::build_futures_contract(const Symbols &future) {
   Contract contract;
   switch (future) {
-  case Futures::MNQ: {
+  case Symbols::MNQ: {
     contract.symbol = "MNQ";
     contract.exchange = "CME";
     contract.currency = "USD";

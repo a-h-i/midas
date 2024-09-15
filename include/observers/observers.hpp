@@ -6,7 +6,7 @@
  * Simple class for adding observability.
  * 
  */
-template <std::invocable HandlerT> class EventSubject {
+template <typename HandlerT, class... Args> requires std::invocable<HandlerT&, Args...> class EventSubject {
 
 public:
   struct EventObserver {

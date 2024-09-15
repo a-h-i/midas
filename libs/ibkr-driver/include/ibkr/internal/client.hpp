@@ -5,20 +5,25 @@
 #include "EReaderOSSignal.h"
 #include "EWrapper.h"
 
+#include "ibkr-driver/subscription.hpp"
 #include "logging/logging.hpp"
 #include "observers/observers.hpp"
 #include <atomic>
 #include <boost/asio.hpp>
+#include <deque>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <ostream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace ibkr::internal {
+typedef std::atomic<std::weak_ptr<Subscription>> subscription_ptr_t;
 
-class Client : public EWrapper {
+class Client: public EWrapper {
 
   /**
    * Before we are ready to send requests to IBKR API
@@ -62,11 +67,12 @@ class Client : public EWrapper {
     }
     friend std::ostream &operator<<(std::ostream &stream,
                                     const ConnectivityState &state) {
-      std::string validIdState = state.nextValidId.has_value() ? std::to_string(state.nextValidId.value()) : " no order id received";                                      
+      std::string validIdState = state.nextValidId.has_value()
+                                     ? std::to_string(state.nextValidId.value())
+                                     : " no order id received";
 
       stream << "[ready: " << state.ready() << "]"
-             << "[ next valid order id: "
-             << validIdState << "]" 
+             << "[ next valid order id: " << validIdState << "]"
              << "[ count farms: "
              << state.connectedDataFarmsCount.load(std::memory_order::relaxed)
              << " ][ count historical farms: "
@@ -1238,7 +1244,8 @@ Returns “Last” or “AllLast” tick-by-tick real-time ti
     ERROR_LOG(logger) << "unsupported feature";
   }
 
-  bool process_cycle();
+  bool processCycle();
+  void addSubscription(subscription_ptr_t subscription);
 
 private:
   ConnectivityState connectionState;
@@ -1248,6 +1255,13 @@ private:
 
   EventSubject<std::function<void()>> connectionSubject;
   std::vector<std::string> managedAccountIds;
+
+  std::mutex subscriptionsMutex;
+  /**
+   * Subscriptions that have not yet been processed
+   */
+  std::deque<subscription_ptr_t> pendingSubscriptions;
+  std::unordered_map<TickerId, subscription_ptr_t> activeSubscriptions;
 };
 
 } // namespace ibkr::internal

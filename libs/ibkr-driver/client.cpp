@@ -18,7 +18,7 @@ void ibkr::internal::Client::disconnect() { connectionState.disconnect(); }
 
 void ibkr::internal::Client::connect() { connectionState.connect(endpoint); }
 
-bool ibkr::internal::Client::process_cycle() {
+bool ibkr::internal::Client::processCycle() {
   connectionState.reader->processMsgs();
   INFO_LOG(logger) << "State : " << connectionState;
   return false;

@@ -5,6 +5,6 @@
 
 void ibkr::internal::Client::requestHistoricalData(const Contract &contract) {
   connectionState.clientSocket->reqHistoricalData(666, contract, "", "1 W",
-                                                  "30 secs", "TRADES", 0, 1,
+                                                  "30 secs", "TRADES", 0, 2,
                                                   false, TagValueListSPtr());
 }

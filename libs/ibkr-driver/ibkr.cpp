@@ -17,7 +17,7 @@ void ibkr::test() {
   bool requested = false;
 
   while (true) {
-    client.process_cycle();
+    client.processCycle();
     std::this_thread::sleep_for(2s);
   }
 }
