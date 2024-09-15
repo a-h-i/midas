@@ -5,6 +5,9 @@ set(SOURCE_LIST
   ibkr.cpp client.cpp errors.cpp order.cpp 
   account.cpp contract.cpp
   ticks.cpp
+  data_requests.cpp
+  build_contracts.cpp
+  connectivity_state.cpp
 )
 
 add_library(ibkr_driver ${SOURCE_LIST} ${HEADER_FILES})

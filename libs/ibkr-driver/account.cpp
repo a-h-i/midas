@@ -1,5 +1,7 @@
 #include "ibkr/internal/client.hpp"
 #include "logging/logging.hpp"
+#include <ranges>
+#include <string_view>
 
 void ibkr::internal::Client::updateAccountValue(
     const std::string &key, const std::string &val, const std::string &currency,
@@ -28,7 +30,11 @@ void ibkr::internal::Client::accountDownloadEnd(
 }
 
 void ibkr::internal::Client::managedAccounts(const std::string &accountsList) {
-  DEBUG_LOG(logger) << "Received managed accounts list " << accountsList;
+  auto accounts = std::views::split(accountsList, ",");
+  for (const auto account : accounts) {
+    managedAccountIds.emplace_back(std::string_view(account));
+  }
+  connectionState.notifyManagedAccountsReceived();
 }
 
 void ibkr::internal::Client::position(const std::string &account,
@@ -57,22 +63,19 @@ void ibkr::internal::Client::accountSummaryEnd(int reqId) {
   DEBUG_LOG(logger) << "Received account summary end: " << reqId;
 }
 
+void ibkr::internal::Client::pnlSingle(int reqId, Decimal pos, double dailyPnL,
+                                       double unrealizedPnL, double realizedPnL,
+                                       double value) {
 
-void ibkr::internal::Client::pnlSingle(int reqId, Decimal pos, double dailyPnL, double unrealizedPnL, double realizedPnL, double value) {
-
-DEBUG_LOG(logger) << "Received pnl " << reqId <<
-    " pos " << pos <<
-    " Daily pnl " << dailyPnL
-    << " unrealized pnl " << unrealizedPnL
-    << " realized " << realizedPnL
-    << " value " << value;  
-
+  DEBUG_LOG(logger) << "Received pnl " << reqId << " pos " << pos
+                    << " Daily pnl " << dailyPnL << " unrealized pnl "
+                    << unrealizedPnL << " realized " << realizedPnL << " value "
+                    << value;
 }
 
-
- void ibkr::internal::Client::pnl(int reqId, double dailyPnL, double unrealizedPnL, double realizedPnL) {
-  DEBUG_LOG(logger) << "Received pnl " << reqId <<
-    " Daily pnl " << dailyPnL
-    << " unrealized pnl " << unrealizedPnL
-    << " realized " << realizedPnL;  
- }
+void ibkr::internal::Client::pnl(int reqId, double dailyPnL,
+                                 double unrealizedPnL, double realizedPnL) {
+  DEBUG_LOG(logger) << "Received pnl " << reqId << " Daily pnl " << dailyPnL
+                    << " unrealized pnl " << unrealizedPnL << " realized "
+                    << realizedPnL;
+}

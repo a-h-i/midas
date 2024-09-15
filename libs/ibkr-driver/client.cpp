@@ -5,49 +5,25 @@
 #include <sstream>
 
 ibkr::internal::Client::Client(const boost::asio::ip::tcp::endpoint &endpoint)
-    : readerSignal(2000), clientSocket(new EClientSocket(this, &readerSignal)),
-      endpoint(endpoint),
-      logger(logging::create_channel_logger("ibkr-driver")) {
-  clientSocket->setConnectOptions("+PACEAPI");
-}
+    : connectionState(this), endpoint(endpoint),
+      logger(logging::create_channel_logger("ibkr-driver")) {}
 
 ibkr::internal::Client::~Client() { disconnect(); }
 
 void ibkr::internal::Client::nextValidId(OrderId order) {
-  nextValidOrderId = order;
-  DEBUG_LOG(logger) << " RECEIVED next valid id " << order;
+  connectionState.nextValidId = order;
 }
 
-void ::ibkr::internal::Client::disconnect() {
-  if (clientSocket->isConnected()) {
-    clientSocket->eDisconnect();
-  }
-}
+void ibkr::internal::Client::disconnect() { connectionState.disconnect(); }
 
-void ibkr::internal::Client::connect() {
-  if (clientSocket->isConnected()) {
-    return;
-  }
-  std::ostringstream host;
-  host << endpoint.address();
-  // attempt to connect
-  bool connected =
-      clientSocket->eConnect(host.view().data(), endpoint.port(), 1, false);
-
-  if (!connected) {
-    host << "port: " << endpoint.port();
-    throw NetworkError("IBKR Driver Can not connect to host at " + host.str());
-  }
-  // Reader initialized after connection due to api version negotiation
-  reader = std::make_unique<EReader>(clientSocket.get(), &readerSignal);
-  reader->start();
-}
+void ibkr::internal::Client::connect() { connectionState.connect(endpoint); }
 
 bool ibkr::internal::Client::process_cycle() {
-  reader->processMsgs();
+  connectionState.reader->processMsgs();
+  INFO_LOG(logger) << "State : " << connectionState;
   return false;
 }
 
-bool ::ibkr::internal::Client::is_connected() const {
-  return clientSocket->isConnected();
+bool ::ibkr::internal::Client::isConnected() const {
+  return connectionState.clientSocket->isConnected();
 }

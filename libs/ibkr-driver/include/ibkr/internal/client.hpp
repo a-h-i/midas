@@ -7,24 +7,85 @@
 
 #include "logging/logging.hpp"
 #include "observers/observers.hpp"
+#include <atomic>
 #include <boost/asio.hpp>
 #include <functional>
 #include <memory>
 #include <optional>
+#include <ostream>
 #include <string>
 #include <vector>
 
 namespace ibkr::internal {
 
-
 class Client : public EWrapper {
+
+  /**
+   * Before we are ready to send requests to IBKR API
+   * We need more than just a socket connection.
+   * We must also track data farm connections
+   * as well as having a valid next order id
+   */
+  class ConnectivityState {
+  public:
+    /**
+     *  next valid order id that can be used
+     */
+    std::optional<OrderId> nextValidId;
+    /**
+     * Signal / mutex pthreads based
+     */
+    EReaderOSSignal readerSignal;
+    std::unique_ptr<EClientSocket> clientSocket;
+    /**
+     * Order of appearance is important so that reader is destructed
+     * before socket
+     */
+    std::unique_ptr<EReader> reader;
+
+    ConnectivityState(EWrapper *);
+    ~ConnectivityState();
+
+    void connect(const boost::asio::ip::tcp::endpoint &endpoint);
+    void disconnect();
+
+    void notifySecDefServerState(bool connected);
+    void notifyDataFarmState(bool connected);
+    void notifyHistoricalDataFarmState(bool connected);
+    void notifyManagedAccountsReceived();
+
+    inline bool ready() const {
+      return receivedManagedAccounts && securityDefinitionServerOk &&
+             nextValidId.has_value() && connectedDataFarmsCount > 0 &&
+             connectedHistoricalDataFarmsCount > 0 &&
+             clientSocket->isConnected();
+    }
+    friend std::ostream &operator<<(std::ostream &stream,
+                                    const ConnectivityState &state) {
+      std::string validIdState = state.nextValidId.has_value() ? std::to_string(state.nextValidId.value()) : " no order id received";                                      
+
+      stream << "[ready: " << state.ready() << "]"
+             << "[ next valid order id: "
+             << validIdState << "]" 
+             << "[ count farms: "
+             << state.connectedDataFarmsCount.load(std::memory_order::relaxed)
+             << " ][ count historical farms: "
+             << state.connectedHistoricalDataFarmsCount.load(
+                    std::memory_order::relaxed)
+             << " ]";
+      return stream;
+    }
+
+  private:
+    bool receivedManagedAccounts = false, securityDefinitionServerOk = false;
+    std::atomic<int> connectedDataFarmsCount, connectedHistoricalDataFarmsCount;
+  };
 
 public:
   Client(const boost::asio::ip::tcp::endpoint &endpoint);
   virtual ~Client();
   void addConnectListener(
-      const EventSubject<std::function<void()>>::EventObserver
-          &obs) {
+      const EventSubject<std::function<void()>>::EventObserver &obs) {
     connectionSubject.add_listener(obs);
   }
   /**
@@ -35,7 +96,9 @@ public:
    * Does nothing if connected
    */
   void disconnect();
-  bool is_connected() const;
+  bool isConnected() const;
+
+  void requestHistoricalData(const Contract &contract);
 
   virtual void nextValidId(OrderId order);
   /**
@@ -119,12 +182,13 @@ Market data tick size callback. Handles all size-related ticks.
    */
   virtual void tickString(TickerId tickerId, TickType tickType,
                           const std::string &value);
-  virtual void tickOptionComputation(TickerId tickerId, TickType tickType,
-                                     int tickAttrib, double impliedVol,
-                                     double delta, double optPrice,
-                                     double pvDividend, double gamma,
-                                     double vega, double theta,
-                                     double undPrice) {
+  virtual void tickOptionComputation(
+      [[maybe_unused]] TickerId tickerId, [[maybe_unused]] TickType tickType,
+      [[maybe_unused]] int tickAttrib, [[maybe_unused]] double impliedVol,
+      [[maybe_unused]] double delta, [[maybe_unused]] double optPrice,
+      [[maybe_unused]] double pvDividend, [[maybe_unused]] double gamma,
+      [[maybe_unused]] double vega, [[maybe_unused]] double theta,
+      [[maybe_unused]] double undPrice) {
     ERROR_LOG(logger) << "Unsupported options";
   }
 
@@ -1177,23 +1241,13 @@ Returns “Last” or “AllLast” tick-by-tick real-time ti
   bool process_cycle();
 
 private:
-  /**
-   * Signal / mutex pthreads based
-   */
-  EReaderOSSignal readerSignal;
-  std::unique_ptr<EClientSocket> clientSocket;
-  /**
-   * Order of appearance is important so that reader is destructed
-   * before socket
-   */
-  std::unique_ptr<EReader> reader;
+  ConnectivityState connectionState;
   boost::asio::ip::tcp::endpoint endpoint;
-
-  std::optional<OrderId> nextValidOrderId;
 
   logging::thread_safe_logger_t logger;
 
   EventSubject<std::function<void()>> connectionSubject;
+  std::vector<std::string> managedAccountIds;
 };
 
 } // namespace ibkr::internal

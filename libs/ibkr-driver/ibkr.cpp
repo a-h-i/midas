@@ -1,5 +1,8 @@
 #include "ibkr-driver/ibkr.hpp"
+#include "ibkr/internal/build_contracts.hpp"
 #include "ibkr/internal/client.hpp"
+#include "midas/instruments.hpp"
+
 #include <chrono>
 #include <thread>
 using namespace std::chrono_literals;
@@ -11,9 +14,10 @@ void ibkr::test() {
   client.addConnectListener(
       {"ID", [&logger] { INFO_LOG(logger) << "Connected"; }});
   client.connect();
+  bool requested = false;
 
   while (true) {
-    std::this_thread::sleep_for(2s);
     client.process_cycle();
+    std::this_thread::sleep_for(2s);
   }
 }

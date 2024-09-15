@@ -5,7 +5,7 @@
 void ibkr::internal::Client::contractDetails(
     int reqId, const ContractDetails &contractDetails) {
   DEBUG_LOG(logger) << "Received contract details " << "Symbol "
-                    << contractDetails.longName;
+                    << contractDetails.longName << contractDetails.contract.multiplier;
 }
 
 void ibkr::internal::Client::contractDetailsEnd(int reqId) {
