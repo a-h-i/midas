@@ -9,6 +9,7 @@ set(SOURCE_LIST
   build_contracts.cpp
   connectivity_state.cpp
   subscriptions.cpp
+  subscription.cpp
 )
 
 add_library(ibkr_driver ${SOURCE_LIST} ${HEADER_FILES})

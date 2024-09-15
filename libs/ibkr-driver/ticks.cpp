@@ -63,12 +63,7 @@ void ibkr::internal::Client::historicalData(TickerId reqId, const Bar &bar) {
                     << " wap: " << bar.wap << " volume " << bar.volume
                     << " count: " << bar.count << " time " << bar.time;
 }
-void ibkr::internal::Client::historicalDataEnd(int reqId,
-                                               const std::string &startDateStr,
-                                               const std::string &endDateStr) {
-  DEBUG_LOG(logger) << "Received historical data end " << reqId << " start at "
-                    << startDateStr << " end at " << endDateStr;
-}
+
 
 /**
  * Real Time Data

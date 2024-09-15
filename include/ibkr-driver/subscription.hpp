@@ -1,8 +1,7 @@
 #pragma once
 #include "data/bar.hpp"
-#include "observers/observers.hpp"
 #include "known_symbols.hpp"
-#include <boost/date_time/gregorian/gregorian.hpp>
+#include "observers/observers.hpp"
 #include <functional>
 namespace ibkr {
 
@@ -15,17 +14,20 @@ typedef std::function<void(const Subscription &, const SubscriptionError &)>
 typedef std::function<void(const Subscription &, midas::Bar bar)>
     sub_bar_listener_t;
 
-struct Subscription {
+class Subscription {
+public:
   /**
    * Realtime subscription
    */
-  Subscription(Symbols symbol);
-  Subscription(Symbols symbol, const boost::gregorian::date &startDate);
+  Subscription(Symbols symbol, bool isRealtime);
 
   EventSubject<sub_cancel_listener_t> cancelListeners;
   EventSubject<sub_end_listener_t> endListeners;
   EventSubject<sub_error_listener_t> errorListeners;
   EventSubject<sub_bar_listener_t> barListeners;
+
+  const Symbols symbol;
+  const bool isRealtime;
 
 
 };

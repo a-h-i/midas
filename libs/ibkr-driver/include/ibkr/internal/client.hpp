@@ -21,7 +21,7 @@
 #include <vector>
 
 namespace ibkr::internal {
-typedef std::atomic<std::weak_ptr<Subscription>> subscription_ptr_t;
+typedef std::weak_ptr<Subscription> subscription_ptr_t;
 
 class Client: public EWrapper {
 
@@ -104,7 +104,6 @@ public:
   void disconnect();
   bool isConnected() const;
 
-  void requestHistoricalData(const Contract &contract);
 
   virtual void nextValidId(OrderId order);
   /**
@@ -1252,16 +1251,19 @@ private:
   boost::asio::ip::tcp::endpoint endpoint;
 
   logging::thread_safe_logger_t logger;
+  std::atomic<TickerId> nextTickerId;
 
   EventSubject<std::function<void()>> connectionSubject;
   std::vector<std::string> managedAccountIds;
-
   std::mutex subscriptionsMutex;
   /**
    * Subscriptions that have not yet been processed
    */
   std::deque<subscription_ptr_t> pendingSubscriptions;
   std::unordered_map<TickerId, subscription_ptr_t> activeSubscriptions;
+
+  void processPendingSubscriptions();
+
 };
 
 } // namespace ibkr::internal
