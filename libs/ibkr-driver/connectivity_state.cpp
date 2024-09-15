@@ -34,7 +34,7 @@ void ibkr::internal::Client::ConnectivityState::connect(
   std::ostringstream host;
   host << endpoint.address();
   // attempt to connect
-  auto addressView = std::string(host.view().data());
+  auto addressView = std::string(host.view());
   bool connected =
       clientSocket->eConnect(addressView.c_str(), endpoint.port(), 1, false);
 
@@ -45,11 +45,15 @@ void ibkr::internal::Client::ConnectivityState::connect(
   // Reader initialized after connection due to api version negotiation
   reader = std::make_unique<EReader>(clientSocket.get(), &readerSignal);
   reader->start();
+  std::scoped_lock listenersMutex(connectionSubjectMutex);
+    connectionSubject.notify();
 }
 
 void ibkr::internal::Client::ConnectivityState::disconnect() {
   if (clientSocket->isConnected()) {
     clientSocket->eDisconnect();
+    std::scoped_lock listenersMutex(connectionSubjectMutex);
+    connectionSubject.notify();
   }
 }
 
@@ -72,5 +76,3 @@ void ibkr::internal::Client::ConnectivityState::
     notifyManagedAccountsReceived() {
   receivedManagedAccounts = true;
 }
-
-

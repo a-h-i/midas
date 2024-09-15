@@ -1,5 +1,6 @@
 #include "bar.h"
 #include "ibkr/internal/client.hpp"
+#include "ibkr/internal/bar_conversion.hpp"
 #include "logging/logging.hpp"
 
 void ibkr::internal::Client::tickPrice(TickerId tickerId, TickType field,
@@ -56,12 +57,14 @@ request will be indicated by a callback to EWrapper.marketDataType with the
 data.
  */
 
-void ibkr::internal::Client::historicalData(TickerId reqId, const Bar &bar) {
-  DEBUG_LOG(logger) << "Received Historical candle tickerId: " << reqId
-                    << " high: " << bar.high << " low: " << bar.low
-                    << " Open: " << bar.open << " close: " << bar.close
-                    << " wap: " << bar.wap << " volume " << bar.volume
-                    << " count: " << bar.count << " time " << bar.time;
+void ibkr::internal::Client::historicalData(TickerId tickerId, const Bar &internalBar) {
+  
+  midas::Bar bar = ibkr::internal::convertIbkrBar(internalBar, 30); 
+  applyToActiveSubscriptions([&bar](Subscription &subscription) {
+    subscription.barListeners.notify(subscription, bar);
+    return false;
+  }, tickerId);
+
 }
 
 
@@ -69,14 +72,24 @@ void ibkr::internal::Client::historicalData(TickerId reqId, const Bar &bar) {
  * Real Time Data
  */
 
-void ibkr::internal::Client::realtimeBar(TickerId reqId, long time, double open,
+void ibkr::internal::Client::realtimeBar(TickerId tickerId, long time, double open,
                                          double high, double low, double close,
                                          Decimal volume, Decimal wap,
                                          int count) {
-  DEBUG_LOG(logger) << "Received realtime bar" << reqId << " time " << time
-                    << " open " << open << " high " << high << " low " << low
-                    << " close " << close << " volume " << volume << " wap "
-                    << wap << " count " << count;
+  Bar internalBar;
+  internalBar.time = std::to_string(time);
+  internalBar.high = high;
+  internalBar.low = low;
+  internalBar.open = open;
+  internalBar.close = close;
+  internalBar.wap = wap;
+  internalBar.volume = volume;
+  internalBar.count = count;
+  midas::Bar bar = ibkr::internal::convertIbkrBar(internalBar, 30); 
+  applyToActiveSubscriptions([&bar](Subscription &subscription) {
+    subscription.barListeners.notify(subscription, bar);
+    return false;
+  }, tickerId);
 }
 
 void ibkr::internal::Client::tickSnapshotEnd(int reqId) {

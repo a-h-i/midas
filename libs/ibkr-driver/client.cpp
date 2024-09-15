@@ -19,17 +19,9 @@ void ibkr::internal::Client::disconnect() { connectionState.disconnect(); }
 
 void ibkr::internal::Client::connect() { connectionState.connect(endpoint); }
 
-
-
 bool ::ibkr::internal::Client::isConnected() const {
   return connectionState.clientSocket->isConnected();
 }
-
-
-
-
-
-
 
 bool ibkr::internal::Client::processCycle() {
   connectionState.reader->processMsgs();

@@ -1,4 +1,4 @@
-#include "internal/bar_conversion.hpp"
+#include "ibkr/internal/bar_conversion.hpp"
 #include "Decimal.h"
 #include <boost/date_time/posix_time/conversion.hpp>
 

@@ -23,7 +23,7 @@
 namespace ibkr::internal {
 typedef std::weak_ptr<Subscription> subscription_ptr_t;
 
-class Client: public EWrapper {
+class Client : public EWrapper {
 
   /**
    * Before we are ready to send requests to IBKR API
@@ -81,18 +81,22 @@ class Client: public EWrapper {
              << " ]";
       return stream;
     }
-
+   void addConnectListener(const std::function<void()> &obs) {
+    std::scoped_lock listenersLock(connectionSubjectMutex);
+    connectionSubject.add_listener(obs);
+  }
   private:
     bool receivedManagedAccounts = false, securityDefinitionServerOk = false;
     std::atomic<int> connectedDataFarmsCount, connectedHistoricalDataFarmsCount;
+    std::mutex connectionSubjectMutex;
+    EventSubject<std::function<void()>> connectionSubject;
   };
 
 public:
   Client(const boost::asio::ip::tcp::endpoint &endpoint);
   virtual ~Client();
-  void addConnectListener(
-      const EventSubject<std::function<void()>>::EventObserver &obs) {
-    connectionSubject.add_listener(obs);
+  inline void addConnectListener(const std::function<void()> &obs) {
+    connectionState.addConnectListener(obs);
   }
   /**
    * Does nothing if not connected
@@ -103,7 +107,6 @@ public:
    */
   void disconnect();
   bool isConnected() const;
-
 
   virtual void nextValidId(OrderId order);
   /**
@@ -1253,7 +1256,6 @@ private:
   logging::thread_safe_logger_t logger;
   std::atomic<TickerId> nextTickerId;
 
-  EventSubject<std::function<void()>> connectionSubject;
   std::vector<std::string> managedAccountIds;
   std::mutex subscriptionsMutex;
   /**
@@ -1263,7 +1265,15 @@ private:
   std::unordered_map<TickerId, subscription_ptr_t> activeSubscriptions;
 
   void processPendingSubscriptions();
-
+  /**
+   * @param func processes function, subscriptionsMutex is locked during
+   * invocation. If it returns true subscription is removed.
+   * @param ticker ticker id to process
+   * @returns number of processed subscriptions
+   */
+  std::size_t
+  applyToActiveSubscriptions(std::function<bool(Subscription &)> func,
+                             const TickerId ticker);
 };
 
 } // namespace ibkr::internal

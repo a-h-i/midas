@@ -10,6 +10,7 @@ set(SOURCE_LIST
   connectivity_state.cpp
   subscriptions.cpp
   subscription.cpp
+  bar_conversion.cpp
 )
 
 add_library(ibkr_driver ${SOURCE_LIST} ${HEADER_FILES})

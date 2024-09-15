@@ -30,21 +30,15 @@ void ibkr::internal::Client::processPendingSubscriptions() {
   pendingSubscriptions.clear();
 }
 
-void ibkr::internal::Client::historicalDataEnd(int ticker,
-                                               const std::string &startDateStr,
-                                               const std::string &endDateStr) {
-  DEBUG_LOG(logger) << "Received historical data end " << ticker << " start at "
-                    << startDateStr << " end at " << endDateStr;
-  std::scoped_lock lock(subscriptionsMutex);
-  if (activeSubscriptions.contains(ticker)) {
-    std::shared_ptr<Subscription> subscription = activeSubscriptions.at(ticker).lock();
-    if (subscription) {
-      subscription->endListeners.notify(*subscription);
-    }
-    activeSubscriptions.erase(ticker);
+void ibkr::internal::Client::historicalDataEnd(
+    int ticker, [[maybe_unused]] const std::string &startDateStr,
+    [[maybe_unused]] const std::string &endDateStr) {
 
-  } else {
-    ERROR_LOG(logger) << "Received historical data end for ticker " << ticker
-                      << " but there is no associated subscription";
-  }
+  applyToActiveSubscriptions(
+      [](Subscription &subscription) {
+        subscription.endListeners.notify(subscription);
+        return true;
+      },
+      ticker);
+  std::scoped_lock lock(subscriptionsMutex);
 }
