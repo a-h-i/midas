@@ -26,7 +26,6 @@ void ibkr::test() {
         client.addSubscription(sub);
       });
   client.connect();
-  bool requested = false;
 
   while (true) {
     client.processCycle();
