@@ -2,7 +2,7 @@
 #include "ibkr/internal/client.hpp"
 
 ibkr::Driver::Driver(boost::asio::ip::tcp::endpoint endpoint)
-    : implementation(new internal::Client(endpoint)) {}
+    : implementation{std::make_unique<internal::Client>(endpoint)} {}
 
 void ibkr::Driver::addConnectListener(const std::function<void()> &func) {
   implementation->addConnectListener(func);
@@ -19,3 +19,5 @@ void ibkr::Driver::connect() { implementation->connect(); }
 void ibkr::Driver::disconnect() { implementation->disconnect(); }
 
 bool ibkr::Driver::isConnected() const { return implementation->isConnected(); }
+
+ibkr::Driver::~Driver() = default;

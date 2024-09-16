@@ -43,6 +43,13 @@ public:
     }
     bufferCv.notify_all();
   }
+  inline void addBars(const midas::Bar &bar) {
+    {
+      std::lock_guard cvLock(bufferMutex);
+      buffer.push_back(bar);
+    }
+    bufferCv.notify_all();
+  }
 
 private:
   std::vector<midas::Bar> buffer;

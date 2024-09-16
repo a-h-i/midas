@@ -1,5 +1,5 @@
 #include "data/data_stream.hpp"
-
+#include <iostream>
 bool midas::DataStream::waitForData(std::chrono::milliseconds timeout) {
   std::vector<midas::Bar> tempBuffer;
   {
@@ -35,5 +35,5 @@ bool midas::DataStream::waitForData(std::chrono::milliseconds timeout) {
     highs.insert(highs.begin() + insertionDistance, bar.high);
     tradeCounts.insert(tradeCounts.begin() + insertionDistance, bar.tradeCount);
   }
-  return true; // we processed data
+  return true; // we processed da ta
 }

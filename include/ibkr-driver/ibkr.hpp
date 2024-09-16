@@ -10,6 +10,8 @@ class Client;
 class Driver {
 public:
   Driver(boost::asio::ip::tcp::endpoint endpoint);
+  ~Driver();
+  
 
   void addConnectListener(const std::function<void()> &func);
   bool processCycle();
