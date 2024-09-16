@@ -21,7 +21,7 @@
 #include <vector>
 
 namespace ibkr::internal {
-typedef std::weak_ptr<Subscription> subscription_ptr_t;
+
 
 class Client : public EWrapper {
 

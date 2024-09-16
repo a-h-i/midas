@@ -3,6 +3,7 @@
 #include "known_symbols.hpp"
 #include "observers/observers.hpp"
 #include <functional>
+#include <memory>
 namespace ibkr {
 
 class Subscription;
@@ -28,7 +29,7 @@ public:
 
   const Symbols symbol;
   const bool isRealtime;
-
-
 };
+
+typedef std::weak_ptr<Subscription> subscription_ptr_t;
 } // namespace ibkr

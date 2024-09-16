@@ -2,7 +2,7 @@
 file(GLOB HEADER_FILES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/include/broker/*.hpp")
 
 set(SOURCE_LIST 
-  ibkr.cpp client.cpp errors.cpp order.cpp 
+  client.cpp errors.cpp order.cpp 
   account.cpp contract.cpp
   ticks.cpp
   data_requests.cpp
@@ -11,6 +11,7 @@ set(SOURCE_LIST
   subscriptions.cpp
   subscription.cpp
   bar_conversion.cpp
+  driver.cpp
 )
 
 add_library(ibkr_driver ${SOURCE_LIST} ${HEADER_FILES})
