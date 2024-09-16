@@ -1,26 +1,26 @@
 #include "bar.h"
-#include "ibkr/internal/client.hpp"
 #include "ibkr/internal/bar_conversion.hpp"
+#include "ibkr/internal/client.hpp"
 #include "logging/logging.hpp"
 
-void ibkr::internal::Client::tickPrice(TickerId tickerId, TickType field,
+void ibkr::internal::Client::tickPrice([[maybe_unused]] TickerId tickerId, TickType field,
                                        double price, const TickAttrib &attrib) {
   DEBUG_LOG(logger) << "TickPrice: " << field << " Price: " << price
                     << " attributes: " << attrib.canAutoExecute
                     << attrib.pastLimit << attrib.preOpen;
 }
 
-void ibkr::internal::Client::tickSize(TickerId tickerId, TickType field,
+void ibkr::internal::Client::tickSize([[maybe_unused]] TickerId tickerId, TickType field,
                                       Decimal size) {
   DEBUG_LOG(logger) << "TickSize: " << size << " type: " << field << std::endl;
 }
 
-void ibkr::internal::Client::tickString(TickerId tickerId, TickType tickType,
+void ibkr::internal::Client::tickString([[maybe_unused]] TickerId tickerId, [[maybe_unused]] TickType tickType,
                                         const std::string &value) {
   DEBUG_LOG(logger) << "TICK STRING: " << value;
 }
 
-void ibkr::internal::Client::tickGeneric(TickerId tickerId, TickType tickType,
+void ibkr::internal::Client::tickGeneric([[maybe_unused]] TickerId tickerId, [[maybe_unused]]TickType tickType,
                                          double value) {
   DEBUG_LOG(logger) << "TICK GENERIC: " << value;
 }
@@ -57,25 +57,26 @@ request will be indicated by a callback to EWrapper.marketDataType with the
 data.
  */
 
-void ibkr::internal::Client::historicalData(TickerId tickerId, const Bar &internalBar) {
-  
-  midas::Bar bar = ibkr::internal::convertIbkrBar(internalBar, 30); 
-  applyToActiveSubscriptions([&bar](Subscription &subscription) {
-    subscription.barListeners.notify(subscription, bar);
-    return false;
-  }, tickerId);
+void ibkr::internal::Client::historicalData(TickerId tickerId,
+                                            const Bar &internalBar) {
 
+  midas::Bar bar = ibkr::internal::convertIbkrBar(internalBar, 30);
+  applyToActiveSubscriptions(
+      [&bar](Subscription &subscription) {
+        subscription.barListeners.notify(subscription, bar);
+        return false;
+      },
+      tickerId);
 }
-
 
 /**
  * Real Time Data
  */
 
-void ibkr::internal::Client::realtimeBar(TickerId tickerId, long time, double open,
-                                         double high, double low, double close,
-                                         Decimal volume, Decimal wap,
-                                         int count) {
+void ibkr::internal::Client::realtimeBar(TickerId tickerId, long time,
+                                         double open, double high, double low,
+                                         double close, Decimal volume,
+                                         Decimal wap, int count) {
   Bar internalBar;
   internalBar.time = std::to_string(time);
   internalBar.high = high;
@@ -85,11 +86,13 @@ void ibkr::internal::Client::realtimeBar(TickerId tickerId, long time, double op
   internalBar.wap = wap;
   internalBar.volume = volume;
   internalBar.count = count;
-  midas::Bar bar = ibkr::internal::convertIbkrBar(internalBar, 30); 
-  applyToActiveSubscriptions([&bar](Subscription &subscription) {
-    subscription.barListeners.notify(subscription, bar);
-    return false;
-  }, tickerId);
+  midas::Bar bar = ibkr::internal::convertIbkrBar(internalBar, 30);
+  applyToActiveSubscriptions(
+      [&bar](Subscription &subscription) {
+        subscription.barListeners.notify(subscription, bar);
+        return false;
+      },
+      tickerId);
 }
 
 void ibkr::internal::Client::tickSnapshotEnd(int reqId) {
@@ -102,8 +105,8 @@ void ibkr::internal::Client::marketDataType(TickerId reqId,
                     << marketDataType;
 }
 
-void ibkr::internal::Client::histogramData(int reqId,
-                                           const HistogramDataVector &data) {
+void ibkr::internal::Client::histogramData([[maybe_unused]] int reqId,
+                                           [[maybe_unused]] const HistogramDataVector &data) {
   DEBUG_LOG(logger) << "Unsupported histogram feature";
 }
 
@@ -115,15 +118,15 @@ void ibkr::internal::Client::tickByTickMidPoint(int reqId, time_t time,
 
 void ibkr::internal::Client::tickByTickBidAsk(
     int reqId, time_t time, double bidPrice, double askPrice, Decimal bidSize,
-    Decimal askSize, const TickAttribBidAsk &tickAttribBidAsk) {
+    Decimal askSize, [[maybe_unused]] const TickAttribBidAsk &tickAttribBidAsk) {
   DEBUG_LOG(logger) << "tickByTickBidAsk " << reqId << " at " << time
                     << " bidPrice " << bidPrice << " askPrice " << askPrice
-                    << " bidSize " << bidSize << " askSize " << " askSize";
+                    << " bidSize " << bidSize << " askSize " <<  askSize;
 }
 
 void ibkr::internal::Client::tickByTickAllLast(
-    int reqId, int tickType, time_t time, double price, Decimal size,
-    const TickAttribLast &tickAttribLast, const std::string &exchange,
+    int reqId, int tickType, time_t time, double price, [[maybe_unused]] Decimal size,
+    [[maybe_unused]] const TickAttribLast &tickAttribLast, const std::string &exchange,
     const std::string &specialConditions) {
   DEBUG_LOG(logger) << " tickByTickAllLast " << reqId << " type " << tickType
                     << " at " << time << " is " << price << " on exchange "
@@ -131,16 +134,19 @@ void ibkr::internal::Client::tickByTickAllLast(
 }
 
 void ibkr::internal::Client::historicalTicks(
-    int reqId, const std::vector<HistoricalTick> &ticks, bool done) {
+    [[maybe_unused]] int reqId, [[maybe_unused]] const std::vector<HistoricalTick> &ticks,
+    [[maybe_unused]] bool done) {
   DEBUG_LOG(logger) << "historical received";
 }
 
 void ibkr::internal::Client::historicalTicksBidAsk(
-    int reqId, const std::vector<HistoricalTickBidAsk> &ticks, bool done) {
+    [[maybe_unused]] int reqId, [[maybe_unused]] const std::vector<HistoricalTickBidAsk> &ticks,
+    [[maybe_unused]] bool done) {
   DEBUG_LOG(logger) << "historical received";
 }
 
 void ibkr::internal::Client::historicalTicksLast(
-    int reqId, const std::vector<HistoricalTickLast> &ticks, bool done) {
+    [[maybe_unused]] int reqId, [[maybe_unused]] const std::vector<HistoricalTickLast> &ticks,
+    [[maybe_unused]] bool done) {
   DEBUG_LOG(logger) << "historical received";
 }
