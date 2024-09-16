@@ -4,6 +4,7 @@ SET(SOURCE_LIST
   exchange.cpp
   timezones.cpp
   data_stream.cpp
+  data_stream_export.cpp
 )
 
 add_library(broker ${SOURCE_LIST})

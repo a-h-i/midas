@@ -1,5 +1,6 @@
 
 #include "data/data_stream.hpp"
+#include "data/export.hpp"
 #include "exceptions/network_error.hpp"
 #include "ibkr-driver/ibkr.hpp"
 #include "ibkr-driver/known_symbols.hpp"
@@ -42,17 +43,6 @@ int main(int argc, char *argv[]) {
   std::mutex signalHandlingCvMutex;
   std::condition_variable signalHandlingCv;
 
-  std::jthread signalHandler([&sigset, &terminationRequested,
-                              &signalHandlingCvMutex, &signalHandlingCv]() {
-    int signalNumber = 0;
-    sigwait(&sigset, &signalNumber);
-    {
-      std::scoped_lock lock(signalHandlingCvMutex);
-      terminationRequested.store(true);
-    }
-    signalHandlingCv.notify_all();
-  });
-
   boost::log::sources::severity_channel_logger_mt<logging::SeverityLevel,
                                                   std::string>
       lg(boost::log::keywords::channel = "cmdline",
@@ -63,7 +53,20 @@ int main(int argc, char *argv[]) {
   if (vm.empty() || vm.count("help")) {
     std::cout << appOptionsDesc << '\n';
   }
-
+  std::jthread signalHandler([&sigset, &terminationRequested,
+                              &signalHandlingCvMutex, &signalHandlingCv,
+                              &lg]() {
+    int signalNumber = 0;
+    timespec sigTimeout;
+    sigTimeout.tv_sec = 0;
+    sigTimeout.tv_nsec = 500000000;
+    do {
+      signalNumber = sigtimedwait(&sigset, nullptr, &sigTimeout);
+    } while (!terminationRequested.load() && signalNumber == -1 &&
+             errno == EAGAIN);
+    terminationRequested.store(true);
+    signalHandlingCv.notify_all();
+  });
   if (vm.count("version")) {
     std::cout << "Midas version v" << MIDAS_VERSION << '\n';
   }
@@ -79,23 +82,43 @@ int main(int argc, char *argv[]) {
     historySubscription->barListeners.add_listener(
         [&mnqOneWeekChart]([[maybe_unused]] const ibkr::Subscription &sub,
                            midas::Bar bar) { mnqOneWeekChart.addBars(bar); });
+    historySubscription->endListeners.add_listener(
+        [&terminationRequested,
+         &signalHandlingCv]([[maybe_unused]] const ibkr::Subscription &sub) {
+          terminationRequested.store(true, std::memory_order::release);
+          signalHandlingCv.notify_all();
+        });
     driver.connect();
-    std::jthread chartWorker([&mnqOneWeekChart, &terminationRequested, &lg] {
-      while (terminationRequested == false) {
-        mnqOneWeekChart.waitForData(std::chrono::milliseconds(500));
+    std::jthread chartWorker([&mnqOneWeekChart, &terminationRequested] {
+      while (!terminationRequested.load()) {
+        mnqOneWeekChart.waitForData(std::chrono::milliseconds(500ms));
       }
     });
     std::jthread driverProcessor([&driver, &terminationRequested,
-                                  &signalHandlingCv, &signalHandlingCvMutex, &lg]() {
-      while (terminationRequested == false) {
+                                  &signalHandlingCv, &signalHandlingCvMutex]() {
+      while (!terminationRequested.load()) {
         driver.processCycle();
         std::unique_lock lock(signalHandlingCvMutex);
         signalHandlingCv.wait_for(
-            lock, std::chrono::milliseconds(500),
+            lock, std::chrono::milliseconds(500ms),
             [&terminationRequested] { return terminationRequested.load(); });
       }
     });
 
+    while (terminationRequested == false) {
+      std::unique_lock lock(signalHandlingCvMutex);
+      signalHandlingCv.wait_for(
+          lock, std::chrono::milliseconds(500ms),
+          [&terminationRequested] { return terminationRequested.load(); });
+    }
+    chartWorker.join();
+    const std::string filename =
+        "MNQ_" +
+        boost::posix_time::to_iso_extended_string(
+            boost::posix_time::second_clock::local_time()) +
+        ".csv";
+    std::ofstream chartStream(filename, std::ios::out | std::ios::trunc);
+    chartStream << mnqOneWeekChart << std::endl;
   } catch (NetworkError &e) {
     std::cerr << "NETWORK error " << e.what() << std::endl;
   }

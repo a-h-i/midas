@@ -20,6 +20,9 @@ bool midas::DataStream::waitForData(std::chrono::milliseconds timeout) {
   // First we insert into decomposed vectors
   // Note that it is unknown if we can receive bars out of order or not
   for (auto bar : tempBuffer) {
+    if (bar.barSizeSeconds != barSizeSeconds) {
+      throw std::runtime_error("Non uniform bar sizes");
+    }
     const auto timeUpperBound =
         std::upper_bound(timestamps.begin(), timestamps.end(), bar.utcTime);
     const auto insertionDistance =
@@ -35,5 +38,5 @@ bool midas::DataStream::waitForData(std::chrono::milliseconds timeout) {
     highs.insert(highs.begin() + insertionDistance, bar.high);
     tradeCounts.insert(tradeCounts.begin() + insertionDistance, bar.tradeCount);
   }
-  return true; // we processed da ta
+  return true; // we processed the bars
 }
