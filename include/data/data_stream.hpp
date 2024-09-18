@@ -1,5 +1,6 @@
 #pragma once
 #include "bar.hpp"
+#include "observers/observers.hpp"
 #include <algorithm>
 #include <boost/date_time/posix_time/ptime.hpp>
 #include <chrono>
@@ -7,6 +8,7 @@
 #include <iterator>
 #include <mutex>
 #include <vector>
+
 
 namespace midas {
 /**
@@ -58,9 +60,25 @@ public:
     bufferCv.notify_all();
   }
 
+  template <typename T>
+  /**
+   * Called by API thread
+   * do not perform long tasks.
+   * Only remember that chart has been reorder before next processing
+   * This happens when we receive out of order data
+   */
+  decltype(auto) addReOrderListener(T listener) {
+    return reOrderListeners.add_listener(listener);
+  }
+  template <typename ListenerId>
+  void removeReOrderListener(ListenerId id) {
+    reOrderListeners.remove_listener(id);
+  }
+
 private:
   std::vector<midas::Bar> buffer;
   std::mutex bufferMutex;
   std::condition_variable bufferCv;
+  EventSubject<std::function<void()>> reOrderListeners;
 };
 } // namespace midas

@@ -1,5 +1,4 @@
 #include "data/data_stream.hpp"
-#include <iostream>
 bool midas::DataStream::waitForData(std::chrono::milliseconds timeout) {
   std::vector<midas::Bar> tempBuffer;
   {
@@ -19,14 +18,17 @@ bool midas::DataStream::waitForData(std::chrono::milliseconds timeout) {
   // Now we can take our time computing values
   // First we insert into decomposed vectors
   // Note that it is unknown if we can receive bars out of order or not
+  bool reordered = false;
   for (auto bar : tempBuffer) {
     if (bar.barSizeSeconds != barSizeSeconds) {
       throw std::runtime_error("Non uniform bar sizes");
     }
     const auto timeUpperBound =
         std::upper_bound(timestamps.begin(), timestamps.end(), bar.utcTime);
+    // We should always be inserting at the end, unless we receive out of order data
+    reordered = reordered || (timeUpperBound != timestamps.end());
     const auto insertionDistance =
-        std::distance(timestamps.begin(), timestamps.end());
+        std::distance(timestamps.begin(), timeUpperBound);
 
     // Insert data point, they all have the same order
     timestamps.insert(timeUpperBound, bar.utcTime);
@@ -37,6 +39,9 @@ bool midas::DataStream::waitForData(std::chrono::milliseconds timeout) {
     lows.insert(lows.begin() + insertionDistance, bar.low);
     highs.insert(highs.begin() + insertionDistance, bar.high);
     tradeCounts.insert(tradeCounts.begin() + insertionDistance, bar.tradeCount);
+  }
+  if (reordered) {
+    reOrderListeners.notify();
   }
   return true; // we processed the bars
 }

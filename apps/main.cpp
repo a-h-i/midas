@@ -49,6 +49,9 @@ static void downloadHistoricalData(std::mutex &signalHandlingCvMutex,
         std::make_shared<ibkr::Subscription>(ibkr::Symbols::MNQ, false);
 
     driver.addSubscription(std::weak_ptr(historySubscription));
+    mnqOneWeekChart.addReOrderListener([&logger] {
+      WARNING_LOG(logger) << "reordered";
+    });
     historySubscription->barListeners.add_listener(
         [&mnqOneWeekChart]([[maybe_unused]] const ibkr::Subscription &sub,
                            midas::Bar bar) { mnqOneWeekChart.addBars(bar); });
