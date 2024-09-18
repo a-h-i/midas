@@ -1,4 +1,8 @@
+#include "Contract.h"
+#include "TagValue.h"
+#include "ibkr/internal/build_contracts.hpp"
 #include "ibkr/internal/client.hpp"
+#include <vector>
 
 void ibkr::internal::Client::addSubscription(subscription_ptr_t subscription) {
   std::scoped_lock lock(subscriptionsMutex);
@@ -28,4 +32,73 @@ std::size_t ibkr::internal::Client::applyToActiveSubscriptions(
   }
 
   return numberProcessed;
+}
+
+
+static void requestHistoricalData(const Contract &contract,
+                                  const TickerId ticker,
+                                  EClientSocket *const socket) {
+  socket->reqHistoricalData(ticker, contract, "", "1 W", "30 secs", "TRADES", 0,
+                            2, false, TagValueListSPtr());
+}
+
+static std::vector<int> requestRealtimeData(const Contract &contract,
+                                     int startRequestId,
+                                     EClientSocket *socket) {
+
+  static const std::array<std::string, 4> tickTypes{"Last", "MidPoint",
+                                                    "BidAsk", "AllLast"};
+  std::vector<int> requestIds;
+  const int requestOffset = startRequestId << 8;
+  for (int i = 0; i < tickTypes.size(); i++) {
+    const int reqId = requestOffset + i;
+    requestIds.push_back(reqId);
+    socket->reqTickByTickData(reqId, contract, tickTypes[i], 0, false);
+  }
+  return requestIds;
+}
+
+void ibkr::internal::Client::processPendingSubscriptions() {
+
+  std::scoped_lock lock(subscriptionsMutex);
+  for (auto weakPtr : pendingSubscriptions) {
+    std::shared_ptr<Subscription> sub = weakPtr.lock();
+    if (sub) {
+      const TickerId tickerId = nextTickerId++;
+      activeSubscriptions[tickerId] = weakPtr;
+      const Contract contract = build_futures_contract(sub->symbol);
+      if (sub->isRealtime) {
+        std::vector<int> realTimeRequestIds = requestRealtimeData(
+            contract, tickerId, connectionState.clientSocket.get());
+        sub->cancelListeners.add_listener(
+            [this, tickerId,
+             realTimeRequestIds]([[maybe_unused]] const Subscription &) {
+              for (auto requestId : realTimeRequestIds) {
+                connectionState.clientSocket->cancelTickByTickData(requestId);
+              }
+            });
+      } else {
+        requestHistoricalData(contract, tickerId,
+                              connectionState.clientSocket.get());
+        sub->cancelListeners.add_listener(
+            [this, tickerId]([[maybe_unused]] const Subscription &) {
+              connectionState.clientSocket->cancelHistoricalData(tickerId);
+            });
+      }
+    }
+  }
+  pendingSubscriptions.clear();
+}
+
+
+
+void ibkr::internal::Client::historicalDataEnd(
+    int ticker, [[maybe_unused]] const std::string &startDateStr,
+    [[maybe_unused]] const std::string &endDateStr) {
+  applyToActiveSubscriptions(
+      [](Subscription &subscription) {
+        subscription.endListeners.notify(subscription);
+        return true;
+      },
+      ticker);
 }

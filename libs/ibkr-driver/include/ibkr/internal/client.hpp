@@ -1248,6 +1248,7 @@ Returns “Last” or “AllLast” tick-by-tick real-time ti
 
   bool processCycle();
   void addSubscription(subscription_ptr_t subscription);
+  
 
 private:
   ConnectivityState connectionState;

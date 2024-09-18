@@ -5,7 +5,6 @@ set(SOURCE_LIST
   client.cpp errors.cpp order.cpp 
   account.cpp contract.cpp
   ticks.cpp
-  data_requests.cpp
   build_contracts.cpp
   connectivity_state.cpp
   subscriptions.cpp

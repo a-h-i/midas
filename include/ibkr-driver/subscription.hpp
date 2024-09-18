@@ -14,6 +14,7 @@ typedef std::function<void(const Subscription &, const SubscriptionError &)>
     sub_error_listener_t;
 typedef std::function<void(const Subscription &, midas::Bar bar)>
     sub_bar_listener_t;
+typedef std::function<void(double price)> sub_bid_ask_listener_t;
 
 class Subscription {
 public:
@@ -26,7 +27,10 @@ public:
   EventSubject<sub_end_listener_t> endListeners;
   EventSubject<sub_error_listener_t> errorListeners;
   EventSubject<sub_bar_listener_t> barListeners;
-
+  /**
+   * Only available in realtime mode
+   */
+  EventSubject<sub_bid_ask_listener_t> askListeners, bidListeners;
   const Symbols symbol;
   const bool isRealtime;
 };

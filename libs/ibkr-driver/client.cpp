@@ -31,5 +31,6 @@ bool ibkr::internal::Client::processCycle() {
     return false;
   }
   processPendingSubscriptions();
+  //TODO: cleanup subscriptions
   return false;
 }
