@@ -3,14 +3,21 @@
 std::ostream &midas::operator<<(std::ostream &stream, const DataStream &data) {
 
   // First we write the headers
-  stream << "datetime,high,open,close,low,volume,trades";
+  stream << "datetime,high,open,close,low,volume,trades,wap";
 
   for (std::size_t index = 0; index < data.timestamps.size(); index++) {
-    stream << "\n"
-           << boost::posix_time::to_iso_extended_string(data.timestamps[index])
-           << "," << data.highs[index] << "," << data.opens[index] << ","
-           << data.closes[index] << "," << data.lows[index] << ","
-           << data.volumes[index] << "," << data.tradeCounts[index];
+    const midas::Bar bar(
+      data.barSizeSeconds,
+      data.tradeCounts[index],
+      data.highs[index],
+      data.lows[index],
+      data.opens[index],
+      data.closes[index],
+      data.waps[index],
+      data.volumes[index],
+      data.timestamps[index]
+    );
+    stream << "\n" << bar;
   }
 
   return stream;

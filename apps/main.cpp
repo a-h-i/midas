@@ -8,6 +8,7 @@
 #include "logging/logging.hpp"
 #include "midas/instruments.hpp"
 #include "midas/version.h"
+#include "trader/trader.hpp"
 #include <boost/log/sources/severity_channel_logger.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/program_options.hpp>
@@ -16,6 +17,7 @@
 #include <iostream>
 #include <memory>
 #include <mutex>
+#include <ranges>
 #include <thread>
 
 using namespace std::chrono_literals;
@@ -36,8 +38,8 @@ static po::variables_map parseCmdLine(int argc, char *argv[]) {
 
 static void downloadHistoricalData(std::mutex &signalHandlingCvMutex,
                                    std::condition_variable &signalHandlingCv,
-                                   std::atomic<bool> &terminationRequested,
-                                   logging::thread_safe_logger_t &logger) {
+                                   std::atomic<bool> &terminationRequested) {
+  auto logger = logging::create_channel_logger("download-historical-data");
   try {
     const auto address = boost::asio::ip::make_address("127.0.0.1");
     const auto endpoint = boost::asio::ip::tcp::endpoint(address, 7496);
@@ -57,11 +59,12 @@ static void downloadHistoricalData(std::mutex &signalHandlingCvMutex,
           signalHandlingCv.notify_all();
         });
     driver.connect();
-    std::jthread chartWorker([&mnqOneWeekChart, &terminationRequested] {
-      while (!terminationRequested.load()) {
-        mnqOneWeekChart.waitForData(std::chrono::milliseconds(500ms));
-      }
-    });
+    std::jthread chartWorker(
+        [&mnqOneWeekChart, &terminationRequested, &signalHandlingCv] {
+          while (!terminationRequested.load()) {
+            mnqOneWeekChart.waitForData(std::chrono::milliseconds(500ms));
+          }
+        });
     std::jthread driverProcessor([&driver, &terminationRequested,
                                   &signalHandlingCv, &signalHandlingCvMutex]() {
       while (!terminationRequested.load()) {
@@ -92,7 +95,26 @@ static void downloadHistoricalData(std::mutex &signalHandlingCvMutex,
   }
 }
 
-static void runSimulation([[maybe_unused]] const std::string &filePath) {}
+static void runSimulation([[maybe_unused]] const std::string &filePath) {
+  auto logger = logging::create_channel_logger("simulator");
+  std::ifstream input(filePath, std::ios::in);
+  if (!input) {
+    ERROR_LOG(logger) << "failed to open file";
+    throw std::runtime_error("Failed to Open file " + filePath);
+  }
+  midas::DataStream simulatedStream(30); // TODO: Specify or infer candle size
+  std::string line;
+  std::getline(input, line); // header
+  while (std::getline(input, line)) {
+    // TODO: Read in order specified in header row
+    midas::Bar bar;
+    line >> bar;
+    simulatedStream.addBars(bar);
+    // Here we are simulating
+    // So we will handle each one by one
+    // invoke trader
+  }
+}
 
 int main(int argc, char *argv[]) {
   logging::initialize_logging();
@@ -131,7 +153,7 @@ int main(int argc, char *argv[]) {
     INFO_LOG(logger) << "Midas version v" << MIDAS_VERSION << '\n';
   } else if (vm.count("historical")) {
     downloadHistoricalData(signalHandlingCvMutex, signalHandlingCv,
-                           terminationRequested, logger);
+                           terminationRequested);
   } else if (vm.count("simulate")) {
     runSimulation(vm["simulate"].as<std::string>());
   } else {

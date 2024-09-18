@@ -30,7 +30,7 @@ void ibkr::internal::Client::accountDownloadEnd(
 }
 
 void ibkr::internal::Client::managedAccounts(const std::string &accountsList) {
-  auto accounts = std::views::split(accountsList, ",");
+  auto accounts = std::views::split(accountsList, std::string(","));
   for (const auto account : accounts) {
     managedAccountIds.emplace_back(std::string_view(account));
   }

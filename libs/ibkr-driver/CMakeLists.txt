@@ -29,11 +29,11 @@ target_include_directories(ibkr_driver PRIVATE include)
 
 
 # ibkr tws api
-target_link_libraries(ibkr_driver PRIVATE twsapi)
+target_link_libraries(ibkr_driver PUBLIC twsapi)
 add_dependencies(ibkr_driver IntelFloatingPointDownload)
 
 # intel decimal floating point libs
-target_link_libraries(ibkr_driver PUBLIC IntelFloatingPoint)
+target_link_libraries(ibkr_driver PRIVATE IntelFloatingPoint)
 # Thread support
 find_package(Threads REQUIRED)
 target_link_libraries(ibkr_driver PUBLIC Threads::Threads)

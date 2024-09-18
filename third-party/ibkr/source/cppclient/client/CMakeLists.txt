@@ -1,7 +1,7 @@
 file(GLOB SOURCES "*.cpp")
 file(GLOB HEADERS "*.h")
 set(twsapi_VERSION 9.79.02)
-add_library(twsapi SHARED ${SOURCES})
+add_library(twsapi STATIC ${SOURCES})
 
 target_compile_features(twsapi PRIVATE cxx_std_11)
 # On Windows (including MinGW), link against Winsock 2
@@ -24,4 +24,5 @@ set_target_properties(twsapi
     PUBLIC_HEADER "${HEADERS}"
 )
 target_include_directories(twsapi PUBLIC .)
+
 install(TARGETS twsapi EXPORT twsapi-targets PUBLIC_HEADER DESTINATION include/twsapi LIBRARY DESTINATION lib)

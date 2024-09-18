@@ -43,6 +43,13 @@ public:
     }
     bufferCv.notify_all();
   }
+  /**
+   * Note that minimal work should be done in the addBars functions
+   * As these are invoked by the thread handling messages from the broker,
+   * and they should be kept responsive.
+   * The purpose of the buffer condition variable is to notify any threads waiting for data
+   * so that they can do the processing
+   */
   inline void addBars(const midas::Bar &bar) {
     {
       std::lock_guard cvLock(bufferMutex);
