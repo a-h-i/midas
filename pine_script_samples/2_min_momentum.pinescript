@@ -1,0 +1,45 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © fiscalpotato
+// This is intended for MNQ like futures scalping
+
+//@version=5
+strategy("ActiveBoi", overlay=true, margin_long=100, margin_short=100)
+fast_ma = ta.ema(close, 9)
+medium_ma = ta.ema(close, 50)
+slow_ma = ta.ema(close, 100)
+avg_volume = ta.sma(volume, 10)
+
+rsi = ta.rsi(close, 9)
+atr = ta.atr(9)
+
+[diplus, dineg, adx] = ta.dmi(14, 14)
+[macdLine, macdSignal, macdHistogram] = ta.macd(close, 6, 13, 5)
+
+float stopLossFactor = 1.5
+float trailActivationFactor = 0.8
+float trailingFactor = 0.4
+
+
+stopLossOffset = atr * stopLossFactor
+trailActivationOffset = atr * trailActivationFactor
+trailingOffset = atr * trailingFactor
+
+
+
+
+
+bullish_macd = macdLine > macdSignal
+bullish_ma = fast_ma > medium_ma
+bullish_dmi = diplus > dineg and adx > 20
+bullish_rsi = rsi < 70 and rsi > 45
+bullish_volume = volume > avg_volume
+
+
+
+quantity = 1
+comission = 0.25 * quantity
+
+if bullish_ma and bullish_macd and bullish_rsi and bullish_dmi and strategy.position_size == 0 and bullish_volume
+    // enter into long position
+    strategy.entry("long", strategy.long, qty = quantity)
+    strategy.exit('exit long', "long", trail_price = close + trailActivationOffset, trail_offset = trailingOffset / syminfo.mintick, stop= close - stopLossOffset)
