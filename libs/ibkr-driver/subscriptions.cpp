@@ -10,7 +10,7 @@ void ibkr::internal::Client::addSubscription(subscription_ptr_t subscription) {
 }
 
 std::size_t ibkr::internal::Client::applyToActiveSubscriptions(
-    std::function<bool (Subscription &)> func, const TickerId ticker) {
+    std::function<bool(Subscription &)> func, const TickerId ticker) {
 
   std::size_t numberProcessed = 0;
   std::scoped_lock subscriptionManagementLock(subscriptionsMutex);
@@ -27,13 +27,13 @@ std::size_t ibkr::internal::Client::applyToActiveSubscriptions(
       activeSubscriptions.erase(ticker);
     }
   } else {
-    ERROR_LOG(logger) << "Attempted to apply function to active subscriptions for ticker " << ticker
-                      << " but there are no associated subscriptions";
+    ERROR_LOG(logger)
+        << "Attempted to apply function to active subscriptions for ticker "
+        << ticker << " but there are no associated subscriptions";
   }
 
   return numberProcessed;
 }
-
 
 static void requestHistoricalData(const Contract &contract,
                                   const TickerId ticker,
@@ -43,18 +43,20 @@ static void requestHistoricalData(const Contract &contract,
 }
 
 static std::vector<int> requestRealtimeData(const Contract &contract,
-                                     int startRequestId,
-                                     EClientSocket *socket) {
+                                            TickerId tickerId,
+                                            EClientSocket *socket) {
 
   static const std::array<std::string, 4> tickTypes{"Last", "MidPoint",
                                                     "BidAsk", "AllLast"};
   std::vector<int> requestIds;
-  const int requestOffset = startRequestId << 8;
+  const int requestOffset = tickerId << 8;
   for (int i = 0; i < tickTypes.size(); i++) {
     const int reqId = requestOffset + i;
     requestIds.push_back(reqId);
     socket->reqTickByTickData(reqId, contract, tickTypes[i], 0, false);
   }
+  socket->reqRealTimeBars(tickerId, contract, 5, 'TRADES', false,
+                          TagValueListSPtr());
   return requestIds;
 }
 
@@ -76,6 +78,7 @@ void ibkr::internal::Client::processPendingSubscriptions() {
               for (auto requestId : realTimeRequestIds) {
                 connectionState.clientSocket->cancelTickByTickData(requestId);
               }
+              connectionState.clientSocket->cancelRealTimeBars(tickerId);
             });
       } else {
         requestHistoricalData(contract, tickerId,
@@ -89,8 +92,6 @@ void ibkr::internal::Client::processPendingSubscriptions() {
   }
   pendingSubscriptions.clear();
 }
-
-
 
 void ibkr::internal::Client::historicalDataEnd(
     int ticker, [[maybe_unused]] const std::string &startDateStr,

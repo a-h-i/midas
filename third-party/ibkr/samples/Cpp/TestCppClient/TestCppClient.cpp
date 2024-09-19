@@ -1426,7 +1426,8 @@ void TestCppClient::whatIfSamples()
 {
     /*** Placing waht-if order ***/
     //! [whatiforder]
-    m_pClient->placeOrder(m_orderId++, ContractSamples::BondWithCusip(), OrderSamples::WhatIfLimitOrder("BUY", DecimalFunctions::stringToDecimal("100"), 20));
+    m_pClient->placeOrder(m_orderId++, ContractSamples::BondWithCusip(), 
+		OrderSamples::WhatIfLimitOrder("BUY", DecimalFunctions::stringToDecimal("100"), 20));
     //! [whatiforder]
 
     m_state = ST_WHATIFSAMPLES_ACK;
