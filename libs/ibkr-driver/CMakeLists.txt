@@ -45,5 +45,6 @@ target_include_directories(ibkr_driver PUBLIC ${Boost_INCLUDE_DIR})
 target_link_libraries(ibkr_driver PUBLIC ${Boost_LIBRARIES})
 
 target_link_libraries(ibkr_driver INTERFACE exceptions)
+target_link_libraries(ibkr_driver PUBLIC subscription)
 
 add_subdirectory(tests)

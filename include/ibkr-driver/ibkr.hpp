@@ -1,5 +1,5 @@
 #pragma once
-#include "subscription.hpp"
+#include "broker-interface/subscription.hpp"
 #include <boost/asio/ip/tcp.hpp>
 #include <memory>
 namespace ibkr {
@@ -15,7 +15,7 @@ public:
 
   void addConnectListener(const std::function<void()> &func);
   bool processCycle();
-  void addSubscription(subscription_ptr_t subscription);
+  void addSubscription(std::weak_ptr<midas::Subscription> subscription);
    /**
    * Does nothing if not connected
    */

@@ -1,10 +1,9 @@
 
+#include "broker-interface/subscription.hpp"
 #include "data/data_stream.hpp"
 #include "data/export.hpp"
 #include "exceptions/network_error.hpp"
 #include "ibkr-driver/ibkr.hpp"
-#include "ibkr-driver/known_symbols.hpp"
-#include "ibkr-driver/subscription.hpp"
 #include "logging/logging.hpp"
 #include "midas/instruments.hpp"
 #include "midas/version.h"
@@ -45,19 +44,19 @@ static void downloadHistoricalData(std::mutex &signalHandlingCvMutex,
     const auto endpoint = boost::asio::ip::tcp::endpoint(address, 7496);
     ibkr::Driver driver(endpoint);
     midas::DataStream mnqOneWeekChart(30);
-    std::shared_ptr<ibkr::Subscription> historySubscription =
-        std::make_shared<ibkr::Subscription>(ibkr::Symbols::MNQ, false);
+    std::shared_ptr<midas::Subscription> historySubscription =
+        std::make_shared<midas::Subscription>(
+            midas::InstrumentEnum::MicroNasdaqFutures, false, false);
 
     driver.addSubscription(std::weak_ptr(historySubscription));
-    mnqOneWeekChart.addReOrderListener([&logger] {
-      WARNING_LOG(logger) << "reordered";
-    });
+    mnqOneWeekChart.addReOrderListener(
+        [&logger] { WARNING_LOG(logger) << "reordered"; });
     historySubscription->barListeners.add_listener(
-        [&mnqOneWeekChart]([[maybe_unused]] const ibkr::Subscription &sub,
+        [&mnqOneWeekChart]([[maybe_unused]] const midas::Subscription &sub,
                            midas::Bar bar) { mnqOneWeekChart.addBars(bar); });
     historySubscription->endListeners.add_listener(
         [&terminationRequested,
-         &signalHandlingCv]([[maybe_unused]] const ibkr::Subscription &sub) {
+         &signalHandlingCv]([[maybe_unused]] const midas::Subscription &sub) {
           terminationRequested.store(true, std::memory_order::release);
           signalHandlingCv.notify_all();
         });

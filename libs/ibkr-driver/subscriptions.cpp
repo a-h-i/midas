@@ -4,18 +4,19 @@
 #include "ibkr/internal/client.hpp"
 #include <vector>
 
-void ibkr::internal::Client::addSubscription(subscription_ptr_t subscription) {
+void ibkr::internal::Client::addSubscription(
+    std::weak_ptr<midas::Subscription> subscription) {
   std::scoped_lock lock(subscriptionsMutex);
   pendingSubscriptions.push_back(subscription);
 }
 
 std::size_t ibkr::internal::Client::applyToActiveSubscriptions(
-    std::function<bool(Subscription &)> func, const TickerId ticker) {
+    std::function<bool(midas::Subscription &)> func, const TickerId ticker) {
 
   std::size_t numberProcessed = 0;
   std::scoped_lock subscriptionManagementLock(subscriptionsMutex);
   if (activeSubscriptions.contains(ticker)) {
-    std::shared_ptr<Subscription> subscription =
+    std::shared_ptr<midas::Subscription> subscription =
         activeSubscriptions.at(ticker).lock();
     if (subscription) {
       const bool remove = func(*subscription);
@@ -67,7 +68,7 @@ void ibkr::internal::Client::processPendingSubscriptions() {
 
   std::scoped_lock lock(subscriptionsMutex);
   for (auto weakPtr : pendingSubscriptions) {
-    std::shared_ptr<Subscription> sub = weakPtr.lock();
+    std::shared_ptr<midas::Subscription> sub = weakPtr.lock();
     if (sub) {
       const TickerId tickerId = nextTickerId++;
       activeSubscriptions[tickerId] = weakPtr;
@@ -78,7 +79,7 @@ void ibkr::internal::Client::processPendingSubscriptions() {
             sub->includeTickData);
         sub->cancelListeners.add_listener(
             [this, tickerId,
-             realTimeRequestIds]([[maybe_unused]] const Subscription &) {
+             realTimeRequestIds]([[maybe_unused]] const midas::Subscription &) {
               for (auto requestId : realTimeRequestIds) {
                 connectionState.clientSocket->cancelTickByTickData(requestId);
               }
@@ -88,7 +89,7 @@ void ibkr::internal::Client::processPendingSubscriptions() {
         requestHistoricalData(contract, tickerId,
                               connectionState.clientSocket.get());
         sub->cancelListeners.add_listener(
-            [this, tickerId]([[maybe_unused]] const Subscription &) {
+            [this, tickerId]([[maybe_unused]] const midas::Subscription &) {
               connectionState.clientSocket->cancelHistoricalData(tickerId);
             });
       }
@@ -101,7 +102,7 @@ void ibkr::internal::Client::historicalDataEnd(
     int ticker, [[maybe_unused]] const std::string &startDateStr,
     [[maybe_unused]] const std::string &endDateStr) {
   applyToActiveSubscriptions(
-      [](Subscription &subscription) {
+      [](midas::Subscription &subscription) {
         subscription.endListeners.notify(subscription);
         return true;
       },

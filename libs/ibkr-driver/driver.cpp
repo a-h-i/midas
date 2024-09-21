@@ -10,7 +10,7 @@ void ibkr::Driver::addConnectListener(const std::function<void()> &func) {
 
 bool ibkr::Driver::processCycle() { return implementation->processCycle(); }
 
-void ibkr::Driver::addSubscription(subscription_ptr_t subscription) {
+void ibkr::Driver::addSubscription(std::weakPtr<midas::Subscription> subscription) {
   implementation->addSubscription(subscription);
 }
 

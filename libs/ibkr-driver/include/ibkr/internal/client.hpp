@@ -5,7 +5,7 @@
 #include "EReaderOSSignal.h"
 #include "EWrapper.h"
 
-#include "ibkr-driver/subscription.hpp"
+#include "broker-interface/subscription.hpp"
 #include "logging/logging.hpp"
 #include "observers/observers.hpp"
 #include <atomic>
@@ -21,7 +21,6 @@
 #include <vector>
 
 namespace ibkr::internal {
-
 
 class Client : public EWrapper {
 
@@ -81,10 +80,11 @@ class Client : public EWrapper {
              << " ]";
       return stream;
     }
-   void addConnectListener(const std::function<void()> &obs) {
-    std::scoped_lock listenersLock(connectionSubjectMutex);
-    connectionSubject.add_listener(obs);
-  }
+    void addConnectListener(const std::function<void()> &obs) {
+      std::scoped_lock listenersLock(connectionSubjectMutex);
+      connectionSubject.add_listener(obs);
+    }
+
   private:
     bool receivedManagedAccounts = false, securityDefinitionServerOk = false;
     std::atomic<int> connectedDataFarmsCount, connectedHistoricalDataFarmsCount;
@@ -1245,10 +1245,11 @@ Returns “Last” or “AllLast” tick-by-tick real-time ti
                         [[maybe_unused]] const std::string &whiteBrandingId) {
     ERROR_LOG(logger) << "unsupported feature";
   }
-
+  /**
+   * Needs to be called in a process loop
+   */
   bool processCycle();
-  void addSubscription(subscription_ptr_t subscription);
-  
+  void addSubscription(std::weak_ptr<midas::Subscription> subscription);
 
 private:
   ConnectivityState connectionState;
@@ -1262,8 +1263,9 @@ private:
   /**
    * Subscriptions that have not yet been processed
    */
-  std::deque<subscription_ptr_t> pendingSubscriptions;
-  std::unordered_map<TickerId, subscription_ptr_t> activeSubscriptions;
+  std::deque<std::weak_ptr<midas::Subscription>> pendingSubscriptions;
+  std::unordered_map<TickerId, std::weak_ptr<midas::Subscription>>
+      activeSubscriptions;
 
   void processPendingSubscriptions();
   /**
@@ -1273,7 +1275,7 @@ private:
    * @returns number of processed subscriptions
    */
   std::size_t
-  applyToActiveSubscriptions(std::function<bool(Subscription &)> func,
+  applyToActiveSubscriptions(std::function<bool(midas::Subscription &)> func,
                              const TickerId ticker);
 };
 
