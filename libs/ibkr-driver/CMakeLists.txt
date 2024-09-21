@@ -8,7 +8,6 @@ set(SOURCE_LIST
   build_contracts.cpp
   connectivity_state.cpp
   subscriptions.cpp
-  subscription.cpp
   bar_conversion.cpp
   driver.cpp
 )

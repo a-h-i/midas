@@ -8,6 +8,7 @@ namespace midas {
  * TODO: Implement
  */
 class SubscriptionError;
+class Subscription;
 typedef std::function<void(const Subscription &)> sub_cancel_listener_t;
 typedef std::function<void(const Subscription &)> sub_end_listener_t;
 typedef std::function<void(const Subscription &, const SubscriptionError &)>

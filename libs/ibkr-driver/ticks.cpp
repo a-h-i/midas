@@ -62,7 +62,7 @@ void ibkr::internal::Client::historicalData(TickerId tickerId,
 
   midas::Bar bar = ibkr::internal::convertIbkrBar(internalBar, 30);
   applyToActiveSubscriptions(
-      [&bar](Subscription &subscription) {
+      [&bar](midas::Subscription &subscription) {
         subscription.barListeners.notify(subscription, bar);
         return false;
       },
@@ -88,7 +88,7 @@ void ibkr::internal::Client::realtimeBar(TickerId tickerId, long time,
   internalBar.count = count;
   midas::Bar bar = ibkr::internal::convertIbkrBar(internalBar, 30);
   applyToActiveSubscriptions(
-      [&bar](Subscription &subscription) {
+      [&bar](midas::Subscription &subscription) {
         subscription.barListeners.notify(subscription, bar);
         return false;
       },
