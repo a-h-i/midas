@@ -44,18 +44,21 @@ static void requestHistoricalData(const Contract &contract,
 
 static std::vector<int> requestRealtimeData(const Contract &contract,
                                             TickerId tickerId,
-                                            EClientSocket *socket) {
+                                            EClientSocket *socket,
+                                            bool includeTickData) {
 
   static const std::array<std::string, 4> tickTypes{"Last", "MidPoint",
                                                     "BidAsk", "AllLast"};
   std::vector<int> requestIds;
   const int requestOffset = tickerId << 8;
-  for (int i = 0; i < tickTypes.size(); i++) {
-    const int reqId = requestOffset + i;
-    requestIds.push_back(reqId);
-    socket->reqTickByTickData(reqId, contract, tickTypes[i], 0, false);
+  if (includeTickData) {
+    for (int i = 0; i < tickTypes.size(); i++) {
+      const int reqId = requestOffset + i;
+      requestIds.push_back(reqId);
+      socket->reqTickByTickData(reqId, contract, tickTypes[i], 0, false);
+    }
   }
-  socket->reqRealTimeBars(tickerId, contract, 5, 'TRADES', false,
+  socket->reqRealTimeBars(tickerId, contract, 5, "TRADES", false,
                           TagValueListSPtr());
   return requestIds;
 }
@@ -71,7 +74,8 @@ void ibkr::internal::Client::processPendingSubscriptions() {
       const Contract contract = build_futures_contract(sub->symbol);
       if (sub->isRealtime) {
         std::vector<int> realTimeRequestIds = requestRealtimeData(
-            contract, tickerId, connectionState.clientSocket.get());
+            contract, tickerId, connectionState.clientSocket.get(),
+            sub->includeTickData);
         sub->cancelListeners.add_listener(
             [this, tickerId,
              realTimeRequestIds]([[maybe_unused]] const Subscription &) {
