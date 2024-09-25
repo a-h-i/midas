@@ -35,7 +35,7 @@ bool midas::trader::TraderData::ok() {
 template <typename Container, typename SourceContainer>
 void downSample(Container &destinationContainer,
                 const SourceContainer &sourceContainer,
-                std::ptrdiff_t downSampleRate, std::size_t &lastReadIndex) {
+                std::ptrdiff_t downSampleRate, std::size_t lastReadIndex) {
   for (; lastReadIndex < sourceContainer.size();
        lastReadIndex += downSampleRate) {
     typename Container::value_type sum =
@@ -69,6 +69,7 @@ void midas::trader::TraderData::processSource() {
   if (numCompleteSamples == 0) {
     return;
   }
+  const std::size_t oldSize = tradeCounts.size();
   downSample(tradeCounts, source->tradeCounts, downSampleRate, lastReadIndex);
   downSample(highs, source->highs, downSampleRate, lastReadIndex);
   downSample(lows, source->lows, downSampleRate, lastReadIndex);
@@ -76,4 +77,6 @@ void midas::trader::TraderData::processSource() {
   downSample(closes, source->closes, downSampleRate, lastReadIndex);
   downSample(waps, source->waps, downSampleRate, lastReadIndex);
   downSample(volumes, source->volumes, downSampleRate, lastReadIndex);
+  // update last read index
+  lastReadIndex += (tradeCounts.size() - oldSize) * downSampleRate;
 }
