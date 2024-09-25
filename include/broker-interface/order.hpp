@@ -52,4 +52,12 @@ public:
    */
   virtual int orderId() const = 0;
 };
+
+
+/**
+ * Manages and executes orders
+ */
+struct OrderManager {
+
+};
 } // namespace midas

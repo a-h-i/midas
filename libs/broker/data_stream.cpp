@@ -43,5 +43,6 @@ bool midas::DataStream::waitForData(std::chrono::milliseconds timeout) {
   if (reordered) {
     reOrderListeners.notify();
   }
+  updateListener.notify();
   return true; // we processed the bars
 }

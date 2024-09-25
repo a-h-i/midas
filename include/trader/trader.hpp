@@ -1,15 +1,59 @@
 #pragma once
 #include "data/data_stream.hpp"
+#include "broker-interface/order.hpp"
+#include <boost/circular_buffer.hpp>
 #include <memory>
-
+#include <type_traits>
+#include <mutex>
 namespace midas::trader {
 
-  struct Trader {
-    virtual void decide(const DataStream &data) = 0;
-  };
+/**
+ * Look back data for traders.
+ */
+class TraderData {
+  const std::size_t lookBackSize, candleSizeSeconds;
+  std::size_t lastReadIndex;
+  std::shared_ptr<DataStream> source;
+  boost::circular_buffer<unsigned int> tradeCounts;
+  boost::circular_buffer<double> highs, lows, opens, closes, waps, volumes;
+  boost::circular_buffer<boost::posix_time::ptime> timestamps;
+  const std::result_of<decltype (&DataStream::addUpdateListener<void()>)(
+      DataStream, void())>::type updateListenerId;
+  const std::result_of<decltype (&DataStream::addReOrderListener<void()>)(
+      DataStream, void())>::type reOrderListenerId;
+  std::recursive_mutex buffersMutex;
+public:
+  /**
+   * @param lookBackSize the number of candles to keep
+   * @param candleSizeSeconds required candle width, to perform down sampling if
+   * needed
+   */
+  TraderData(std::size_t lookBackSize, std::size_t candleSizeSeconds,
+             std::shared_ptr<DataStream> source);
+  ~TraderData();
+  bool ok();
+  operator bool() { return ok(); }
 
   /**
-   * Designed for fast 2 min momentum exploitation
+   * processes source, can be called manually at start to consume before any updates.
+   * Otherwise data is kept in sync via source subscriptions
    */
-  std::unique_ptr<Trader> momentumExploit();
-}
+  void processSource();
+  /**
+   * Clears data
+   */
+  void clear();
+};
+
+struct Trader {
+  virtual ~Trader() = default;
+  virtual void decide() = 0;
+};
+
+/**
+ * Designed for fast 2 min momentum exploitation
+ */
+std::unique_ptr<Trader>
+momentumExploit(std::shared_ptr<DataStream> &source,
+                std::shared_ptr<midas::OrderManager> orderManager);
+} // namespace midas::trader

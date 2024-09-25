@@ -9,7 +9,6 @@
 #include <mutex>
 #include <vector>
 
-
 namespace midas {
 /**
  * A representation of a data stream for an instrument.
@@ -49,8 +48,8 @@ public:
    * Note that minimal work should be done in the addBars functions
    * As these are invoked by the thread handling messages from the broker,
    * and they should be kept responsive.
-   * The purpose of the buffer condition variable is to notify any threads waiting for data
-   * so that they can do the processing
+   * The purpose of the buffer condition variable is to notify any threads
+   * waiting for data so that they can do the processing
    */
   inline void addBars(const midas::Bar &bar) {
     {
@@ -62,10 +61,11 @@ public:
 
   template <typename T>
   /**
-   * Called by API thread
-   * do not perform long tasks.
-   * Only remember that chart has been reorder before next processing
-   * This happens when we receive out of order data
+   * Called before returning from waitForData
+   * to process the new bars.
+   * This happens after associated re-order events if any
+   * Note that this happens while a lock on the buffers is held.
+   * This should be kept in mind as it can block api thread
    */
   decltype(auto) addReOrderListener(T listener) {
     return reOrderListeners.add_listener(listener);
@@ -75,10 +75,30 @@ public:
     reOrderListeners.remove_listener(id);
   }
 
+  template <typename T>
+  /**
+   * Called before returning from waitForData
+   * to process the new bars.
+   * This happens after associated re-order events if any
+   * Note that this happens while a lock on the buffers is held.
+   * This should be kept in mind as it can block api thread
+   */
+  decltype(auto) addUpdateListener(T listener) {
+    return updateListener.add_listener(listener);
+  }
+
+  template <typename ListenerId>
+  void removeUpdateListener(ListenerId id) {
+    updateListener.remove_listener(id);
+  }
+
+  inline std::size_t size() const { return tradeCounts.size(); }
+
 private:
   std::vector<midas::Bar> buffer;
   std::mutex bufferMutex;
   std::condition_variable bufferCv;
   EventSubject<std::function<void()>> reOrderListeners;
+  EventSubject<std::function<void()>> updateListener;
 };
 } // namespace midas

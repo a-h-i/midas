@@ -3,3 +3,8 @@
 midas::Subscription::Subscription(InstrumentEnum symbol, bool realTime,
                                   bool includeTickData)
     : symbol(symbol), isRealtime(realTime), includeTickData(includeTickData) {}
+
+
+midas::Subscription::~Subscription() {
+  cancelListeners.notify(*this);
+}

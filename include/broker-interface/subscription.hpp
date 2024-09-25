@@ -26,7 +26,10 @@ class Subscription {
 
 public:
   Subscription(InstrumentEnum symbol, bool isRealtime, bool includeTickData);
-  virtual ~Subscription() = default;
+  /**
+   * Notifies cancel listeners
+   */
+  ~Subscription();
   EventSubject<sub_cancel_listener_t> cancelListeners;
   EventSubject<sub_end_listener_t> endListeners;
   EventSubject<sub_error_listener_t> errorListeners;
