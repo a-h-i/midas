@@ -44,10 +44,9 @@ SET(INTEL_LIB_DIR ${CMAKE_SOURCE_DIR}/third-party/inteldecimalfp)
 add_library(IntelFloatingPoint STATIC IMPORTED)
 set_target_properties(IntelFloatingPoint PROPERTIES IMPORTED_LOCATION ${INTEL_LIB_DIR}/libbid.a)
 
-# SET(TA_LIB_DIR ${CMAKE_BINARY_DIR}/third-party/src/TechnicalAnalysisDownload-build/)
-# link_directories(${TA_LIB_DIR})
-# add_library(TechnicalAnalysis STATIC IMPORTED)
-# set_target_properties(TechnicalAnalysis PROPERTIES IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/third-party/src/TechnicalAnalysisDownload-build/libta_lib.a)
+add_library(TechnicalAnalysis STATIC IMPORTED)
+set_target_properties(TechnicalAnalysis PROPERTIES IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/third-party/src/TechnicalAnalysisDownload-build/libta_lib.a 
+INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_BINARY_DIR}/third-party/src/TechnicalAnalysisDownload/include)
 
 
 add_subdirectory(third-party)

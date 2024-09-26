@@ -13,7 +13,7 @@ namespace midas::trader {
  * Look back data for traders.
  */
 class TraderData {
-  const std::size_t lookBackSize, candleSizeSeconds;
+
   std::size_t lastReadIndex;
   const std::ptrdiff_t downSampleRate;
   std::shared_ptr<DataStream> source;
@@ -27,6 +27,7 @@ class TraderData {
   std::recursive_mutex buffersMutex;
 
 public:
+  const std::size_t lookBackSize, candleSizeSeconds;
   /**
    * @param lookBackSize the number of candles to keep
    * @param candleSizeSeconds required candle width, to perform down sampling if
@@ -52,7 +53,17 @@ public:
   void clear();
 };
 
-struct Trader {
+class Trader {
+protected:
+  TraderData data;
+  std::shared_ptr<midas::OrderManager> orderManager;
+  Trader(std::size_t lookBackSize, std::size_t candleSizeSeconds,
+         std::shared_ptr<DataStream> source,
+         std::shared_ptr<midas::OrderManager> orderManager)
+      : data(lookBackSize, candleSizeSeconds, source),
+        orderManager(orderManager) {}
+
+public:
   virtual ~Trader() = default;
   virtual void decide() = 0;
 };
@@ -61,6 +72,6 @@ struct Trader {
  * Designed for fast 2 min momentum exploitation
  */
 std::unique_ptr<Trader>
-momentumExploit(std::shared_ptr<DataStream> &source,
+momentumExploit(std::shared_ptr<DataStream> source,
                 std::shared_ptr<midas::OrderManager> orderManager);
 } // namespace midas::trader

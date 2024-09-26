@@ -1,7 +1,7 @@
 
 SET(SOURCE_LIST
 
-  trader.cpp
+  momentum_trader.cpp
   trader_data.cpp
 )
 
@@ -18,8 +18,7 @@ target_link_libraries(trader PUBLIC TBB::tbb)
 
 
 add_dependencies(trader TechnicalAnalysisDownload)
-target_link_libraries(trader PUBLIC )
-
+target_link_libraries(trader PRIVATE TechnicalAnalysis)
 target_link_libraries(trader PUBLIC broker)
 target_link_libraries(trader PUBLIC subscription)
 
