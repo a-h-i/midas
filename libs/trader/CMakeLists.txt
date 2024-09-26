@@ -21,6 +21,7 @@ add_dependencies(trader TechnicalAnalysisDownload)
 target_link_libraries(trader PRIVATE TechnicalAnalysis)
 target_link_libraries(trader PUBLIC broker)
 target_link_libraries(trader PUBLIC subscription)
+target_link_libraries(trader PUBLIC order)
 
 find_package(Boost 1.83 REQUIRED)
 target_include_directories(trader PUBLIC ${Boost_INCLUDE_DIR})

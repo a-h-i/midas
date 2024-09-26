@@ -57,7 +57,9 @@ public:
 /**
  * Manages and executes orders
  */
-struct OrderManager {
-
+class OrderManager {
+  
+  public:
+    virtual ~OrderManager() = default;
 };
 } // namespace midas

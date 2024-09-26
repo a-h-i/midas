@@ -1,6 +1,7 @@
 #pragma once
 #include "broker-interface/order.hpp"
 #include "data/data_stream.hpp"
+#include "midas/instruments.hpp"
 #include <boost/circular_buffer.hpp>
 #include <cstddef>
 #include <memory>
@@ -41,6 +42,10 @@ public:
   inline std::size_t size() { return tradeCounts.size(); }
   inline bool empty() { return size() == 0; }
 
+  boost::circular_buffer<double> &closesBuffer() { return closes; }
+  boost::circular_buffer<double> &volumesBuffer() { return volumes; }
+  boost::circular_buffer<double> &highsBuffer() { return highs; }
+  boost::circular_buffer<double> &lowsBuffer() { return lows; }
   /**
    * processes source, can be called manually at start to consume before any
    * updates. Otherwise data is kept in sync via source subscriptions. Note that
@@ -66,6 +71,8 @@ protected:
 public:
   virtual ~Trader() = default;
   virtual void decide() = 0;
+  bool hasOpenPosition();
+  void buy(int quantity, InstrumentEnum instrument);
 };
 
 /**
