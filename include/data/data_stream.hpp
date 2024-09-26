@@ -95,7 +95,13 @@ public:
   inline std::size_t size() const { return tradeCounts.size(); }
 
 private:
-  std::vector<midas::Bar> buffer;
+  std::vector<midas::Bar> buffer
+  /**
+   * Protects the bar buffer 
+   * Which is where the API worker produces data.
+   * API worker does not interact directly with the data vectors.
+   * 
+   *  */;
   std::mutex bufferMutex;
   std::condition_variable bufferCv;
   EventSubject<std::function<void()>> reOrderListeners;

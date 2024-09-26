@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 #include <string>
 
-TEST(BarConversion, IbkrDriverAssertions) {
+TEST(IbkrDriverAssertions, BarConversion) {
   Bar internalBar;
   internalBar.close = 22.4;
   internalBar.open = 20;

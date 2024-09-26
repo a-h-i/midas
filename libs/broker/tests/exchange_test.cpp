@@ -3,7 +3,7 @@
 #include "midas/instruments.hpp"
 #include <gtest/gtest.h>
 
-TEST(ComexTest, ExchangeAssertions) {
+TEST(ExchangeAssertions, ComexTest) {
   std::shared_ptr<midas::Exchange> comex =
       midas::exchange_from_symbol(midas::SupportedExchanges::COMEX);
   EXPECT_EQ(comex->exchange_name(), "COMEX");
@@ -16,7 +16,7 @@ TEST(ComexTest, ExchangeAssertions) {
   EXPECT_EQ(tz->dst_zone_abbrev(), "CDT");
 }
 
-TEST(ComexTradingHoursTest, ExchangeAssertions) {
+TEST(ExchangeAssertions, ComexTradingHoursTest) {
   std::shared_ptr<midas::Exchange> comex =
       midas::exchange_from_symbol(midas::SupportedExchanges::COMEX);
 

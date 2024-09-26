@@ -3,7 +3,7 @@
 #include <sstream>
 #include <string>
 
-TEST(BarIO, DataUnitAssertions) {
+TEST(DataUnitAssertions, BarIO) {
   std::stringstream streamSimulator;
   midas::Bar originalBar(30, 100, 500, 333.1, 111.5, 130, 120, 1000,
                          boost::posix_time::second_clock::universal_time());

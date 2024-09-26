@@ -36,11 +36,12 @@ public:
 
   /**
    * processes source, can be called manually at start to consume before any updates.
-   * Otherwise data is kept in sync via source subscriptions
+   * Otherwise data is kept in sync via source subscriptions.
+   * Note that the same function is used to update on new events
    */
   void processSource();
   /**
-   * Clears data
+   * Clears data. Note that the same function is used to handle re-orfs
    */
   void clear();
 };
