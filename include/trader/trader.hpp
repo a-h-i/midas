@@ -1,10 +1,12 @@
 #pragma once
-#include "data/data_stream.hpp"
 #include "broker-interface/order.hpp"
+#include "data/data_stream.hpp"
 #include <boost/circular_buffer.hpp>
+#include <cstddef>
 #include <memory>
-#include <type_traits>
 #include <mutex>
+#include <type_traits>
+
 namespace midas::trader {
 
 /**
@@ -13,6 +15,7 @@ namespace midas::trader {
 class TraderData {
   const std::size_t lookBackSize, candleSizeSeconds;
   std::size_t lastReadIndex;
+  const std::ptrdiff_t downSampleRate;
   std::shared_ptr<DataStream> source;
   boost::circular_buffer<unsigned int> tradeCounts;
   boost::circular_buffer<double> highs, lows, opens, closes, waps, volumes;
@@ -22,6 +25,7 @@ class TraderData {
   const std::result_of<decltype (&DataStream::addReOrderListener<void()>)(
       DataStream, void())>::type reOrderListenerId;
   std::recursive_mutex buffersMutex;
+
 public:
   /**
    * @param lookBackSize the number of candles to keep
@@ -33,11 +37,13 @@ public:
   ~TraderData();
   bool ok();
   operator bool() { return ok(); }
+  inline std::size_t size() { return tradeCounts.size(); }
+  inline bool empty() { return size() == 0; }
 
   /**
-   * processes source, can be called manually at start to consume before any updates.
-   * Otherwise data is kept in sync via source subscriptions.
-   * Note that the same function is used to update on new events
+   * processes source, can be called manually at start to consume before any
+   * updates. Otherwise data is kept in sync via source subscriptions. Note that
+   * the same function is used to update on new events
    */
   void processSource();
   /**

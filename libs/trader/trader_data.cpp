@@ -8,9 +8,11 @@ midas::trader::TraderData::TraderData(std::size_t lookBackSize,
                                       std::size_t candleSizeSeconds,
                                       std::shared_ptr<DataStream> source)
     : lookBackSize(lookBackSize), candleSizeSeconds(candleSizeSeconds),
-      lastReadIndex(0), source(source), tradeCounts(lookBackSize),
-      highs(lookBackSize), lows(lookBackSize), opens(lookBackSize),
-      closes(lookBackSize), waps(lookBackSize), volumes(lookBackSize),
+      lastReadIndex(0),
+      downSampleRate(candleSizeSeconds / source->barSizeSeconds),
+      source(source), tradeCounts(lookBackSize), highs(lookBackSize),
+      lows(lookBackSize), opens(lookBackSize), closes(lookBackSize),
+      waps(lookBackSize), volumes(lookBackSize),
       updateListenerId(source->addUpdateListener(
           std::bind(&TraderData::processSource, this))),
       reOrderListenerId(
@@ -29,7 +31,7 @@ midas::trader::TraderData::~TraderData() {
 bool midas::trader::TraderData::ok() {
   std::scoped_lock lock(buffersMutex);
   // Depends on the vectors being kept at the same
-  return tradeCounts.size() > lookBackSize;
+  return tradeCounts.size() >= lookBackSize;
 }
 
 template <typename Container, typename SourceContainer>
@@ -60,11 +62,6 @@ void midas::trader::TraderData::clear() {
 
 void midas::trader::TraderData::processSource() {
   std::scoped_lock lock(buffersMutex);
-  if (!ok()) {
-    return;
-  }
-  const std::ptrdiff_t downSampleRate =
-      candleSizeSeconds / source->barSizeSeconds;
   const std::ptrdiff_t numCompleteSamples = source->size() / downSampleRate;
   if (numCompleteSamples == 0) {
     return;
@@ -77,6 +74,6 @@ void midas::trader::TraderData::processSource() {
   downSample(closes, source->closes, downSampleRate, lastReadIndex);
   downSample(waps, source->waps, downSampleRate, lastReadIndex);
   downSample(volumes, source->volumes, downSampleRate, lastReadIndex);
-  // update last read index
+  // update last read index, which really is next read index
   lastReadIndex += (tradeCounts.size() - oldSize) * downSampleRate;
 }
