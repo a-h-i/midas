@@ -80,5 +80,5 @@ public:
  */
 std::unique_ptr<Trader>
 momentumExploit(std::shared_ptr<DataStream> source,
-                std::shared_ptr<midas::OrderManager> orderManager);
+                std::shared_ptr<midas::OrderManager> orderManager, InstrumentEnum instrument);
 } // namespace midas::trader

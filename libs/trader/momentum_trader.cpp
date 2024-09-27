@@ -83,7 +83,7 @@ public:
 
 std::unique_ptr<midas::trader::Trader> midas::trader::momentumExploit(
     std::shared_ptr<midas::DataStream> source,
-    std::shared_ptr<midas::OrderManager> orderManager) {
+    std::shared_ptr<midas::OrderManager> orderManager, InstrumentEnum instrument ) {
 
-  return std::make_unique<MomentumTrader>(source, orderManager);
+  return std::make_unique<MomentumTrader>(source, orderManager, instrument);
 }
