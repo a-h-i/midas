@@ -2,6 +2,7 @@
 #include "trader/trader.hpp"
 #include <boost/circular_buffer.hpp>
 #include <cstddef>
+#include <execution>
 #include <numeric>
 
 midas::trader::TraderData::TraderData(std::size_t lookBackSize,
@@ -12,7 +13,7 @@ midas::trader::TraderData::TraderData(std::size_t lookBackSize,
       downSampleRate(candleSizeSeconds / source->barSizeSeconds),
       source(source), tradeCounts(lookBackSize), highs(lookBackSize),
       lows(lookBackSize), opens(lookBackSize), closes(lookBackSize),
-      waps(lookBackSize), volumes(lookBackSize),
+      vwaps(lookBackSize), volumes(lookBackSize),
       updateListenerId(source->addUpdateListener(
           std::bind(&TraderData::processSource, this))),
       reOrderListenerId(
@@ -34,19 +35,6 @@ bool midas::trader::TraderData::ok() {
   return tradeCounts.size() >= lookBackSize;
 }
 
-template <typename Container, typename SourceContainer>
-void downSample(Container &destinationContainer,
-                const SourceContainer &sourceContainer,
-                std::ptrdiff_t downSampleRate, std::size_t lastReadIndex) {
-  for (; lastReadIndex < sourceContainer.size();
-       lastReadIndex += downSampleRate) {
-    typename Container::value_type sum =
-        std::reduce(&sourceContainer[lastReadIndex],
-                    &sourceContainer[lastReadIndex + downSampleRate]);
-    destinationContainer.push_back(sum / downSampleRate);
-  }
-}
-
 void midas::trader::TraderData::clear() {
   std::scoped_lock lock(buffersMutex);
   tradeCounts.clear();
@@ -54,7 +42,7 @@ void midas::trader::TraderData::clear() {
   lows.clear();
   opens.clear();
   closes.clear();
-  waps.clear();
+  vwaps.clear();
   volumes.clear();
   timestamps.clear();
   lastReadIndex = 0;
@@ -66,14 +54,33 @@ void midas::trader::TraderData::processSource() {
   if (numCompleteSamples == 0) {
     return;
   }
-  const std::size_t oldSize = tradeCounts.size();
-  downSample(tradeCounts, source->tradeCounts, downSampleRate, lastReadIndex);
-  downSample(highs, source->highs, downSampleRate, lastReadIndex);
-  downSample(lows, source->lows, downSampleRate, lastReadIndex);
-  downSample(opens, source->opens, downSampleRate, lastReadIndex);
-  downSample(closes, source->closes, downSampleRate, lastReadIndex);
-  downSample(waps, source->waps, downSampleRate, lastReadIndex);
-  downSample(volumes, source->volumes, downSampleRate, lastReadIndex);
-  // update last read index, which really is next read index
-  lastReadIndex += (tradeCounts.size() - oldSize) * downSampleRate;
+  for (; lastReadIndex < tradeCounts.size(); lastReadIndex += downSampleRate) {
+
+    // for each candle the high is the first
+    const auto lowIterator = std::min_element(
+        std::execution::par_unseq, source->lows.begin() + lastReadIndex,
+        source->lows.begin() + lastReadIndex + downSampleRate);
+    const auto highIterator = std::max_element(
+        std::execution::par_unseq, source->highs.begin() + lastReadIndex,
+        source->highs.begin() + lastReadIndex + downSampleRate);
+    const auto tradesSum = std::reduce(
+        std::execution::par_unseq, source->tradeCounts.begin() + lastReadIndex,
+        source->tradeCounts.begin() + lastReadIndex + downSampleRate);
+    const auto volumeSum = std::reduce(
+        std::execution::par_unseq, source->volumes.begin() + lastReadIndex,
+        source->volumes.begin() + lastReadIndex + downSampleRate);
+
+    const auto wapSum = std::inner_product(
+        source->waps.begin() + lastReadIndex,
+        source->waps.begin() + lastReadIndex + downSampleRate,
+        source->volumes.begin() + lastReadIndex, 0.0);
+
+    lows.push_back(*lowIterator);
+    highs.push_back(*highIterator);
+    opens.push_back(source->opens[lastReadIndex]);
+    closes.push_back(source->closes[lastReadIndex + downSampleRate - 1]);
+    tradeCounts.push_back(tradesSum);
+    volumes.push_back(volumeSum);
+    vwaps.push_back(wapSum / volumeSum);
+  }
 }

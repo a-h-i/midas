@@ -19,7 +19,7 @@ class TraderData {
   const std::ptrdiff_t downSampleRate;
   std::shared_ptr<DataStream> source;
   boost::circular_buffer<unsigned int> tradeCounts;
-  boost::circular_buffer<double> highs, lows, opens, closes, waps, volumes;
+  boost::circular_buffer<double> highs, lows, opens, closes, vwaps, volumes;
   boost::circular_buffer<boost::posix_time::ptime> timestamps;
   const std::result_of<decltype (&DataStream::addUpdateListener<void()>)(
       DataStream, void())>::type updateListenerId;
