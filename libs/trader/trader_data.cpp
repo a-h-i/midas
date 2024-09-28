@@ -70,7 +70,7 @@ void midas::trader::TraderData::processSource() {
   }
   const ParallelPolicy executionPolicy =
       downSampleRate >= 1000 ? ParallelPolicy::parallel : ParallelPolicy::unseq;
-  for (; lastReadIndex < tradeCounts.size(); lastReadIndex += downSampleRate) {
+  for (; lastReadIndex < source->size(); lastReadIndex += downSampleRate) {
 
     // we preserve low by getting the min of the range
     const auto lowIterator = maybeParallel(
