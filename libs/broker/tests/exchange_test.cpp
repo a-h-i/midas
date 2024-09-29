@@ -1,6 +1,6 @@
 #include "boost/date_time/gregorian/gregorian.hpp"
 #include "boost/date_time/local_time/local_time.hpp"
-#include "midas/instruments.hpp"
+#include "broker-interface/instruments.hpp"
 #include <gtest/gtest.h>
 
 TEST(ExchangeAssertions, ComexTest) {

@@ -13,7 +13,7 @@ enum SeverityLevel { debug, info, warning, error, critical };
 template <typename CharT, typename TraitsT>
 std::basic_ostream<CharT, TraitsT> &
 operator<<(std::basic_ostream<CharT, TraitsT> &stream,
-           logging::SeverityLevel &severity) {
+           logging::SeverityLevel severity) {
   switch (severity) {
   case logging::SeverityLevel::critical:
     stream << "critical";

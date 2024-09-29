@@ -1,6 +1,6 @@
 #pragma once
 #include "data/bar.hpp"
-#include "midas/instruments.hpp"
+#include "broker-interface/instruments.hpp"
 #include "observers/observers.hpp"
 #include <functional>
 namespace midas {

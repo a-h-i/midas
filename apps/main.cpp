@@ -5,11 +5,10 @@
 #include "exceptions/network_error.hpp"
 #include "ibkr-driver/ibkr.hpp"
 #include "logging/logging.hpp"
-#include "midas/instruments.hpp"
+#include "broker-interface/instruments.hpp"
 #include "midas/version.h"
 #include "trader/trader.hpp"
-#include <boost/log/sources/severity_channel_logger.hpp>
-#include <boost/log/trivial.hpp>
+
 #include <boost/program_options.hpp>
 #include <condition_variable>
 #include <csignal>

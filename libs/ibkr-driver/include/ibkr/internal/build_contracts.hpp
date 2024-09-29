@@ -1,6 +1,6 @@
 #pragma once
 #include "Contract.h"
-#include "midas/instruments.hpp"
+#include "broker-interface/instruments.hpp"
 
 namespace ibkr::internal {
 
