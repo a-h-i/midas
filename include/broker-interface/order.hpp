@@ -1,6 +1,7 @@
 #pragma once
 #include "broker-interface/instruments.hpp"
 #include "logging/logging.hpp"
+#include "observers/observers.hpp"
 #include <memory>
 #include <optional>
 
@@ -8,9 +9,16 @@ namespace midas {
 
 enum class OrderStatusEnum {
   /**
-   * Completely filled
+   * Completely filled considered a final state
    */
   Filled,
+  /**
+   * Filled But waiting for children
+   */
+  WaitingForChildren,
+  /**
+   * Considered a final state
+   */
   Cancelled,
   /**
    * Transmitted but not accepted by destination
@@ -29,14 +37,15 @@ enum class OrderStatusEnum {
    */
   ShortLocatingHold,
   /**
-   * Not transmitted by application
+   * Not transmitted by application.
+   * Start state
    */
   UnTransmitted,
 };
 template <typename CharT, typename TraitsT>
 std::basic_ostream<CharT, TraitsT> &
 operator<<(std::basic_ostream<CharT, TraitsT> &stream, OrderStatusEnum status) {
-  switch (direction) {
+  switch (status) {
   case OrderStatusEnum::Filled:
     stream << "filled";
     break;
@@ -77,13 +86,7 @@ operator<<(std::basic_ostream<CharT, TraitsT> &stream,
   return stream;
 };
 
-OrderDirection operator~(OrderDirection original) {
-  if (original == OrderDirection::BUY) {
-    return OrderDirection::SELL;
-  } else {
-    return OrderDirection::BUY;
-  }
-}
+OrderDirection operator~(OrderDirection original);
 
 enum class ExecutionType { Limit, Stop };
 
@@ -91,6 +94,25 @@ enum class ExecutionType { Limit, Stop };
  * Abstract order representation
  */
 class Order {
+public:
+  enum class EventSource { ParentOrder, ProfitTaker, StopLoss };
+
+  struct BaseEvent {
+    EventSource source;
+  };
+
+  struct StatusChangeEvent : BaseEvent {
+    OrderStatusEnum oldStatus, newStatus;
+  };
+  struct FillEvent : BaseEvent {
+    unsigned int newFilled;
+    bool isCompletelyFilled;
+  };
+
+  typedef std::function<void(Order &, StatusChangeEvent)> StatusChangeHandler;
+  typedef std::function<void(Order &, FillEvent)> FillEventHandler;
+
+private:
   /**
    * Total quantity requested in order
    */
@@ -100,7 +122,7 @@ class Order {
   const OrderDirection direction;
   const InstrumentEnum instrument;
   OrderStatusEnum status{OrderStatusEnum::UnTransmitted};
-  std::optional<Order> profitTaker, stopLoss;
+  std::unique_ptr<Order> profitTaker, stopLoss;
   ExecutionType execType;
   double targetPrice;
   /**
@@ -108,6 +130,8 @@ class Order {
    */
   std::optional<double> totalCommissions;
   std::shared_ptr<logging::thread_safe_logger_t> logger;
+  EventSubject<StatusChangeHandler> statusObservers;
+  EventSubject<FillEventHandler> fillHandlers;
 
 public:
   Order(unsigned int requestedQuantity, OrderDirection direction,
@@ -121,6 +145,21 @@ public:
   bool inModifiableState() const;
 
   inline OrderStatusEnum state() const { return status; }
+
+  auto addStatusChangeListener(StatusChangeHandler handler) {
+    return statusObservers.add_listener(handler);
+  }
+  void
+  removeStatusChangeListener(decltype(statusObservers)::ListenerIdType id) {
+    statusObservers.remove_listener(id);
+  }
+
+  auto addFillEventListener(FillEventHandler handler) {
+    return fillHandlers.add_listener(handler);
+  }
+  void removeFillEventListener(decltype(fillHandlers)::ListenerIdType id) {
+    fillHandlers.remove_listener(id);
+  }
 };
 
 /**
@@ -130,5 +169,6 @@ class OrderManager {
 
 public:
   virtual ~OrderManager() = default;
+  virtual void transmit(std::shared_ptr<Order>) = 0;
 };
 } // namespace midas

@@ -25,7 +25,7 @@ void midas::Order::Order::attachProfitTaker(double limit) {
     throw OrderParameterError("Profit target below buy or above sale");
   }
   OrderDirection profitTakerDirection = ~direction;
-  profitTaker.emplace(quantity, profitTakerDirection, instrument,
+  profitTaker = std::make_unique<Order>(quantity, profitTakerDirection, instrument,
                       ExecutionType::Limit, limit, logger);
 }
 
@@ -45,10 +45,20 @@ void midas::Order::Order::attachStopLoss(double limit) {
     throw OrderParameterError("Stop loss target above buy or below sale");
   }
   OrderDirection stopLossDirection = ~direction;
-  stopLoss.emplace(quantity, stopLossDirection, instrument, ExecutionType::Stop,
+  stopLoss = std::make_unique<Order>(quantity, stopLossDirection, instrument, ExecutionType::Stop,
                    limit, logger);
 }
 
 bool midas::Order::inModifiableState() const {
   return state() == OrderStatusEnum::UnTransmitted;
+}
+
+
+
+midas::OrderDirection midas::operator~(OrderDirection original) {
+  if (original == OrderDirection::BUY) {
+    return OrderDirection::SELL;
+  } else {
+    return OrderDirection::BUY;
+  }
 }
