@@ -91,75 +91,102 @@ OrderDirection operator~(OrderDirection original);
 enum class ExecutionType { Limit, Stop };
 
 /**
- * Abstract order representation
+ * Order representation
  */
 class Order {
+
 public:
-  enum class EventSource { ParentOrder, ProfitTaker, StopLoss };
+  const ExecutionType execType;
 
-  struct BaseEvent {
-    EventSource source;
-  };
-
-  struct StatusChangeEvent : BaseEvent {
+  struct StatusChangeEvent {
     OrderStatusEnum oldStatus, newStatus;
   };
-  struct FillEvent : BaseEvent {
+  struct FillEvent {
     unsigned int newFilled;
     bool isCompletelyFilled;
   };
 
   typedef std::function<void(Order &, StatusChangeEvent)> StatusChangeHandler;
   typedef std::function<void(Order &, FillEvent)> FillEventHandler;
-
-private:
   /**
    * Total quantity requested in order
    */
-  const unsigned int quantity;
-  unsigned int quantityFilled = 0;
-  std::optional<double> avgFillPrice, lastFillPrice;
+  const unsigned int requestedQuantity;
   const OrderDirection direction;
   const InstrumentEnum instrument;
-  OrderStatusEnum status{OrderStatusEnum::UnTransmitted};
-  std::unique_ptr<Order> profitTaker, stopLoss;
-  ExecutionType execType;
-  double targetPrice;
+
+private:
   /**
    * Only available after full execution
    */
   std::optional<double> totalCommissions;
+  unsigned int quantityFilled = 0;
+  OrderStatusEnum status{OrderStatusEnum::UnTransmitted};
+  std::optional<double> avgFillPrice, lastFillPrice;
+
+protected:
   std::shared_ptr<logging::thread_safe_logger_t> logger;
   EventSubject<StatusChangeHandler> statusObservers;
   EventSubject<FillEventHandler> fillHandlers;
 
 public:
   Order(unsigned int requestedQuantity, OrderDirection direction,
-        InstrumentEnum instrument, ExecutionType type, double targetPrice,
+        InstrumentEnum instrument, ExecutionType execType,
         std::shared_ptr<logging::thread_safe_logger_t> logger);
-  virtual ~Order() = default;
+  virtual ~Order() = 0;
 
-  virtual void cancel();
-  void attachProfitTaker(double limit);
-  void attachStopLoss(double limit);
-  bool inModifiableState() const;
+  virtual bool inModifiableState() const;
+  virtual OrderStatusEnum state() const;
 
-  inline OrderStatusEnum state() const { return status; }
-
-  auto addStatusChangeListener(StatusChangeHandler handler) {
+  virtual decltype(statusObservers)::ListenerIdType
+  addStatusChangeListener(StatusChangeHandler handler) {
     return statusObservers.add_listener(handler);
   }
-  void
+  virtual void
   removeStatusChangeListener(decltype(statusObservers)::ListenerIdType id) {
     statusObservers.remove_listener(id);
   }
 
-  auto addFillEventListener(FillEventHandler handler) {
+  virtual decltype(fillHandlers)::ListenerIdType
+  addFillEventListener(FillEventHandler handler) {
     return fillHandlers.add_listener(handler);
   }
-  void removeFillEventListener(decltype(fillHandlers)::ListenerIdType id) {
+  virtual void
+  removeFillEventListener(decltype(fillHandlers)::ListenerIdType id) {
     fillHandlers.remove_listener(id);
   }
+};
+
+/**
+ * Orders that work with limit target prices
+ */
+class SimpleOrder : public Order {
+
+private:
+  const double targetPrice;
+
+public:
+  SimpleOrder(unsigned int requestedQuantity, OrderDirection direction,
+              InstrumentEnum instrument, ExecutionType type,
+              std::shared_ptr<logging::thread_safe_logger_t> logger,
+              double targetPrice);
+};
+
+class BracketedOrder : public Order {
+private:
+  std::unique_ptr<Order> entryOrder, stopLossOrder, profitTakerOrder;
+
+public:
+  /**
+   * Bracket orders have both directions attached as part of stop loss and
+   * profit taker. Direction param indicates entry direction of order. i.e a
+   * short position that is bracketed or a long position that is bracketed.
+   * \note currently entry order type is always limit
+   */
+  BracketedOrder(unsigned int quantity, OrderDirection direction,
+                 InstrumentEnum instrument, double entryPrice,
+                 double profitPrice, double stopLossPrice,
+                 std::shared_ptr<logging::thread_safe_logger_t> logger);
 };
 
 /**
