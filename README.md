@@ -8,6 +8,11 @@ This application has some dependencies such as intel's decimal floating point li
 Outside of these third party libraries the GNU AGPLv3 license applies to all other works.
 Third party libraries are contained in the subfolder `third-party`
 
+
+## Goal
+To provide a simple yet powerful means of running trading algorithms locally.
+
+
 ## Build instructions
 
 Make sure you have boost libraries installed.
@@ -25,3 +30,10 @@ After building run
 ```bash
 ctest --test-dir build
 ```
+
+
+## Generating Documentation
+We attempt (and hope) to provide and maintain adequate documentation via in code comments and doxygen. 
+To generate simply run `doxygen` in the root of the repository. This will generate documentation files in different formats under docs folder. This folder is created if it does not exist.
+
+
