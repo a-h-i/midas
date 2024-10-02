@@ -2,6 +2,7 @@
 #include "broker-interface/instruments.hpp"
 #include "logging/logging.hpp"
 #include "observers/observers.hpp"
+#include <atomic>
 #include <memory>
 #include <optional>
 
@@ -12,10 +13,6 @@ enum class OrderStatusEnum {
    * Completely filled considered a final state
    */
   Filled,
-  /**
-   * Filled But waiting for children
-   */
-  WaitingForChildren,
   /**
    * Considered a final state
    */
@@ -120,9 +117,9 @@ private:
    * Only available after full execution
    */
   std::optional<double> totalCommissions;
-  unsigned int quantityFilled = 0;
+  std::atomic<unsigned int> quantityFilled{0};
   OrderStatusEnum status{OrderStatusEnum::UnTransmitted};
-  std::optional<double> avgFillPrice, lastFillPrice;
+  std::atomic<double> avgFillPrice{0}, lastFillPrice{0};
 
 protected:
   std::shared_ptr<logging::thread_safe_logger_t> logger;
@@ -130,6 +127,9 @@ protected:
   EventSubject<FillEventHandler> fillHandlers;
 
 public:
+  /**
+   * \param requestedQuantity
+   */
   Order(unsigned int requestedQuantity, OrderDirection direction,
         InstrumentEnum instrument, ExecutionType execType,
         std::shared_ptr<logging::thread_safe_logger_t> logger);
@@ -171,22 +171,31 @@ public:
               std::shared_ptr<logging::thread_safe_logger_t> logger,
               double targetPrice);
 };
-
+namespace internal {
+class BracketedOrderState;
+} // namespace internal
 class BracketedOrder : public Order {
+  friend class internal::BracketedOrderState;
+
 private:
   std::unique_ptr<Order> entryOrder, stopLossOrder, profitTakerOrder;
+  std::unique_ptr<internal::BracketedOrderState> phasePtr;
 
 public:
   /**
    * Bracket orders have both directions attached as part of stop loss and
    * profit taker. Direction param indicates entry direction of order. i.e a
    * short position that is bracketed or a long position that is bracketed.
+   *
    * \note currently entry order type is always limit
    */
   BracketedOrder(unsigned int quantity, OrderDirection direction,
                  InstrumentEnum instrument, double entryPrice,
                  double profitPrice, double stopLossPrice,
                  std::shared_ptr<logging::thread_safe_logger_t> logger);
+  ~BracketedOrder();
+  virtual bool inModifiableState() const override;
+  virtual OrderStatusEnum state() const override;
 };
 
 /**

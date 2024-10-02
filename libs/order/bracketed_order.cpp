@@ -1,3 +1,4 @@
+#include "bracketed_order_state.hpp"
 #include "broker-interface/order.hpp"
 #include "exceptions/order_parameter_error.hpp"
 
@@ -5,8 +6,7 @@ midas::BracketedOrder::BracketedOrder(
     unsigned int quantity, OrderDirection direction, InstrumentEnum instrument,
     double entryPrice, double profitPrice, double stopLossPrice,
     std::shared_ptr<logging::thread_safe_logger_t> logger)
-    : Order(requestedQuantity, direction, instrument, ExecutionType::Limit,
-            logger) {
+    : Order(quantity, direction, instrument, ExecutionType::Limit, logger) {
 
   if ((direction == OrderDirection::BUY && profitPrice < entryPrice) ||
       profitPrice > entryPrice) {
@@ -32,4 +32,17 @@ midas::BracketedOrder::BracketedOrder(
   stopLossOrder =
       std::make_unique<SimpleOrder>(quantity, exitDirection, instrument,
                                     ExecutionType::Stop, logger, stopLossPrice);
+  entryOrder =
+      std::make_unique<SimpleOrder>(quantity, direction, instrument,
+                                    ExecutionType::Limit, logger, entryPrice);
+  phasePtr = std::make_unique<internal::BracketUntransmittedState>(this);
 }
+
+bool midas::BracketedOrder::inModifiableState() const {
+  return phasePtr->isModifiable();
+}
+midas::OrderStatusEnum midas::BracketedOrder::state() const {
+  return phasePtr->state();
+}
+
+midas::BracketedOrder::~BracketedOrder() = default;

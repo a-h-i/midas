@@ -11,10 +11,7 @@ struct BacktestInterval {
 };
 
 namespace literals {
-BacktestInterval operator""_years(unsigned long long durationTime) {
-  return {.duration = std::to_string(durationTime) + " Y",
-          .barSize = "30 secs"};
-}
+BacktestInterval operator""_years(unsigned long long durationTime);
 }; // namespace literals
 
 BacktestResult performBacktest(InstrumentEnum instrument, BacktestInterval interval);

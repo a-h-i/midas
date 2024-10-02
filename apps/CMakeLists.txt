@@ -1,6 +1,5 @@
 SET(SOURCES_LIST
   main.cpp
-  backtest.cpp
 )
 add_executable(midas ${SOURCES_LIST} ${PROJECT_SOURCE_DIR}/include/midas/version.h.in )
 
@@ -19,3 +18,4 @@ target_include_directories(midas PRIVATE ./include )
 target_link_libraries(midas PRIVATE logging)
 target_link_libraries(midas PRIVATE broker)
 target_link_libraries(midas PRIVATE trader)
+target_link_libraries(midas PRIVATE backtest)

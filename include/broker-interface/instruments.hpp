@@ -19,6 +19,17 @@ enum SupportedCurrencies { USD };
 
 enum SupportedExchanges { COMEX };
 
+inline std::string operator+(const char * lhs, InstrumentEnum instrument) {
+  std::string instrumentStr;
+  switch (instrument) {
+
+  case MicroNasdaqFutures:
+    instrumentStr = "MNQ";
+    break;
+  }
+  return lhs + instrumentStr;
+}
+
 /**
  * The object contains hours (if any)
  * associated with the date
@@ -72,9 +83,9 @@ operator<<(std::basic_ostream<CharT, TraitsT> &stream,
 template <typename CharT, typename TraitsT>
 std::basic_ostream<CharT, TraitsT> &
 operator<<(std::basic_ostream<CharT, TraitsT> &stream, Exchange exchange) {
-  return stream << "[Exchange: " << exchange.exchange_name << " - "
-                << exchange.exchange_symbol << " - "
-                << exchange.supported_currency << "]";
+  return stream << "[Exchange: " << exchange.exchange_name() << " - "
+                << exchange.exchange_symbol() << " - "
+                << exchange.supported_currency() << "]";
 }
 
 /**

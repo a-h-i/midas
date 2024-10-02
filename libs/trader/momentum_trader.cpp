@@ -1,8 +1,10 @@
 #include "broker-interface/order.hpp"
+#include "logging/logging.hpp"
 #include "ta_func.h"
 #include "trader/trader.hpp"
 #include <array>
 #include <cmath>
+#include <memory>
 /**
  * Very simple momentum trader
  * Intended to scalp MNQ and MES and similar indexes.
@@ -28,8 +30,10 @@ class MomentumTrader : public midas::trader::Trader {
 public:
   MomentumTrader(std::shared_ptr<midas::DataStream> source,
                  std::shared_ptr<midas::OrderManager> orderManager,
-                 midas::InstrumentEnum instrument)
-      : Trader(100, 120, source, orderManager), instrument(instrument) {}
+                 midas::InstrumentEnum instrument,
+                 std::shared_ptr<logging::thread_safe_logger_t> logger)
+      : Trader(100, 120, source, orderManager, logger), instrument(instrument) {
+  }
   virtual ~MomentumTrader() {}
   virtual void decide() override {
     if (!data.ok() || hasOpenPosition()) {
@@ -61,14 +65,15 @@ public:
             macd.data(), macdSignal.data(), macdHistogram.data());
 
     bool bullishMa = fastMa[fastMAOutSize - 1] > slowMa[slowMAOutSize - 1];
-    bool bullishRsi = (rsi[rsiOutSize - 1] < 70) & (rsi[rsiOutSize - 1] > 45);
+    bool bullishRsi = (rsi[rsiOutSize - 1] < 70) && (rsi[rsiOutSize - 1] > 45);
     bool bullishVolume = volumes.back() > volumeMa[volumeMAOutSize - 1];
     bool bullishMacd = macd[macdOutSize - 1] > macdSignal[macdOutSize - 1];
     double takeProfitLimit = closePrices.back() + 2 * atr.back();
-    double stopPriceLimit = closePrices.back() - 2 * atr.back();
+    double stopLossLimit = closePrices.back() - 2 * atr.back();
+    double entryPrice = closePrices.back();
     takeProfitLimit =
         std::round(takeProfitLimit * roundingCoeff) / roundingCoeff;
-    stopPriceLimit = std::round(stopPriceLimit * roundingCoeff) / roundingCoeff;
+    stopLossLimit = std::round(stopLossLimit * roundingCoeff) / roundingCoeff;
 
     const double commissionEstimate =
         commissionEstimatePerUnit * entryQuantity * 2;
@@ -76,14 +81,19 @@ public:
 
     if (coversCommission & bullishMa & bullishRsi & bullishVolume &
         bullishMacd) {
-      buy(entryQuantity, instrument);
+      enterBracket(instrument, entryQuantity, midas::OrderDirection::BUY,
+                   entryPrice, stopLossLimit, takeProfitLimit);
     }
   }
 };
 
 std::unique_ptr<midas::trader::Trader> midas::trader::momentumExploit(
     std::shared_ptr<midas::DataStream> source,
-    std::shared_ptr<midas::OrderManager> orderManager, InstrumentEnum instrument ) {
+    std::shared_ptr<midas::OrderManager> orderManager,
+    InstrumentEnum instrument) {
 
-  return std::make_unique<MomentumTrader>(source, orderManager, instrument);
+  return std::make_unique<MomentumTrader>(
+      source, orderManager, instrument,
+      std::make_shared<logging::thread_safe_logger_t>(
+          logging::create_channel_logger("Momentum Trader " + instrument)));
 }

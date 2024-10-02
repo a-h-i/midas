@@ -9,11 +9,10 @@ midas::trader::TraderData::TraderData(std::size_t lookBackSize,
                                       std::size_t candleSizeSeconds,
                                       std::shared_ptr<DataStream> source)
     : lookBackSize(lookBackSize), candleSizeSeconds(candleSizeSeconds),
-      lastReadIndex(0),
       downSampleRate(candleSizeSeconds / source->barSizeSeconds),
-      source(source), tradeCounts(lookBackSize), highs(lookBackSize),
-      lows(lookBackSize), opens(lookBackSize), closes(lookBackSize),
-      vwaps(lookBackSize), volumes(lookBackSize),
+      lastReadIndex(0), source(source), tradeCounts(lookBackSize),
+      highs(lookBackSize), lows(lookBackSize), opens(lookBackSize),
+      closes(lookBackSize), vwaps(lookBackSize), volumes(lookBackSize),
       updateListenerId(source->addUpdateListener(
           std::bind(&TraderData::processSource, this))),
       reOrderListenerId(
