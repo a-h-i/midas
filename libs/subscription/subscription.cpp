@@ -1,9 +1,13 @@
 #include "broker-interface/subscription.hpp"
 
-midas::Subscription::Subscription(InstrumentEnum symbol, bool realTime,
+midas::Subscription::Subscription(InstrumentEnum symbol,
                                   bool includeTickData)
-    : symbol(symbol), isRealtime(realTime), includeTickData(includeTickData) {}
+    : symbol(symbol), isRealtime(false), includeTickData(includeTickData) {}
 
+midas::Subscription::Subscription(InstrumentEnum symbol,
+                                  std::string historicalDuration,
+                                  bool includeTickData)
+    : symbol(symbol), isRealtime(true), includeTickData(includeTickData), historicalDuration(historicalDuration) {}
 
 midas::Subscription::~Subscription() {
   cancelListeners.notify(*this);

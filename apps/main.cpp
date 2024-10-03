@@ -7,7 +7,6 @@
 #include "logging/logging.hpp"
 #include "broker-interface/instruments.hpp"
 #include "midas/version.h"
-#include "trader/trader.hpp"
 
 #include <boost/program_options.hpp>
 #include <condition_variable>
@@ -15,7 +14,6 @@
 #include <iostream>
 #include <memory>
 #include <mutex>
-#include <ranges>
 #include <thread>
 
 using namespace std::chrono_literals;

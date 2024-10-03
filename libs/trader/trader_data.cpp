@@ -118,5 +118,6 @@ void midas::trader::TraderData::processSource() {
     volumes.push_back(volumeSum);
     vwaps.push_back(wapSum /
                     volumeSum); // divide wapSum by total volume to get vwap
+    timestamps.push_back(source->timestamps[lastReadIndex]);
   }
 }

@@ -17,8 +17,9 @@ namespace midas::trader {
  */
 class TraderData {
 
-public: 
+public:
   const std::size_t lookBackSize, candleSizeSeconds;
+
 private:
   const std::ptrdiff_t downSampleRate;
   std::size_t lastReadIndex;
@@ -83,7 +84,10 @@ protected:
          std::shared_ptr<midas::OrderManager> orderManager,
          std::shared_ptr<logging::thread_safe_logger_t> logger)
       : data(lookBackSize, candleSizeSeconds, source),
-        orderManager(orderManager), logger(logger) {}
+        orderManager(orderManager), logger(logger) {
+    // Perform initial processing, for any data already loaded
+    data.processSource();
+  }
 
   void enterBracket(InstrumentEnum instrument, unsigned int quantity,
                     OrderDirection direction, double entryPrice,

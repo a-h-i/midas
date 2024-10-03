@@ -230,11 +230,12 @@ public:
 /**
  * Manages and executes orders
  */
-class OrderManager: public OrderTransmitter {
+class OrderManager {
 
 public:
   virtual ~OrderManager() = default;
-  virtual void execute(std::shared_ptr<Order>);
+  virtual void transmit(std::shared_ptr<Order>) = 0;
+  virtual bool hasActiveOrders() const = 0;
 
 };
 } // namespace midas

@@ -7,5 +7,5 @@ void midas::trader::Trader::enterBracket(
     double entryPrice, double stopLossPrice, double profitPrice) {
   auto& order =currentOrders.emplace_back(std::make_shared<BracketedOrder>(
       quantity, direction, instrument, entryPrice, profitPrice, stopLossPrice, logger));
-  orderManager->execute(order);
+  orderManager->transmit(order);
 }

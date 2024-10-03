@@ -1,6 +1,6 @@
 #pragma once
-#include "data/bar.hpp"
 #include "broker-interface/instruments.hpp"
+#include "data/bar.hpp"
 #include "observers/observers.hpp"
 #include <functional>
 namespace midas {
@@ -25,7 +25,9 @@ typedef std::function<void(double midpoint)> sub_tick_midpoint_listener_t;
 class Subscription {
 
 public:
-  Subscription(InstrumentEnum symbol, bool isRealtime, bool includeTickData);
+  Subscription(InstrumentEnum symbol, bool includeTickData);
+  Subscription(InstrumentEnum symbol, std::string historyDuration,
+               bool includeTickData);
   /**
    * Notifies cancel listeners
    */
@@ -41,5 +43,6 @@ public:
 
   const InstrumentEnum symbol;
   const bool isRealtime, includeTickData;
+  const std::optional<std::string> historicalDuration;
 };
 } // namespace midas
