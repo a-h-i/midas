@@ -87,6 +87,29 @@ OrderDirection operator~(OrderDirection original);
 
 enum class ExecutionType { Limit, Stop };
 
+class SimpleOrder;
+class BracketedOrder;
+
+/**
+ * \brief An interface for implementing a visitor design pattern.
+ * \details  Why do we need it ? an order transmitter is responsible for
+ * serializing orders to different platforms and backends. These could be
+ * simulations or different brokers. Each backend has different order semantics,
+ * additionally different order subtypes have different fields some relative
+ * orders have targets in percentage of parent, or basis points, or absolute
+ * price, etc. We want to avoid a situation where classes members that have
+ * different meanings (i.e one target that can either be in relative or absolute
+ * units) We also don't want multiple members on all subclasses with only a
+ * subset in use and valid. This allows us to do double dispatch without
+ * resorting to dynamic casts and if statements as that is very ugly in OO
+ * design. There is of course a degree of opinion here.
+ */
+struct OrderTransmitter {
+  virtual ~OrderTransmitter();
+  virtual void transmit(SimpleOrder &) = 0;
+  virtual void transmit(BracketedOrder &) = 0;
+};
+
 /**
  * Order representation
  */
@@ -133,7 +156,11 @@ public:
   Order(unsigned int requestedQuantity, OrderDirection direction,
         InstrumentEnum instrument, ExecutionType execType,
         std::shared_ptr<logging::thread_safe_logger_t> logger);
-  virtual ~Order() = 0;
+  virtual ~Order();
+  /**
+   * visitor pattern
+   */
+  virtual void transmit(OrderTransmitter &) = 0;
 
   virtual bool inModifiableState() const;
   virtual OrderStatusEnum state() const;
@@ -170,6 +197,7 @@ public:
               InstrumentEnum instrument, ExecutionType type,
               std::shared_ptr<logging::thread_safe_logger_t> logger,
               double targetPrice);
+  virtual void transmit(OrderTransmitter &) override;
 };
 namespace internal {
 class BracketedOrderState;
@@ -196,15 +224,17 @@ public:
   ~BracketedOrder();
   virtual bool inModifiableState() const override;
   virtual OrderStatusEnum state() const override;
+  virtual void transmit(OrderTransmitter &) override;
 };
 
 /**
  * Manages and executes orders
  */
-class OrderManager {
+class OrderManager: public OrderTransmitter {
 
 public:
   virtual ~OrderManager() = default;
-  virtual void transmit(std::shared_ptr<Order>) = 0;
+  virtual void execute(std::shared_ptr<Order>);
+
 };
 } // namespace midas

@@ -6,3 +6,7 @@ midas::SimpleOrder::SimpleOrder(
     std::shared_ptr<logging::thread_safe_logger_t> logger, double targetPrice)
     : Order(requestedQuantity, direction, instrument, type, logger),
       targetPrice(targetPrice) {}
+
+void midas::SimpleOrder::transmit(midas::OrderTransmitter &transmitter) {
+  transmitter.transmit(*this);
+}
