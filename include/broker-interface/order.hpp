@@ -14,6 +14,10 @@ enum class OrderStatusEnum {
    */
   Filled,
   /**
+   * Parent executed, waiting for children
+   */
+  WaitingForChildren,
+  /**
    * Considered a final state
    */
   Cancelled,
@@ -45,6 +49,9 @@ operator<<(std::basic_ostream<CharT, TraitsT> &stream, OrderStatusEnum status) {
   switch (status) {
   case OrderStatusEnum::Filled:
     stream << "filled";
+    break;
+  case OrderStatusEnum::WaitingForChildren:
+    stream << "WaitingForChildren";
     break;
   case OrderStatusEnum::Cancelled:
     stream << "Cancelled";
@@ -161,7 +168,10 @@ public:
    * visitor pattern
    */
   virtual void transmit(OrderTransmitter &) = 0;
-
+  virtual void setTransmitted();
+  virtual void setCancelled();
+  virtual void setShortLocatingHold();
+  virtual void setFilled(double avgFillPrice, double totalCommissions);
   virtual bool inModifiableState() const;
   virtual OrderStatusEnum state() const;
 
@@ -189,24 +199,24 @@ public:
  */
 class SimpleOrder : public Order {
 
-private:
-  const double targetPrice;
-
 public:
+  const double targetPrice;
   SimpleOrder(unsigned int requestedQuantity, OrderDirection direction,
               InstrumentEnum instrument, ExecutionType type,
               std::shared_ptr<logging::thread_safe_logger_t> logger,
               double targetPrice);
   virtual void transmit(OrderTransmitter &) override;
 };
+
 namespace internal {
 class BracketedOrderState;
 } // namespace internal
+
 class BracketedOrder : public Order {
   friend class internal::BracketedOrderState;
 
 private:
-  std::unique_ptr<Order> entryOrder, stopLossOrder, profitTakerOrder;
+  std::unique_ptr<SimpleOrder> entryOrder, stopLossOrder, profitTakerOrder;
   std::unique_ptr<internal::BracketedOrderState> phasePtr;
 
 public:
@@ -225,6 +235,10 @@ public:
   virtual bool inModifiableState() const override;
   virtual OrderStatusEnum state() const override;
   virtual void transmit(OrderTransmitter &) override;
+  virtual void setTransmitted() override;
+  inline const SimpleOrder &getEntryOrder() const { return *entryOrder; }
+  inline const SimpleOrder &getStopOrder() const { return *stopLossOrder; }
+  inline const SimpleOrder &getProfitTakerOrder() const { return *profitTakerOrder; }
 };
 
 /**
@@ -236,6 +250,5 @@ public:
   virtual ~OrderManager() = default;
   virtual void transmit(std::shared_ptr<Order>) = 0;
   virtual bool hasActiveOrders() const = 0;
-
 };
 } // namespace midas

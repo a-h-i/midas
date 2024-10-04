@@ -2,9 +2,21 @@
 #include "broker-interface/order.hpp"
 #include "data/bar.hpp"
 #include "logging/logging.hpp"
+#include <functional>
 #include <list>
 #include <memory>
 namespace midas::backtest {
+
+class SimulationOrderTransmitter : public midas::OrderTransmitter {
+  const Bar &bar;
+  std::function<void(double fillPrice, double commission, bool isFinished)> triggerCallback;
+
+public:
+  SimulationOrderTransmitter(const Bar &bar, std::function<void(double fillPrice, double commission, bool isFinished)> triggerCallback)
+      : bar(bar), triggerCallback(triggerCallback) {}
+  virtual void transmit(SimpleOrder &) override;
+  virtual void transmit(BracketedOrder &) override;
+};
 
 class BacktestOrderManager : public midas::OrderManager {
   std::list<std::shared_ptr<Order>> activeOrdersList, completedOrdersList;
