@@ -39,14 +39,19 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 FetchContent_MakeAvailable(googletest)
 
-SET(INTEL_LIB_DIR ${CMAKE_SOURCE_DIR}/third-party/inteldecimalfp)
+
+ExternalProject_Get_Property(IntelFloatingPointDownload BINARY_DIR)
+SET(INTEL_BUILD_DIR ${BINARY_DIR})
 
 add_library(IntelFloatingPoint STATIC IMPORTED)
-set_target_properties(IntelFloatingPoint PROPERTIES IMPORTED_LOCATION ${INTEL_LIB_DIR}/libbid.a)
+set_target_properties(IntelFloatingPoint PROPERTIES IMPORTED_LOCATION ${INTEL_BUILD_DIR}/libbid.a)
 
+ExternalProject_Get_Property(TechnicalAnalysisDownload BINARY_DIR)
+SET(TA_BUILD_DIR ${BINARY_DIR})
+ExternalProject_Get_Property(TechnicalAnalysisDownload SOURCE_DIR)
+SET(TA_INCLUDE_DIR ${SOURCE_DIR}/include)
 add_library(TechnicalAnalysis STATIC IMPORTED)
-set_target_properties(TechnicalAnalysis PROPERTIES IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/third-party/src/TechnicalAnalysisDownload-build/libta_lib.a 
-INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_BINARY_DIR}/third-party/src/TechnicalAnalysisDownload/include)
+set_target_properties(TechnicalAnalysis PROPERTIES IMPORTED_LOCATION ${TA_BUILD_DIR}/libta_lib.a)
 
 
 add_subdirectory(third-party)
