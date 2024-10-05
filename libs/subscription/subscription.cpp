@@ -5,7 +5,7 @@ midas::Subscription::Subscription(InstrumentEnum symbol,
     : symbol(symbol), isRealtime(false), includeTickData(includeTickData) {}
 
 midas::Subscription::Subscription(InstrumentEnum symbol,
-                                  std::string historicalDuration,
+                                  HistorySubscriptionStartPoint historicalDuration,
                                   bool includeTickData)
     : symbol(symbol), isRealtime(true), includeTickData(includeTickData), historicalDuration(historicalDuration) {}
 

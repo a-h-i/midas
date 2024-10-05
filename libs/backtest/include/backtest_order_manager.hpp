@@ -5,6 +5,7 @@
 #include <functional>
 #include <list>
 #include <memory>
+
 namespace midas::backtest {
 
 class SimulationOrderTransmitter : public midas::OrderTransmitter {

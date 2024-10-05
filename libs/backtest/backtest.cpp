@@ -1,10 +1,10 @@
 #include "backtest/backtest.hpp"
 #include "backtest_order_manager.hpp"
+#include "broker-interface/broker.hpp"
 #include "broker-interface/instruments.hpp"
 #include "broker-interface/subscription.hpp"
 #include "data/bar.hpp"
 #include "data/data_stream.hpp"
-#include "ibkr-driver/ibkr.hpp"
 #include "logging/logging.hpp"
 #include "trader/trader.hpp"
 #include <atomic>
@@ -15,12 +15,12 @@ using namespace std::chrono_literals;
 
 static std::unique_ptr<midas::DataStream>
 loadHistoricalData(unsigned int barSize, midas::InstrumentEnum instrument,
-                   ibkr::Driver &driver, const std::string &duration) {
+                   midas::Broker &broker, const midas::HistorySubscriptionStartPoint &duration) {
 
   std::unique_ptr<midas::DataStream> historicalData(
       new midas::DataStream(barSize));
   std::shared_ptr<midas::Subscription> historicalSubscription =
-      std::make_shared<midas::Subscription>(instrument, false, false);
+      std::make_shared<midas::Subscription>(instrument, duration, false);
   historicalSubscription->barListeners.add_listener(
       [&historicalData]([[maybe_unused]] const midas::Subscription &sub,
                         midas::Bar bar) { historicalData->addBars(bar); });
@@ -29,7 +29,7 @@ loadHistoricalData(unsigned int barSize, midas::InstrumentEnum instrument,
       [&dataEnded]([[maybe_unused]] const midas::Subscription &sub) {
         dataEnded.store(true, std::memory_order::release);
       });
-  driver.addSubscription(historicalSubscription);
+  broker.addSubscription(historicalSubscription);
   while (dataEnded == false) {
     historicalData->waitForData(500ms);
   }
@@ -41,7 +41,7 @@ midas::backtest::BacktestResult midas::backtest::performBacktest(
     std::function<std::unique_ptr<trader::Trader>(
         std::shared_ptr<DataStream>, std::shared_ptr<midas::OrderManager>)>
         traderFactory,
-    ibkr::Driver &driver) {
+    Broker &broker) {
   std::shared_ptr<logging::thread_safe_logger_t> logger =
       std::make_shared<logging::thread_safe_logger_t>(
           logging::create_channel_logger("backtest " + instrument));
@@ -50,7 +50,7 @@ midas::backtest::BacktestResult midas::backtest::performBacktest(
   // now we need to request and wait for historical data.
   constexpr unsigned int historicalBarSize = 30;
   std::unique_ptr<DataStream> historicalData = loadHistoricalData(
-      historicalBarSize, instrument, driver, interval.duration);
+      historicalBarSize, instrument, broker, interval.duration);
   // Now that we have the historical data, lets create our dummy real time
   // simulation source and our trader
   std::shared_ptr<DataStream> realtimeSimStream =

@@ -1,18 +1,20 @@
+#include "broker-interface/broker.hpp"
 #include "broker-interface/instruments.hpp"
+#include "broker-interface/subscription.hpp"
 #include "data/data_stream.hpp"
-#include "ibkr-driver/ibkr.hpp"
 #include "trader/trader.hpp"
 #include <functional>
 #include <memory>
-#include <string>
 
 namespace midas::backtest {
 
 struct BacktestResult {};
 
 struct BacktestInterval {
-  std::string duration;
-  std::string barSize;
+  /**
+  * Intervals are from duration to now
+   */
+  HistorySubscriptionStartPoint duration;
 };
 
 namespace literals {
@@ -24,6 +26,6 @@ BacktestResult performBacktest(
     std::function<std::unique_ptr<trader::Trader>(
         std::shared_ptr<DataStream>, std::shared_ptr<midas::OrderManager>)>
         traderFactory,
-    ibkr::Driver &driver);
+    Broker &broker);
 
 }; // namespace midas::backtest

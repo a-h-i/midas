@@ -1,4 +1,5 @@
 #pragma once
+#include "broker-interface/broker.hpp"
 #include "broker-interface/subscription.hpp"
 #include <boost/asio/ip/tcp.hpp>
 #include <memory>
@@ -7,24 +8,24 @@ namespace ibkr {
 namespace internal {
 class Client;
 }
-class Driver {
+class Driver: midas::Broker {
 public:
   Driver(boost::asio::ip::tcp::endpoint endpoint);
   ~Driver();
   
 
   void addConnectListener(const std::function<void()> &func);
-  bool processCycle();
-  void addSubscription(std::weak_ptr<midas::Subscription> subscription);
+  virtual bool processCycle() override;
+  virtual void addSubscription(std::weak_ptr<midas::Subscription> subscription) override;
    /**
    * Does nothing if not connected
    */
-  void connect();
+  virtual void connect() override;
   /**
    * Does nothing if connected
    */
-  void disconnect();
-  bool isConnected() const;
+  virtual void disconnect() override;
+  virtual bool isConnected() const override;
 
 private:
   std::unique_ptr<internal::Client> implementation;

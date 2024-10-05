@@ -16,6 +16,16 @@ typedef std::function<void(const Subscription &, const SubscriptionError &)>
 typedef std::function<void(const Subscription &, midas::Bar bar)>
     sub_bar_listener_t;
 
+enum class SubscriptionDurationUnits {
+  Years,
+  Months,
+};
+
+struct HistorySubscriptionStartPoint {
+  SubscriptionDurationUnits unit;
+  unsigned int quantity;
+};
+
 /**
  * Tick by tick listeners
  * TODO: Handle size and optional values
@@ -26,7 +36,8 @@ class Subscription {
 
 public:
   Subscription(InstrumentEnum symbol, bool includeTickData);
-  Subscription(InstrumentEnum symbol, std::string historyDuration,
+  Subscription(InstrumentEnum symbol,
+               HistorySubscriptionStartPoint historyDuration,
                bool includeTickData);
   /**
    * Notifies cancel listeners
@@ -43,6 +54,6 @@ public:
 
   const InstrumentEnum symbol;
   const bool isRealtime, includeTickData;
-  const std::optional<std::string> historicalDuration;
+  const std::optional<HistorySubscriptionStartPoint> historicalDuration;
 };
 } // namespace midas
