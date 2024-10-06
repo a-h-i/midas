@@ -1,6 +1,8 @@
 #include "bracketed_order_state.hpp"
 #include "broker-interface/order.hpp"
 #include "exceptions/order_parameter_error.hpp"
+#include "exceptions/order_state_error.hpp"
+#include <memory>
 
 midas::BracketedOrder::BracketedOrder(
     unsigned int quantity, OrderDirection direction, InstrumentEnum instrument,
@@ -49,4 +51,51 @@ void midas::BracketedOrder::transmit(midas::OrderTransmitter &transmitter) {
   transmitter.transmit(*this);
 }
 
+void midas::BracketedOrder::setTransmitted() {
+  if (phasePtr->canTransmit()) {
+    CRITICAL_LOG(*logger) << "Tried to set transmitted while order status was "
+                          << state();
+    throw OrderStateError(
+        "Can only enter transmitted state from untransmitted state");
+  }
+  status = OrderStatusEnum::Accepted;
+  phasePtr = std::make_unique<internal::BracketTransmittedState>(this);
+}
+
 midas::BracketedOrder::~BracketedOrder() = default;
+
+bool midas::internal::BracketUntransmittedState::canTransmit() { return true; }
+
+bool midas::internal::BracketedOrderState::canTransmit() { return false; }
+
+bool midas::internal::BracketUntransmittedState::isModifiable() const {
+  return true;
+}
+
+bool midas::internal::BracketedOrderState::isModifiable() const {
+  // currently we are keeping it simple and deeming entire bracket
+  // unmodifiable, once entry position is transmitted
+  return false;
+}
+midas::OrderStatusEnum
+midas::internal::BracketUntransmittedState::state() const {
+  return OrderStatusEnum::UnTransmitted;
+}
+
+
+
+midas::OrderStatusEnum
+midas::internal::BracketTransmittedState::state() const {
+  return OrderStatusEnum::Accepted;
+}
+
+midas::OrderStatusEnum
+midas::internal::BracketHoldingPositionState::state() const {
+  return OrderStatusEnum::WaitingForChildren;
+}
+
+midas::OrderStatusEnum
+midas::internal::BracketTerminatedState::state() const {
+  return OrderStatusEnum::Filled;
+}
+

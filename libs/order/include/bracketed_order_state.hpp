@@ -5,56 +5,42 @@ namespace midas::internal {
 
 class BracketedOrderState {
 public:
-  const BracketedOrder *bracketPtr;
+  BracketedOrder *bracketPtr;
   BracketedOrderState(BracketedOrder *bracketPtr) : bracketPtr(bracketPtr) {}
   virtual ~BracketedOrderState() = default;
-  virtual bool isModifiable() const = 0;
+  virtual bool isModifiable() const;
   virtual midas::OrderStatusEnum state() const = 0;
+  virtual bool canTransmit();
 };
 
 class BracketUntransmittedState : public BracketedOrderState {
 public:
   BracketUntransmittedState(BracketedOrder *bracketPtr)
       : BracketedOrderState(bracketPtr) {}
-  virtual bool isModifiable() const override { return true; }
-  virtual midas::OrderStatusEnum state() const override {
-    return OrderStatusEnum::UnTransmitted;
-  }
+  virtual bool isModifiable() const override;
+  virtual midas::OrderStatusEnum state() const override;
+  virtual bool canTransmit() override;
 };
 
 class BracketTransmittedState : public BracketedOrderState {
 public:
   BracketTransmittedState(BracketedOrder *bracketPtr)
       : BracketedOrderState(bracketPtr) {}
-  virtual bool isModifiable() const override {
-    // currently we are keeping it simple and deeming entire bracket
-    // unmodifiable, once entry position is transmitted
-    return false;
-  }
-  virtual midas::OrderStatusEnum state() const override {
-    return OrderStatusEnum::UnTransmitted;
-  }
+
+  virtual midas::OrderStatusEnum state() const override;
 };
 
 class BracketHoldingPositionState : public BracketedOrderState {
 public:
   BracketHoldingPositionState(BracketedOrder *bracketPtr)
       : BracketedOrderState(bracketPtr) {}
-  virtual bool isModifiable() const override {
-    // currently we are keeping it simple and deeming entire bracket
-    // unmodifiable, once entry position is transmitted
-    return false;
-  }
+  virtual midas::OrderStatusEnum state() const override;
 };
 
 class BracketTerminatedState : public BracketedOrderState {
 public:
   BracketTerminatedState(BracketedOrder *bracketPtr)
       : BracketedOrderState(bracketPtr) {}
-  virtual bool isModifiable() const override {
-    // currently we are keeping it simple and deeming entire bracket
-    // unmodifiable, once entry position is transmitted
-    return false;
-  }
+  virtual midas::OrderStatusEnum state() const override;
 };
 }; // namespace midas::internal

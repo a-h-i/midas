@@ -12,18 +12,18 @@ void midas::backtest::BacktestOrderManager::transmit(
   activeOrdersList.push_back(order);
 }
 
-void midas::backtest::BacktestOrderManager::simulate(const midas::Bar &bar) {
+void midas::backtest::BacktestOrderManager::simulate(const midas::Bar *bar) {
   // First we trigger all stops that reached their stop price
 
   // now we trigger profit takers that
 }
 
 static bool isTriggered(midas::OrderDirection direction, double targetPrice,
-                        const midas::Bar &bar) {
-  if (direction == midas::OrderDirection::BUY && bar.low <= targetPrice) {
+                        const midas::Bar *bar) {
+  if (direction == midas::OrderDirection::BUY && bar->low <= targetPrice) {
     return true;
   } else if (direction == midas::OrderDirection::SELL &&
-             bar.high >= targetPrice) {
+             bar->high >= targetPrice) {
     return true;
   } else {
     return false;
@@ -31,7 +31,7 @@ static bool isTriggered(midas::OrderDirection direction, double targetPrice,
 }
 
 static bool transmitHelper(const midas::SimpleOrder &order,
-                           const midas::Bar &bar) {
+                           const midas::Bar *bar) {
   const midas::OrderDirection direction =
       order.execType == midas::ExecutionType::Stop ? ~order.direction
                                                    : order.direction;

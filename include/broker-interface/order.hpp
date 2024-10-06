@@ -4,7 +4,6 @@
 #include "observers/observers.hpp"
 #include <atomic>
 #include <memory>
-#include <optional>
 
 namespace midas {
 
@@ -112,7 +111,7 @@ class BracketedOrder;
  * design. There is of course a degree of opinion here.
  */
 struct OrderTransmitter {
-  virtual ~OrderTransmitter();
+  virtual ~OrderTransmitter() = default;
   virtual void transmit(SimpleOrder &) = 0;
   virtual void transmit(BracketedOrder &) = 0;
 };
@@ -146,12 +145,12 @@ private:
   /**
    * Only available after full execution
    */
-  std::optional<double> totalCommissions;
+  std::atomic<double> totalCommissions{0};
   std::atomic<unsigned int> quantityFilled{0};
-  OrderStatusEnum status{OrderStatusEnum::UnTransmitted};
-  std::atomic<double> avgFillPrice{0}, lastFillPrice{0};
+  std::atomic<double> avgFillPrice{0};
 
 protected:
+  OrderStatusEnum status{OrderStatusEnum::UnTransmitted};
   std::shared_ptr<logging::thread_safe_logger_t> logger;
   EventSubject<StatusChangeHandler> statusObservers;
   EventSubject<FillEventHandler> fillHandlers;
@@ -163,7 +162,7 @@ public:
   Order(unsigned int requestedQuantity, OrderDirection direction,
         InstrumentEnum instrument, ExecutionType execType,
         std::shared_ptr<logging::thread_safe_logger_t> logger);
-  virtual ~Order();
+  virtual ~Order() = default;
   /**
    * visitor pattern
    */
@@ -171,7 +170,7 @@ public:
   virtual void setTransmitted();
   virtual void setCancelled();
   virtual void setShortLocatingHold();
-  virtual void setFilled(double avgFillPrice, double totalCommissions);
+  virtual void setFilled(double avgFillPrice, double totalCommissions, double filledQuantity);
   virtual bool inModifiableState() const;
   virtual OrderStatusEnum state() const;
 
@@ -213,13 +212,14 @@ class BracketedOrderState;
 } // namespace internal
 
 class BracketedOrder : public Order {
-  friend class internal::BracketedOrderState;
+  
 
 private:
   std::unique_ptr<SimpleOrder> entryOrder, stopLossOrder, profitTakerOrder;
   std::unique_ptr<internal::BracketedOrderState> phasePtr;
 
 public:
+  friend class midas::internal::BracketedOrderState;
   /**
    * Bracket orders have both directions attached as part of stop loss and
    * profit taker. Direction param indicates entry direction of order. i.e a

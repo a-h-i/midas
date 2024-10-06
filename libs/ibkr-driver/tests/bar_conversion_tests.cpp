@@ -1,4 +1,3 @@
-#include "boost/date_time/posix_time/posix_time.hpp"
 #include "ibkr/internal/bar_conversion.hpp"
 #include <boost/date_time/posix_time/conversion.hpp>
 #include <gtest/gtest.h>

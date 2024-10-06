@@ -14,5 +14,6 @@ target_include_directories(backtest PRIVATE ./include)
 
 target_link_libraries(backtest PRIVATE trader)
 target_link_libraries(backtest PRIVATE broker)
+target_link_libraries(backtest PRIVATE order)
 
 add_subdirectory(tests)

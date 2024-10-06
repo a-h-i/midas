@@ -69,7 +69,7 @@ midas::backtest::BacktestResult midas::backtest::performBacktest(
         historicalData->timestamps[barIndex]);
     
     if (orderManager->hasActiveOrders()) {
-      orderManager->simulate(bar);
+      orderManager->simulate(&bar);
       // we don't want to process trades and enter new trades on the same candle.
       barBuffer.push_back(bar);
     } else {
