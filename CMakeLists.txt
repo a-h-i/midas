@@ -3,6 +3,7 @@ enable_testing()
 include(ExternalProject)
 include(FetchContent)
 set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "")
+set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 project(
         Midas
         VERSION 0.1.0

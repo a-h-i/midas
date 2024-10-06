@@ -14,3 +14,5 @@ target_include_directories(backtest PRIVATE ./include)
 
 target_link_libraries(backtest PRIVATE trader)
 target_link_libraries(backtest PRIVATE broker)
+
+add_subdirectory(tests)
