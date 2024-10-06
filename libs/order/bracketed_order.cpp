@@ -11,7 +11,7 @@ midas::BracketedOrder::BracketedOrder(
     : Order(quantity, direction, instrument, ExecutionType::Limit, logger) {
 
   if ((direction == OrderDirection::BUY && profitPrice < entryPrice) ||
-      profitPrice > entryPrice) {
+      (direction == OrderDirection::SELL && profitPrice > entryPrice)) {
     // taking profit below requested  buy or above sale
     CRITICAL_LOG(*logger) << "Requested to attach profit taker to " << direction
                           << " type order with profit taker price of "
@@ -20,7 +20,7 @@ midas::BracketedOrder::BracketedOrder(
     throw OrderParameterError("Profit target below buy or above sale");
   }
   if ((direction == OrderDirection::BUY && stopLossPrice > entryPrice) ||
-      stopLossPrice < entryPrice) {
+      (direction == OrderDirection::SELL && stopLossPrice < entryPrice)) {
     // stopping loss above requested buy or below sale
     CRITICAL_LOG(*logger) << "Requested to attach stop loss to " << direction
                           << " type order with stop price of " << stopLossPrice
@@ -38,6 +38,16 @@ midas::BracketedOrder::BracketedOrder(
       std::make_unique<SimpleOrder>(quantity, direction, instrument,
                                     ExecutionType::Limit, logger, entryPrice);
   phasePtr = std::make_unique<internal::BracketUntransmittedState>(this);
+  entryOrder->addFillEventListener(
+      [this]([[maybe_unused]] Order &entry, FillEvent event) {
+        if (event.isCompletelyFilled) {
+          handleEntryFilled();
+        }
+      });
+}
+
+void midas::BracketedOrder::handleEntryFilled() {
+  phasePtr = std::make_unique<internal::BracketHoldingPositionState>(this);
 }
 
 bool midas::BracketedOrder::inModifiableState() const {
@@ -52,7 +62,7 @@ void midas::BracketedOrder::transmit(midas::OrderTransmitter &transmitter) {
 }
 
 void midas::BracketedOrder::setTransmitted() {
-  if (phasePtr->canTransmit()) {
+  if (!phasePtr->canTransmit()) {
     CRITICAL_LOG(*logger) << "Tried to set transmitted while order status was "
                           << state();
     throw OrderStateError(
@@ -82,10 +92,7 @@ midas::internal::BracketUntransmittedState::state() const {
   return OrderStatusEnum::UnTransmitted;
 }
 
-
-
-midas::OrderStatusEnum
-midas::internal::BracketTransmittedState::state() const {
+midas::OrderStatusEnum midas::internal::BracketTransmittedState::state() const {
   return OrderStatusEnum::Accepted;
 }
 
@@ -94,8 +101,6 @@ midas::internal::BracketHoldingPositionState::state() const {
   return OrderStatusEnum::WaitingForChildren;
 }
 
-midas::OrderStatusEnum
-midas::internal::BracketTerminatedState::state() const {
+midas::OrderStatusEnum midas::internal::BracketTerminatedState::state() const {
   return OrderStatusEnum::Filled;
 }
-

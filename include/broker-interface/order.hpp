@@ -170,7 +170,8 @@ public:
   virtual void setTransmitted();
   virtual void setCancelled();
   virtual void setShortLocatingHold();
-  virtual void setFilled(double avgFillPrice, double totalCommissions, double filledQuantity);
+  virtual void setFilled(double avgFillPrice, double totalCommissions,
+                         unsigned int filledQuantity);
   virtual bool inModifiableState() const;
   virtual OrderStatusEnum state() const;
 
@@ -212,11 +213,12 @@ class BracketedOrderState;
 } // namespace internal
 
 class BracketedOrder : public Order {
-  
 
 private:
   std::unique_ptr<SimpleOrder> entryOrder, stopLossOrder, profitTakerOrder;
   std::unique_ptr<internal::BracketedOrderState> phasePtr;
+
+  void handleEntryFilled();
 
 public:
   friend class midas::internal::BracketedOrderState;
@@ -236,9 +238,11 @@ public:
   virtual OrderStatusEnum state() const override;
   virtual void transmit(OrderTransmitter &) override;
   virtual void setTransmitted() override;
-  inline const SimpleOrder &getEntryOrder() const { return *entryOrder; }
-  inline const SimpleOrder &getStopOrder() const { return *stopLossOrder; }
-  inline const SimpleOrder &getProfitTakerOrder() const { return *profitTakerOrder; }
+  inline SimpleOrder &getEntryOrder() const { return *entryOrder; }
+  inline SimpleOrder &getStopOrder() const { return *stopLossOrder; }
+  inline SimpleOrder &getProfitTakerOrder() const {
+    return *profitTakerOrder;
+  }
 };
 
 /**

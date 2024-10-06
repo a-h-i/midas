@@ -31,8 +31,14 @@ void midas::Order::setShortLocatingHold() {
   status = OrderStatusEnum::ShortLocatingHold;
 }
 
-void midas::Order::setFilled(double avgFillPrice, double totalCommissions, double filledQuantity) {
+void midas::Order::setFilled(double avgFillPrice, double totalCommissions,
+                             unsigned int filledQuantity) {
   this->avgFillPrice.store(avgFillPrice, std::memory_order::release);
   this->totalCommissions.store(totalCommissions, std::memory_order::release);
   this->quantityFilled.store(filledQuantity, std::memory_order::release);
+  FillEvent event{
+      .newFilled = filledQuantity,
+      .isCompletelyFilled = filledQuantity == requestedQuantity,
+  };
+  fillHandlers.notify(*this, event);
 }
