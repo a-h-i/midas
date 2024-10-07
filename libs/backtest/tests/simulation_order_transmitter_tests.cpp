@@ -43,6 +43,21 @@ protected:
       60, 60,  79,
       69, 69,  boost::posix_time::second_clock::universal_time()};
 
+  Bar overlappingBracketLimit{
+      30, 500, 160,
+      100, 60,  100,
+      69, 69,  boost::posix_time::second_clock::universal_time()};
+
+  Bar belowBracketLimit{
+      30, 500, 105,
+      100, 100,  100,
+      69, 69,  boost::posix_time::second_clock::universal_time()};
+
+  Bar aboveBracketLimit{
+      30,  500, 200,
+      180, 190, 195,
+      69,  69,  boost::posix_time::second_clock::universal_time()};
+
   std::unique_ptr<Order> createSimpleOrder(OrderDirection direction,
                                            ExecutionType execution) {
     std::shared_ptr<logging::thread_safe_logger_t> logger =
@@ -284,7 +299,7 @@ TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderStopAbove) {
 
   auto order = createHoldingBracketedOrder(OrderDirection::BUY);
   MockFunction<void(double, double, bool)> mockCallback;
-  EXPECT_CALL(mockCallback, Call(50, _, true)).Times(0);
+  EXPECT_CALL(mockCallback, Call(_, _, true)).Times(0);
   SimulationOrderTransmitter transmitter(&aboveBracketStop,
                                          mockCallback.AsStdFunction());
   order->transmit(transmitter);
@@ -304,11 +319,47 @@ TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderStopOverlap) {
   order->transmit(transmitter);
 }
 
-TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderLimitAbove) {}
+TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderLimitAbove) {
+  std::shared_ptr<logging::thread_safe_logger_t> logger =
+      std::make_shared<logging::thread_safe_logger_t>(
+          logging::create_channel_logger("test"));
 
-TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderLimitBelow) {}
+  auto order = createHoldingBracketedOrder(OrderDirection::BUY);
+  MockFunction<void(double, double, bool)> mockCallback;
+  EXPECT_CALL(mockCallback, Call(150, _, true)).Times(1);
 
-TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderLimitOverlap) {}
+  SimulationOrderTransmitter transmitter(&aboveBracketLimit,
+                                         mockCallback.AsStdFunction());
+  order->transmit(transmitter);
+}
+
+TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderLimitBelow) {
+  std::shared_ptr<logging::thread_safe_logger_t> logger =
+      std::make_shared<logging::thread_safe_logger_t>(
+          logging::create_channel_logger("test"));
+
+  auto order = createHoldingBracketedOrder(OrderDirection::BUY);
+  MockFunction<void(double, double, bool)> mockCallback;
+  EXPECT_CALL(mockCallback, Call(_, _, true)).Times(0);
+
+  SimulationOrderTransmitter transmitter(&belowBracketLimit,
+                                         mockCallback.AsStdFunction());
+  order->transmit(transmitter);
+}
+
+TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderLimitOverlap) {
+    std::shared_ptr<logging::thread_safe_logger_t> logger =
+      std::make_shared<logging::thread_safe_logger_t>(
+          logging::create_channel_logger("test"));
+
+  auto order = createHoldingBracketedOrder(OrderDirection::BUY);
+  MockFunction<void(double, double, bool)> mockCallback;
+  EXPECT_CALL(mockCallback, Call(150, _, true)).Times(1);
+
+  SimulationOrderTransmitter transmitter(&overlappingBracketLimit,
+                                         mockCallback.AsStdFunction());
+  order->transmit(transmitter);
+}
 
 TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderEntryOverlap) {}
 
