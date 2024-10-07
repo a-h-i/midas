@@ -1,7 +1,9 @@
 #include "Contract.h"
 #include "TagValue.h"
+#include "broker-interface/subscription.hpp"
 #include "ibkr/internal/build_contracts.hpp"
 #include "ibkr/internal/client.hpp"
+#include <sstream>
 #include <vector>
 
 void ibkr::internal::Client::addSubscription(
@@ -36,11 +38,24 @@ std::size_t ibkr::internal::Client::applyToActiveSubscriptions(
   return numberProcessed;
 }
 
-static void requestHistoricalData(const Contract &contract,
-                                  const TickerId ticker,
-                                  EClientSocket *const socket) {
-  socket->reqHistoricalData(ticker, contract, "", "1 W", "30 secs", "TRADES", 0,
-                            2, false, TagValueListSPtr());
+static void
+requestHistoricalData(const Contract &contract, const TickerId ticker,
+                      EClientSocket *const socket,
+                      const midas::HistorySubscriptionStartPoint &start) {
+  std::stringstream historicalDuration;
+  historicalDuration << start.quantity;
+  switch (start.unit) {
+
+  case midas::SubscriptionDurationUnits::Years:
+    historicalDuration << " Y";
+    break;
+  case midas::SubscriptionDurationUnits::Months:
+    historicalDuration << " M";
+    break;
+  }
+  const auto durationStr = historicalDuration.str();
+  socket->reqHistoricalData(ticker, contract, "", durationStr, "30 secs",
+                            "TRADES", 0, 2, false, TagValueListSPtr());
 }
 
 static std::vector<int> requestRealtimeData(const Contract &contract,
@@ -86,11 +101,18 @@ void ibkr::internal::Client::processPendingSubscriptions() {
               connectionState.clientSocket->cancelRealTimeBars(tickerId);
             });
       } else {
-        requestHistoricalData(contract, tickerId,
-                              connectionState.clientSocket.get());
+        historicalBarSizes[tickerId] = 30;
+        requestHistoricalData(
+            contract, tickerId, connectionState.clientSocket.get(),
+            sub->historicalDuration.value_or(
+                midas::HistorySubscriptionStartPoint{
+                    .unit = midas::SubscriptionDurationUnits::Months,
+                    .quantity = 1,
+                }));
         sub->cancelListeners.add_listener(
             [this, tickerId]([[maybe_unused]] const midas::Subscription &) {
               connectionState.clientSocket->cancelHistoricalData(tickerId);
+              historicalBarSizes.erase(tickerId);
             });
       }
     }

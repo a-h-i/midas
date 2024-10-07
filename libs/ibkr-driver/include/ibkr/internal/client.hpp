@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CommonDefs.h"
 #include "EClientSocket.h"
 #include "EReader.h"
 #include "EReaderOSSignal.h"
@@ -1266,6 +1267,7 @@ private:
   std::deque<std::weak_ptr<midas::Subscription>> pendingSubscriptions;
   std::unordered_map<TickerId, std::weak_ptr<midas::Subscription>>
       activeSubscriptions;
+  std::unordered_map<TickerId, unsigned int> historicalBarSizes;
 
   void processPendingSubscriptions();
   /**
