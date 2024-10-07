@@ -7,9 +7,10 @@
 
 void ibkr::internal::Client::orderStatus(
     OrderId orderId, const std::string &status, Decimal filled,
-    Decimal remaining, double avgFillPrice, int permId, int parentId,
-    double lastFillPrice, int clientId, const std::string &whyHeld,
-    double mktCapPrice) {
+    Decimal remaining, double avgFillPrice, [[maybe_unused]] int permId,
+    [[maybe_unused]] int parentId, [[maybe_unused]] double lastFillPrice,
+    [[maybe_unused]] int clientId, [[maybe_unused]] const std::string &whyHeld,
+    [[maybe_unused]] double mktCapPrice) {
 
   DEBUG_LOG(logger) << "ORDER STATUS: OrderId " << orderId
                     << " status: " << status << " filled " << filled
@@ -29,7 +30,8 @@ void ibkr::internal::Client::openOrderEnd() {
   DEBUG_LOG(logger) << "OPEN ORDER END";
 }
 
-void ibkr::internal::Client::winError(const std::string &str, int lastError) {
+void ibkr::internal::Client::winError(const std::string &str,
+                                      [[maybe_unused]] int lastError) {
   CRITICAL_LOG(logger) << "RECEIVED WINERROR " << str;
 }
 
@@ -55,8 +57,6 @@ void ibkr::internal::Client::commissionReport(
                     << commissionReport.realizedPNL;
 }
 
-
 void ibkr::internal::Client::completedOrdersEnd() {
   DEBUG_LOG(logger) << "Completed order end";
 }
-

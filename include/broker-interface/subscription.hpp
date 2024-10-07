@@ -1,13 +1,10 @@
 #pragma once
 #include "broker-interface/instruments.hpp"
 #include "data/bar.hpp"
+#include "exceptions/subscription_error.hpp"
 #include "observers/observers.hpp"
 #include <functional>
 namespace midas {
-/**
- * TODO: Implement
- */
-class SubscriptionError;
 class Subscription;
 typedef std::function<void(const Subscription &)> sub_cancel_listener_t;
 typedef std::function<void(const Subscription &)> sub_end_listener_t;

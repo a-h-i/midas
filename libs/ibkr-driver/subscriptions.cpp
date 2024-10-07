@@ -68,7 +68,7 @@ static std::vector<int> requestRealtimeData(const Contract &contract,
   std::vector<int> requestIds;
   const int requestOffset = tickerId << 8;
   if (includeTickData) {
-    for (int i = 0; i < tickTypes.size(); i++) {
+    for (unsigned int i = 0; i < tickTypes.size(); i++) {
       const int reqId = requestOffset + i;
       requestIds.push_back(reqId);
       socket->reqTickByTickData(reqId, contract, tickTypes[i], 0, false);
