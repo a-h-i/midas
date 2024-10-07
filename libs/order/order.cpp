@@ -40,6 +40,9 @@ void midas::Order::setFilled(double avgFillPrice, double totalCommissions,
       .newFilled = filledQuantity,
       .isCompletelyFilled = filledQuantity == requestedQuantity,
   };
+  if (event.isCompletelyFilled) {
+    setState(OrderStatusEnum::Filled);
+  }
   fillHandlers.notify(*this, event);
 }
 
@@ -52,3 +55,4 @@ void midas::Order::setState(OrderStatusEnum newState) {
   };
   statusObservers.notify(*this, event);
 }
+

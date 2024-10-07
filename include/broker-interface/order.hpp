@@ -4,6 +4,7 @@
 #include "observers/observers.hpp"
 #include <atomic>
 #include <memory>
+#include <mutex>
 
 namespace midas {
 
@@ -174,8 +175,12 @@ public:
   virtual void setFilled(double avgFillPrice, double totalCommissions,
                          unsigned int filledQuantity);
   virtual bool inModifiableState() const;
+  inline bool isDone() const {
+    auto current = state();
+    return current == OrderStatusEnum::Accepted ||
+           current == OrderStatusEnum::Cancelled;
+  }
   virtual OrderStatusEnum state() const;
-  
 
   virtual decltype(statusObservers)::ListenerIdType
   addStatusChangeListener(StatusChangeHandler handler) {
@@ -219,8 +224,11 @@ class BracketedOrder : public Order {
 private:
   std::unique_ptr<SimpleOrder> entryOrder, stopLossOrder, profitTakerOrder;
   std::unique_ptr<internal::BracketedOrderState> phasePtr;
+  std::recursive_mutex phaseMutex;
 
-  void handleEntryFilled();
+  void handleEntryFilled(FillEvent event);
+  void handleStopLossFilled(FillEvent event);
+  void handleProfitTakerFilled(FillEvent event);
 
 public:
   friend class midas::internal::BracketedOrderState;
@@ -243,6 +251,8 @@ public:
   inline SimpleOrder &getEntryOrder() const { return *entryOrder; }
   inline SimpleOrder &getStopOrder() const { return *stopLossOrder; }
   inline SimpleOrder &getProfitTakerOrder() const { return *profitTakerOrder; }
+  virtual void setFilled(double avgFillPrice, double totalCommissions,
+                         unsigned int filledQuantity) override;
 };
 
 /**

@@ -1,6 +1,8 @@
 #include "backtest_order_manager.hpp"
 #include "broker-interface/order.hpp"
 #include "data/bar.hpp"
+#include <algorithm>
+#include <memory>
 
 bool midas::backtest::BacktestOrderManager::hasActiveOrders() const {
   return !activeOrdersList.empty();
@@ -13,9 +15,24 @@ void midas::backtest::BacktestOrderManager::transmit(
 }
 
 void midas::backtest::BacktestOrderManager::simulate(const midas::Bar *bar) {
-  // First we trigger all stops that reached their stop price
 
-  // now we trigger profit takers that
+  std::ranges::for_each(
+      activeOrdersList, [&bar](std::shared_ptr<Order> &orderPtr) {
+        SimulationOrderTransmitter transmitter(
+            bar, [&orderPtr](double price, double commission,
+                             [[maybe_unused]] bool isFinished) {
+              orderPtr->setFilled(price, commission,
+                                  orderPtr->requestedQuantity);
+            });
+        orderPtr->transmit(transmitter);
+      });
+  for (auto it = activeOrdersList.begin(); it != activeOrdersList.end(); it++) {
+    if (it->get()->isDone()) {
+      auto copy = std::prev(it);
+      completedOrdersList.splice(completedOrdersList.end(), activeOrdersList, it);
+      it = copy;
+    }
+  }
 }
 
 static bool isTriggered(midas::OrderDirection direction, double targetPrice,

@@ -2,7 +2,9 @@
 #include "broker-interface/order.hpp"
 #include "exceptions/order_parameter_error.hpp"
 #include "exceptions/order_state_error.hpp"
+#include "logging/logging.hpp"
 #include <memory>
+#include <mutex>
 
 midas::BracketedOrder::BracketedOrder(
     unsigned int quantity, OrderDirection direction, InstrumentEnum instrument,
@@ -40,13 +42,31 @@ midas::BracketedOrder::BracketedOrder(
   phasePtr = std::make_unique<internal::BracketUntransmittedState>(this);
   entryOrder->addFillEventListener(
       [this]([[maybe_unused]] Order &entry, FillEvent event) {
-        if (event.isCompletelyFilled) {
-          handleEntryFilled();
-        }
+        handleEntryFilled(event);
+      });
+  stopLossOrder->addFillEventListener(
+      [this]([[maybe_unused]] Order &stop, FillEvent event) {
+        handleStopLossFilled(event);
       });
 }
 
-void midas::BracketedOrder::handleEntryFilled() {
+void midas::BracketedOrder::handleStopLossFilled(FillEvent event) {
+  std::scoped_lock phaseLock(phaseMutex);
+  if (event.isCompletelyFilled) {
+    phasePtr = std::make_unique<internal::BracketTerminatedState>(this);
+  }
+}
+
+void midas::BracketedOrder::handleProfitTakerFilled(FillEvent event) {
+  std::scoped_lock phaseLock(phaseMutex);
+  if (event.isCompletelyFilled) {
+    phasePtr = std::make_unique<internal::BracketTerminatedState>(this);
+  }
+}
+
+void midas::BracketedOrder::handleEntryFilled(
+    [[maybe_unused]] FillEvent event) {
+  std::scoped_lock phaseLock(phaseMutex);
   phasePtr = std::make_unique<internal::BracketHoldingPositionState>(this);
 }
 
@@ -62,6 +82,7 @@ void midas::BracketedOrder::transmit(midas::OrderTransmitter &transmitter) {
 }
 
 void midas::BracketedOrder::setTransmitted() {
+  std::scoped_lock phaseLock(phaseMutex);
   if (!phasePtr->canTransmit()) {
     CRITICAL_LOG(*logger) << "Tried to set transmitted while order status was "
                           << state();
@@ -73,6 +94,13 @@ void midas::BracketedOrder::setTransmitted() {
 }
 
 midas::BracketedOrder::~BracketedOrder() = default;
+void midas::BracketedOrder::setFilled(
+    [[maybe_unused]] double avgFillPrice,
+    [[maybe_unused]] double totalCommissions,
+    [[maybe_unused]] unsigned int filledQuantity) {
+  // no-op on bracketed order
+  WARNING_LOG(*logger) << "setFilled called directly on bracketed order";
+}
 
 bool midas::internal::BracketUntransmittedState::canTransmit() { return true; }
 
