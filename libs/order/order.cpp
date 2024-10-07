@@ -13,7 +13,7 @@ bool midas::Order::inModifiableState() const {
   return state() == OrderStatusEnum::UnTransmitted;
 }
 
-midas::OrderStatusEnum midas::Order::state() const { return status; }
+midas::OrderStatusEnum midas::Order::state() const { return status.load(); }
 
 void midas::Order::setTransmitted() {
   if (status != OrderStatusEnum::UnTransmitted) {
@@ -41,4 +41,14 @@ void midas::Order::setFilled(double avgFillPrice, double totalCommissions,
       .isCompletelyFilled = filledQuantity == requestedQuantity,
   };
   fillHandlers.notify(*this, event);
+}
+
+void midas::Order::setState(OrderStatusEnum newState) {
+  auto oldState = state();
+  status.store(newState);
+  StatusChangeEvent event{
+      .oldStatus = oldState,
+      .newStatus = newState,
+  };
+  statusObservers.notify(*this, event);
 }

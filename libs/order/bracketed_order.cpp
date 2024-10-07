@@ -68,7 +68,7 @@ void midas::BracketedOrder::setTransmitted() {
     throw OrderStateError(
         "Can only enter transmitted state from untransmitted state");
   }
-  status = OrderStatusEnum::Accepted;
+  setState(OrderStatusEnum::Accepted);
   phasePtr = std::make_unique<internal::BracketTransmittedState>(this);
 }
 

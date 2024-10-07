@@ -148,12 +148,13 @@ private:
   std::atomic<double> totalCommissions{0};
   std::atomic<unsigned int> quantityFilled{0};
   std::atomic<double> avgFillPrice{0};
+  std::atomic<OrderStatusEnum> status{OrderStatusEnum::UnTransmitted};
 
 protected:
-  OrderStatusEnum status{OrderStatusEnum::UnTransmitted};
   std::shared_ptr<logging::thread_safe_logger_t> logger;
   EventSubject<StatusChangeHandler> statusObservers;
   EventSubject<FillEventHandler> fillHandlers;
+  virtual void setState(OrderStatusEnum newState);
 
 public:
   /**
@@ -174,6 +175,7 @@ public:
                          unsigned int filledQuantity);
   virtual bool inModifiableState() const;
   virtual OrderStatusEnum state() const;
+  
 
   virtual decltype(statusObservers)::ListenerIdType
   addStatusChangeListener(StatusChangeHandler handler) {
@@ -240,9 +242,7 @@ public:
   virtual void setTransmitted() override;
   inline SimpleOrder &getEntryOrder() const { return *entryOrder; }
   inline SimpleOrder &getStopOrder() const { return *stopLossOrder; }
-  inline SimpleOrder &getProfitTakerOrder() const {
-    return *profitTakerOrder;
-  }
+  inline SimpleOrder &getProfitTakerOrder() const { return *profitTakerOrder; }
 };
 
 /**
