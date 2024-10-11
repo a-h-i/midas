@@ -8,7 +8,7 @@
 
 namespace midas::backtest {
 
-class SimulationOrderTransmitter : public midas::OrderTransmitter {
+class SimulationOrderTransmitter : public midas::OrderVisitor {
   const Bar *bar;
   std::function<void(double fillPrice, double commission, bool isFinished)> triggerCallback;
 
@@ -16,8 +16,8 @@ public:
   SimulationOrderTransmitter(const Bar *bar, std::function<void(double fillPrice, double commission, bool isFinished)> triggerCallback)
       : bar(bar), triggerCallback(triggerCallback) {}
   
-  virtual void transmit(SimpleOrder &) override;
-  virtual void transmit(BracketedOrder &) override;
+  virtual void visit(SimpleOrder &) override;
+  virtual void visit(BracketedOrder &) override;
 };
 
 class BacktestOrderManager : public midas::OrderManager {
@@ -33,6 +33,7 @@ public:
    * i.e stop orders triggered, limit orders triggered, etc.
    */
   void simulate(const midas::Bar *);
+  virtual std::generator<Order *> getFilledOrders() override;
 };
 
 } // namespace midas::backtest

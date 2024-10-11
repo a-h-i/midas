@@ -56,3 +56,6 @@ void midas::Order::setState(OrderStatusEnum newState) {
   statusObservers.notify(*this, event);
 }
 
+double midas::Order::getAvgFillPrice() { return avgFillPrice.load(); }
+
+unsigned int midas::Order::getFilledQuantity() { return quantityFilled.load(); }

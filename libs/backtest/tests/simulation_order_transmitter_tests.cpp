@@ -113,7 +113,7 @@ TEST_F(SimulationOrderTransmitterTest, SimpleBuyStopOrderBelow) {
   SimulationOrderTransmitter transmitter(&belowTriggerPriceBar,
                                          mockCallback.AsStdFunction());
 
-  buyStopOrder->transmit(transmitter);
+  buyStopOrder->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, SimpleBuyStopOrderOverlap) {
@@ -129,7 +129,7 @@ TEST_F(SimulationOrderTransmitterTest, SimpleBuyStopOrderOverlap) {
   SimulationOrderTransmitter transmitter(&overlappingTriggerPriceBar,
                                          mockCallback.AsStdFunction());
 
-  buyStopOrder->transmit(transmitter);
+  buyStopOrder->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, SimpleBuyStopOrderAbove) {
@@ -145,7 +145,7 @@ TEST_F(SimulationOrderTransmitterTest, SimpleBuyStopOrderAbove) {
   SimulationOrderTransmitter transmitter(&aboveTriggerPriceBar,
                                          mockCallback.AsStdFunction());
 
-  buyStopOrder->transmit(transmitter);
+  buyStopOrder->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, SimpleSellStopOrderAbove) {
@@ -156,7 +156,7 @@ TEST_F(SimulationOrderTransmitterTest, SimpleSellStopOrderAbove) {
   SimulationOrderTransmitter transmitter(&aboveTriggerPriceBar,
                                          mockCallback.AsStdFunction());
 
-  sellStopOrder->transmit(transmitter);
+  sellStopOrder->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, SimpleSellStopOrderOverlap) {
@@ -167,7 +167,7 @@ TEST_F(SimulationOrderTransmitterTest, SimpleSellStopOrderOverlap) {
   SimulationOrderTransmitter transmitter(&overlappingTriggerPriceBar,
                                          mockCallback.AsStdFunction());
 
-  sellStopOrder->transmit(transmitter);
+  sellStopOrder->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, SimpleSellStopOrderBelow) {
@@ -178,7 +178,7 @@ TEST_F(SimulationOrderTransmitterTest, SimpleSellStopOrderBelow) {
   SimulationOrderTransmitter transmitter(&belowTriggerPriceBar,
                                          mockCallback.AsStdFunction());
 
-  sellStopOrder->transmit(transmitter);
+  sellStopOrder->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, SimpleLimitBuyOrderAbove) {
@@ -188,7 +188,7 @@ TEST_F(SimulationOrderTransmitterTest, SimpleLimitBuyOrderAbove) {
   EXPECT_CALL(mockCallback, Call(_, _, _)).Times(0);
   SimulationOrderTransmitter transmitter(&aboveTriggerPriceBar,
                                          mockCallback.AsStdFunction());
-  order->transmit(transmitter);
+  order->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, SimpleLimitBuyOrderOverlap) {
@@ -198,7 +198,7 @@ TEST_F(SimulationOrderTransmitterTest, SimpleLimitBuyOrderOverlap) {
   EXPECT_CALL(mockCallback, Call(100, _, true)).Times(1);
   SimulationOrderTransmitter transmitter(&overlappingTriggerPriceBar,
                                          mockCallback.AsStdFunction());
-  order->transmit(transmitter);
+  order->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, SimpleLimitBuyOrderBelow) {
@@ -208,7 +208,7 @@ TEST_F(SimulationOrderTransmitterTest, SimpleLimitBuyOrderBelow) {
   EXPECT_CALL(mockCallback, Call(100, _, true)).Times(1);
   SimulationOrderTransmitter transmitter(&belowTriggerPriceBar,
                                          mockCallback.AsStdFunction());
-  order->transmit(transmitter);
+  order->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, SimpleLimitSellOrderAbove) {
@@ -218,7 +218,7 @@ TEST_F(SimulationOrderTransmitterTest, SimpleLimitSellOrderAbove) {
   EXPECT_CALL(mockCallback, Call(100, _, true)).Times(1);
   SimulationOrderTransmitter transmitter(&aboveTriggerPriceBar,
                                          mockCallback.AsStdFunction());
-  order->transmit(transmitter);
+  order->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, SimpleLimitSellOrderBelow) {
@@ -229,7 +229,7 @@ TEST_F(SimulationOrderTransmitterTest, SimpleLimitSellOrderBelow) {
   EXPECT_CALL(mockCallback, Call(_, _, _)).Times(0);
   SimulationOrderTransmitter transmitter(&belowTriggerPriceBar,
                                          mockCallback.AsStdFunction());
-  order->transmit(transmitter);
+  order->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, SimpleLimitSellOrderOverlap) {
@@ -240,7 +240,7 @@ TEST_F(SimulationOrderTransmitterTest, SimpleLimitSellOrderOverlap) {
   EXPECT_CALL(mockCallback, Call(100, _, true)).Times(1);
   SimulationOrderTransmitter transmitter(&overlappingTriggerPriceBar,
                                          mockCallback.AsStdFunction());
-  order->transmit(transmitter);
+  order->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderEntryOverlap) {
@@ -251,7 +251,7 @@ TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderEntryOverlap) {
   // We are buying, meaning we enter the position if the price is below or equal
   SimulationOrderTransmitter transmitter(&overlappingTriggerPriceBar,
                                          mockCallback.AsStdFunction());
-  order->transmit(transmitter);
+  order->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderEntryBelow) {
@@ -262,7 +262,7 @@ TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderEntryBelow) {
   // We are buying, meaning we enter the position if the price is below or equal
   SimulationOrderTransmitter transmitter(&belowTriggerPriceBar,
                                          mockCallback.AsStdFunction());
-  order->transmit(transmitter);
+  order->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderEntryAbove) {
@@ -273,7 +273,7 @@ TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderEntryAbove) {
   // We are buying, meaning we enter the position if the price is below or equal
   SimulationOrderTransmitter transmitter(&aboveTriggerPriceBar,
                                          mockCallback.AsStdFunction());
-  order->transmit(transmitter);
+  order->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderStopBelow) {
@@ -283,7 +283,7 @@ TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderStopBelow) {
   EXPECT_CALL(mockCallback, Call(50, _, true)).Times(1);
   SimulationOrderTransmitter transmitter(&belowBracketStop,
                                          mockCallback.AsStdFunction());
-  order->transmit(transmitter);
+  order->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderStopAbove) {
@@ -293,7 +293,7 @@ TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderStopAbove) {
   EXPECT_CALL(mockCallback, Call(_, _, _)).Times(0);
   SimulationOrderTransmitter transmitter(&aboveBracketStop,
                                          mockCallback.AsStdFunction());
-  order->transmit(transmitter);
+  order->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderStopOverlap) {
@@ -304,7 +304,7 @@ TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderStopOverlap) {
 
   SimulationOrderTransmitter transmitter(&overlappingBracketStop,
                                          mockCallback.AsStdFunction());
-  order->transmit(transmitter);
+  order->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderLimitAbove) {
@@ -315,7 +315,7 @@ TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderLimitAbove) {
 
   SimulationOrderTransmitter transmitter(&aboveBracketLimit,
                                          mockCallback.AsStdFunction());
-  order->transmit(transmitter);
+  order->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderLimitBelow) {
@@ -326,7 +326,7 @@ TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderLimitBelow) {
 
   SimulationOrderTransmitter transmitter(&belowBracketLimit,
                                          mockCallback.AsStdFunction());
-  order->transmit(transmitter);
+  order->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderLimitOverlap) {
@@ -337,7 +337,7 @@ TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderLimitOverlap) {
 
   SimulationOrderTransmitter transmitter(&overlappingBracketLimit,
                                          mockCallback.AsStdFunction());
-  order->transmit(transmitter);
+  order->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderEntryOverlap) {
@@ -346,7 +346,7 @@ TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderEntryOverlap) {
   EXPECT_CALL(mockCallback, Call(100, _, false)).Times(1);
   SimulationOrderTransmitter transmitter(&overlappingTriggerPriceBar,
                                          mockCallback.AsStdFunction());
-  order->transmit(transmitter);
+  order->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderEntryBelow) {
@@ -355,7 +355,7 @@ TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderEntryBelow) {
   EXPECT_CALL(mockCallback, Call(_, _, _)).Times(0);
   SimulationOrderTransmitter transmitter(&belowTriggerPriceBar,
                                          mockCallback.AsStdFunction());
-  order->transmit(transmitter);
+  order->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderEntryAbove) {
@@ -364,7 +364,7 @@ TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderEntryAbove) {
   EXPECT_CALL(mockCallback, Call(100, _, false)).Times(1);
   SimulationOrderTransmitter transmitter(&aboveTriggerPriceBar,
                                          mockCallback.AsStdFunction());
-  order->transmit(transmitter);
+  order->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderStopBelow) {
@@ -373,7 +373,7 @@ TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderStopBelow) {
   EXPECT_CALL(mockCallback, Call(_, _, _)).Times(0);
   SimulationOrderTransmitter transmitter(&belowBracketLimit,
                                          mockCallback.AsStdFunction());
-  order->transmit(transmitter);
+  order->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderStopAbove) {
@@ -382,7 +382,7 @@ TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderStopAbove) {
   EXPECT_CALL(mockCallback, Call(150, _, true)).Times(1);
   SimulationOrderTransmitter transmitter(&aboveBracketLimit,
                                          mockCallback.AsStdFunction());
-  order->transmit(transmitter);
+  order->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderStopOverlap) {
@@ -391,7 +391,7 @@ TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderStopOverlap) {
   EXPECT_CALL(mockCallback, Call(150, _, true)).Times(1);
   SimulationOrderTransmitter transmitter(&overlappingBracketLimit,
                                          mockCallback.AsStdFunction());
-  order->transmit(transmitter);
+  order->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderLimitBelow) {
@@ -400,7 +400,7 @@ TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderLimitBelow) {
   EXPECT_CALL(mockCallback, Call(50, _, true)).Times(1);
   SimulationOrderTransmitter transmitter(&belowBracketStop,
                                          mockCallback.AsStdFunction());
-  order->transmit(transmitter);
+  order->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderLimitAbove) {
@@ -409,7 +409,7 @@ TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderLimitAbove) {
   EXPECT_CALL(mockCallback, Call(_, _, _)).Times(0);
   SimulationOrderTransmitter transmitter(&aboveBracketStop,
                                          mockCallback.AsStdFunction());
-  order->transmit(transmitter);
+  order->visit(transmitter);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderLimitOverlap) {
@@ -418,5 +418,5 @@ TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderLimitOverlap) {
   EXPECT_CALL(mockCallback, Call(50, _, true)).Times(1);
   SimulationOrderTransmitter transmitter(&overlappingBracketStop,
                                          mockCallback.AsStdFunction());
-  order->transmit(transmitter);
+  order->visit(transmitter);
 }

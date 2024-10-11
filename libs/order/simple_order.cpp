@@ -7,6 +7,6 @@ midas::SimpleOrder::SimpleOrder(
     : Order(requestedQuantity, direction, instrument, type, logger),
       targetPrice(targetPrice) {}
 
-void midas::SimpleOrder::transmit(midas::OrderTransmitter &transmitter) {
-  transmitter.transmit(*this);
+void midas::SimpleOrder::visit(midas::OrderVisitor &transmitter) {
+  transmitter.visit(*this);
 }

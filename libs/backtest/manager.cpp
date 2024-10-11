@@ -24,12 +24,13 @@ void midas::backtest::BacktestOrderManager::simulate(const midas::Bar *bar) {
               orderPtr->setFilled(price, commission,
                                   orderPtr->requestedQuantity);
             });
-        orderPtr->transmit(transmitter);
+        orderPtr->visit(transmitter);
       });
   for (auto it = activeOrdersList.begin(); it != activeOrdersList.end(); it++) {
     if (it->get()->isDone()) {
       auto copy = std::prev(it);
-      completedOrdersList.splice(completedOrdersList.end(), activeOrdersList, it);
+      completedOrdersList.splice(completedOrdersList.end(), activeOrdersList,
+                                 it);
       it = copy;
     }
   }
@@ -55,14 +56,14 @@ static bool transmitHelper(const midas::SimpleOrder &order,
   return isTriggered(direction, order.targetPrice, bar);
 }
 
-void midas::backtest::SimulationOrderTransmitter::transmit(
+void midas::backtest::SimulationOrderTransmitter::visit(
     midas::SimpleOrder &order) {
   if (transmitHelper(order, bar)) {
     triggerCallback(order.targetPrice, 0.25 * order.requestedQuantity, true);
   }
 }
 
-void midas::backtest::SimulationOrderTransmitter::transmit(
+void midas::backtest::SimulationOrderTransmitter::visit(
     midas::BracketedOrder &order) {
   // first check if parent has not executed
   if (order.state() == OrderStatusEnum::Accepted &&
@@ -79,5 +80,12 @@ void midas::backtest::SimulationOrderTransmitter::transmit(
                       0.25 * order.getProfitTakerOrder().requestedQuantity,
                       true);
     }
+  }
+}
+
+std::generator<midas::Order *>
+midas::backtest::BacktestOrderManager::getFilledOrders() {
+  for (auto &orderPtr : completedOrdersList) {
+    co_yield orderPtr.get();
   }
 }

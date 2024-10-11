@@ -1,5 +1,6 @@
 #include "broker-interface/broker.hpp"
 #include "broker-interface/instruments.hpp"
+#include "broker-interface/order_summary.hpp"
 #include "broker-interface/subscription.hpp"
 #include "data/data_stream.hpp"
 #include "trader/trader.hpp"
@@ -8,11 +9,13 @@
 
 namespace midas::backtest {
 
-struct BacktestResult {};
+struct BacktestResult {
+  TradeSummary summary;
+};
 
 struct BacktestInterval {
   /**
-  * Intervals are from duration to now
+   * Intervals are from duration to now
    */
   HistorySubscriptionStartPoint duration;
 };

@@ -77,8 +77,8 @@ midas::OrderStatusEnum midas::BracketedOrder::state() const {
   return phasePtr->state();
 }
 
-void midas::BracketedOrder::transmit(midas::OrderTransmitter &transmitter) {
-  transmitter.transmit(*this);
+void midas::BracketedOrder::visit(midas::OrderVisitor &transmitter) {
+  transmitter.visit(*this);
 }
 
 void midas::BracketedOrder::setTransmitted() {

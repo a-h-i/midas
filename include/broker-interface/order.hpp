@@ -5,6 +5,7 @@
 #include <atomic>
 #include <memory>
 #include <mutex>
+#include <generator>
 
 namespace midas {
 
@@ -111,10 +112,10 @@ class BracketedOrder;
  * resorting to dynamic casts and if statements as that is very ugly in OO
  * design. There is of course a degree of opinion here.
  */
-struct OrderTransmitter {
-  virtual ~OrderTransmitter() = default;
-  virtual void transmit(SimpleOrder &) = 0;
-  virtual void transmit(BracketedOrder &) = 0;
+struct OrderVisitor {
+  virtual ~OrderVisitor() = default;
+  virtual void visit(SimpleOrder &) = 0;
+  virtual void visit(BracketedOrder &) = 0;
 };
 
 /**
@@ -168,7 +169,7 @@ public:
   /**
    * visitor pattern
    */
-  virtual void transmit(OrderTransmitter &) = 0;
+  virtual void visit(OrderVisitor &) = 0;
   virtual void setTransmitted();
   virtual void setCancelled();
   virtual void setShortLocatingHold();
@@ -177,7 +178,7 @@ public:
   virtual bool inModifiableState() const;
   inline bool isDone() const {
     auto current = state();
-    return current == OrderStatusEnum::Accepted ||
+    return current == OrderStatusEnum::Filled ||
            current == OrderStatusEnum::Cancelled;
   }
   virtual OrderStatusEnum state() const;
@@ -199,6 +200,11 @@ public:
   removeFillEventListener(decltype(fillHandlers)::ListenerIdType id) {
     fillHandlers.remove_listener(id);
   }
+  /**
+    * Only valid if order in filled state.
+   */
+  virtual double getAvgFillPrice();
+  virtual unsigned int getFilledQuantity();
 };
 
 /**
@@ -212,7 +218,7 @@ public:
               InstrumentEnum instrument, ExecutionType type,
               std::shared_ptr<logging::thread_safe_logger_t> logger,
               double targetPrice);
-  virtual void transmit(OrderTransmitter &) override;
+  virtual void visit(OrderVisitor &) override;
 };
 
 namespace internal {
@@ -246,7 +252,7 @@ public:
   ~BracketedOrder();
   virtual bool inModifiableState() const override;
   virtual OrderStatusEnum state() const override;
-  virtual void transmit(OrderTransmitter &) override;
+  virtual void visit(OrderVisitor &) override;
   virtual void setTransmitted() override;
   inline SimpleOrder &getEntryOrder() const { return *entryOrder; }
   inline SimpleOrder &getStopOrder() const { return *stopLossOrder; }
@@ -264,5 +270,6 @@ public:
   virtual ~OrderManager() = default;
   virtual void transmit(std::shared_ptr<Order>) = 0;
   virtual bool hasActiveOrders() const = 0;
+  virtual std::generator<Order *> getFilledOrders() = 0;
 };
 } // namespace midas

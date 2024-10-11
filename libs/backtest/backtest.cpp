@@ -2,6 +2,7 @@
 #include "backtest_order_manager.hpp"
 #include "broker-interface/broker.hpp"
 #include "broker-interface/instruments.hpp"
+#include "broker-interface/order_summary.hpp"
 #include "broker-interface/subscription.hpp"
 #include "data/bar.hpp"
 #include "data/data_stream.hpp"
@@ -15,7 +16,8 @@ using namespace std::chrono_literals;
 
 static std::unique_ptr<midas::DataStream>
 loadHistoricalData(unsigned int barSize, midas::InstrumentEnum instrument,
-                   midas::Broker &broker, const midas::HistorySubscriptionStartPoint &duration) {
+                   midas::Broker &broker,
+                   const midas::HistorySubscriptionStartPoint &duration) {
 
   std::unique_ptr<midas::DataStream> historicalData(
       new midas::DataStream(barSize));
@@ -67,16 +69,29 @@ midas::backtest::BacktestResult midas::backtest::performBacktest(
         historicalData->opens[barIndex], historicalData->closes[barIndex],
         historicalData->waps[barIndex], historicalData->volumes[barIndex],
         historicalData->timestamps[barIndex]);
-    
+
     if (orderManager->hasActiveOrders()) {
+      // we only decide on new orders if we don't have current ones.
+      // This is a limitation that should be eventually removed
       orderManager->simulate(&bar);
-      // we don't want to process trades and enter new trades on the same candle.
+      // we don't want to process trades and enter new trades on the same
+      // candle.
       barBuffer.push_back(bar);
     } else {
-      realtimeSimStream->addBars(barBuffer.begin(), barBuffer.end());
+      realtimeSimStream->addBars(
+          barBuffer.begin(),
+          barBuffer.end()); // simulate broker sending data events
+      realtimeSimStream->waitForData(500ms); // have the stream process the data
       barBuffer.clear();
       traderPtr->decide();
     }
-
   }
+  OrderSummaryTracker summaryTracker;
+
+  for (Order *orderPtr : orderManager->getFilledOrders()) {
+    summaryTracker.addToSummary(orderPtr);
+  }
+
+  BacktestResult result{.summary = summaryTracker.summary()};
+  return result;
 }
