@@ -1,11 +1,13 @@
 #pragma once
 #include <boost/date_time/posix_time/ptime.hpp>
-#include <boost/date_time/posix_time/time_parsers.hpp>
 #include <boost/date_time/posix_time/time_formatters.hpp>
+#include <boost/date_time/posix_time/time_parsers.hpp>
 #include <ostream>
-#include <ranges>
+#include <string>
 
 namespace midas {
+struct Bar;
+Bar operator>>(const std::string &line, Bar &bar);
 struct Bar {
   Bar() = default;
   Bar(unsigned int barSizeSeconds, unsigned int tradeCount, double high,
@@ -21,30 +23,13 @@ struct Bar {
   template <typename CharT, typename TraitsT>
   friend std::basic_ostream<CharT, TraitsT> &
   operator<<(std::basic_ostream<CharT, TraitsT> &stream, const Bar &bar) {
-    stream << boost::posix_time::to_iso_extended_string(bar.utcTime)
-           << "," << bar.high << "," << bar.open << ","
-           << bar.close << "," << bar.low << ","
-           << bar.volume << "," << bar.tradeCount
-           << "," << bar.wap;
+    stream << boost::posix_time::to_iso_extended_string(bar.utcTime) << ","
+           << bar.high << "," << bar.open << "," << bar.close << "," << bar.low
+           << "," << bar.volume << "," << bar.tradeCount << "," << bar.wap
+           << "," << bar.barSizeSeconds;
     return stream;
   }
 
-  
-  friend midas::Bar
-  operator>>(const std::string &line, Bar &bar) {
-    auto splitColumns = std::ranges::split_view(line, std::string(","));
-    std::vector<std::string> columns;
-    for (auto column : splitColumns) {
-      columns.emplace_back(std::string_view(column));
-    }
-    bar = Bar(30, std::stoi(columns[6]), std::stod(columns[1]),
-                   std::stod(columns[4]), std::stod(columns[2]),
-                   std::stod(columns[3]), std::stod(columns[7]),
-                   std::stod(columns[5]),
-                   boost::posix_time::from_iso_extended_string(columns[0])
-
-    );
-    return bar;
-  }
+  friend midas::Bar midas::operator>>(const std::string &line, Bar &bar);
 };
 } // namespace midas

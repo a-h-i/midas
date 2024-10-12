@@ -4,6 +4,7 @@
 #include "broker-interface/instruments.hpp"
 #include "broker-interface/order.hpp"
 #include "data/data_stream.hpp"
+#include "data/export.hpp"
 #include "ibkr-driver/ibkr.hpp"
 #include "logging/logging.hpp"
 #include "midas/version.h"
@@ -51,12 +52,11 @@ static void backtestMomentumTrader() {
   std::jthread brokerProcessor([&broker, &driverWorkerTermination] {
     while (!driverWorkerTermination.load()) {
       broker->processCycle();
-      std::this_thread::sleep_for(100ms);
     }
   });
   backtest::BacktestResult results =
       backtest::performBacktest(midas::InstrumentEnum::MicroNasdaqFutures,
-                                2_months, traderFactory, *broker);
+                                1_months, traderFactory, *broker);
   std::cout << "Trade Summary"
             << "\nnumber  entry orders: " << results.summary.numberOfEntryOrders
             << "\nnumber of stop loss orders triggered "
@@ -66,11 +66,11 @@ static void backtestMomentumTrader() {
             << "\nsuccess ratio " << results.summary.successRatio
             << "\nmax down turn " << results.summary.maxDownTurn
             << "\nmax up turn " << results.summary.maxUpTurn
-            << "\nending balance " << results.summary.endingBalance;
+            << "\nending balance " << results.summary.endingBalance << std::endl;
   std::ofstream sourceCsv("source.csv", std::ios::out),
       downSampledCsv("down_sampled.csv", std::ios::out);
-  sourceCsv << results.originalStream;
-  downSampledCsv << results.traderDownSampledStream;
+  sourceCsv << *results.originalStream;
+  downSampledCsv << *results.traderDownSampledStream;
   driverWorkerTermination.store(true);
 }
 

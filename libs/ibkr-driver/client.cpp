@@ -19,13 +19,12 @@ bool ::ibkr::internal::Client::isConnected() const {
 }
 
 bool ibkr::internal::Client::processCycle() {
+  connectionState.readerSignal.waitForSignal();
   connectionState.reader->processMsgs();
-  // INFO_LOG(logger) << "State : " << connectionState;
 
   if (!connectionState.ready()) {
     return false;
   }
   processPendingSubscriptions();
-  // TODO: cleanup subscriptions
   return false;
 }

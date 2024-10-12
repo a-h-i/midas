@@ -18,6 +18,16 @@ enum class SubscriptionDurationUnits {
   Months,
 };
 
+inline std::string to_string(SubscriptionDurationUnits unit) {
+  switch (unit) {
+  case SubscriptionDurationUnits::Years:
+    return "Years";
+  case SubscriptionDurationUnits::Months:
+    return "Months";
+  }
+  
+}
+
 struct HistorySubscriptionStartPoint {
   SubscriptionDurationUnits unit;
   unsigned int quantity;

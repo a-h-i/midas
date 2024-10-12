@@ -1,6 +1,7 @@
 #include "Contract.h"
 #include "TagValue.h"
 #include "broker-interface/subscription.hpp"
+#include "ibkr-driver/ibkr.hpp"
 #include "ibkr/internal/build_contracts.hpp"
 #include "ibkr/internal/client.hpp"
 #include <sstream>
@@ -10,6 +11,11 @@ void ibkr::internal::Client::addSubscription(
     std::weak_ptr<midas::Subscription> subscription) {
   std::scoped_lock lock(subscriptionsMutex);
   pendingSubscriptions.push_back(subscription);
+}
+
+void ibkr::internal::Client::removeActiveSubscription(const TickerId ticker) {
+  std::scoped_lock subscriptionManagementLock(subscriptionsMutex);
+  activeSubscriptions.erase(ticker);
 }
 
 std::size_t ibkr::internal::Client::applyToActiveSubscriptions(
@@ -30,6 +36,8 @@ std::size_t ibkr::internal::Client::applyToActiveSubscriptions(
       activeSubscriptions.erase(ticker);
     }
   } else {
+    // While a weak pointer may not have a reference anymore. It should still
+    // exist in the map if this function is called
     ERROR_LOG(logger)
         << "Attempted to apply function to active subscriptions for ticker "
         << ticker << " but there are no associated subscriptions";
@@ -51,6 +59,11 @@ historicalBarSize(const midas::HistorySubscriptionStartPoint &start) {
   } else {
     return {.settingString = "30 secs", .sizeSeconds = 30};
   }
+}
+
+unsigned int ibkr::Driver::estimateHistoricalBarSizeSeconds(
+    const midas::HistorySubscriptionStartPoint &duration) const {
+  return historicalBarSize(duration).sizeSeconds;
 }
 
 static void requestHistoricalData(
@@ -142,6 +155,7 @@ void ibkr::internal::Client::processPendingSubscriptions() {
 void ibkr::internal::Client::historicalDataEnd(
     int ticker, [[maybe_unused]] const std::string &startDateStr,
     [[maybe_unused]] const std::string &endDateStr) {
+  
   applyToActiveSubscriptions(
       [](midas::Subscription &subscription) {
         subscription.endListeners.notify(subscription);

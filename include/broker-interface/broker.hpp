@@ -30,5 +30,7 @@ public:
   * Usually called from a dedicated thread.
   */
   virtual bool processCycle() = 0;
+
+  virtual unsigned int estimateHistoricalBarSizeSeconds(const HistorySubscriptionStartPoint &duration) const = 0;
 };
 } // namespace midas

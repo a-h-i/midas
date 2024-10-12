@@ -108,7 +108,6 @@ public:
    */
   void disconnect();
   bool isConnected() const;
-
   virtual void nextValidId(OrderId order);
   /**
    *  In TWS (not IB Gateway) if there is an active network connection,
@@ -1260,7 +1259,7 @@ private:
   std::atomic<TickerId> nextTickerId;
 
   std::vector<std::string> managedAccountIds;
-  std::mutex subscriptionsMutex;
+  std::recursive_mutex subscriptionsMutex;
   /**
    * Subscriptions that have not yet been processed
    */
@@ -1279,6 +1278,7 @@ private:
   std::size_t
   applyToActiveSubscriptions(std::function<bool(midas::Subscription &)> func,
                              const TickerId ticker);
+  void removeActiveSubscription(const TickerId ticker);
 };
 
 } // namespace ibkr::internal
