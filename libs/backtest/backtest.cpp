@@ -14,7 +14,7 @@
 
 using namespace std::chrono_literals;
 
-static std::unique_ptr<midas::DataStream>
+static std::shared_ptr<midas::DataStream>
 loadHistoricalData(unsigned int barSize, midas::InstrumentEnum instrument,
                    midas::Broker &broker,
                    const midas::HistorySubscriptionStartPoint &duration) {
@@ -32,7 +32,7 @@ loadHistoricalData(unsigned int barSize, midas::InstrumentEnum instrument,
         dataEnded.store(true, std::memory_order::release);
       });
   broker.addSubscription(historicalSubscription);
-  while (dataEnded == false) {
+  while (dataEnded.load() == false) {
     historicalData->waitForData(500ms);
   }
   return historicalData;
@@ -51,14 +51,17 @@ midas::backtest::BacktestResult midas::backtest::performBacktest(
       new BacktestOrderManager(logger));
   // now we need to request and wait for historical data.
   constexpr unsigned int historicalBarSize = 30;
-  std::unique_ptr<DataStream> historicalData = loadHistoricalData(
+  INFO_LOG(*logger) << "Fetching historical data";
+  std::shared_ptr<DataStream> historicalData = loadHistoricalData(
       historicalBarSize, instrument, broker, interval.duration);
   // Now that we have the historical data, lets create our dummy real time
   // simulation source and our trader
+  INFO_LOG(*logger) << "Fetched historical data";
   std::shared_ptr<DataStream> realtimeSimStream =
       std::make_shared<DataStream>(historicalBarSize);
   auto traderPtr = traderFactory(realtimeSimStream, orderManager);
 
+  INFO_LOG(*logger) << "Starting simulation";
   // We now enter the simulation phase
   std::list<Bar> barBuffer;
   for (std::size_t barIndex = 0; barIndex < historicalData->size();
@@ -86,12 +89,15 @@ midas::backtest::BacktestResult midas::backtest::performBacktest(
       traderPtr->decide();
     }
   }
+  INFO_LOG(*logger) << "Simulation complete";
   OrderSummaryTracker summaryTracker;
 
   for (Order *orderPtr : orderManager->getFilledOrders()) {
     summaryTracker.addToSummary(orderPtr);
   }
 
-  BacktestResult result{.summary = summaryTracker.summary()};
+  BacktestResult result{.summary = summaryTracker.summary(),
+                        .originalStream = historicalData,
+                        .traderDownSampledStream = realtimeSimStream};
   return result;
 }

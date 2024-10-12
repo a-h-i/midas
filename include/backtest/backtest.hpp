@@ -11,7 +11,9 @@ namespace midas::backtest {
 
 struct BacktestResult {
   TradeSummary summary;
+  std::shared_ptr<DataStream> originalStream, traderDownSampledStream;
 };
+
 
 struct BacktestInterval {
   /**
@@ -22,6 +24,7 @@ struct BacktestInterval {
 
 namespace literals {
 BacktestInterval operator""_years(unsigned long long durationTime);
+BacktestInterval operator""_months(unsigned long long durationTime);
 }; // namespace literals
 
 BacktestResult performBacktest(

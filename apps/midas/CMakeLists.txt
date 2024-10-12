@@ -1,5 +1,7 @@
 SET(SOURCES_LIST
   main.cpp
+  ui.cpp
+  trader_view.cpp
 )
 add_executable(midas ${SOURCES_LIST} ${PROJECT_SOURCE_DIR}/include/midas/version.h.in )
 
@@ -19,3 +21,4 @@ target_link_libraries(midas PRIVATE logging)
 target_link_libraries(midas PRIVATE broker)
 target_link_libraries(midas PRIVATE trader)
 target_link_libraries(midas PRIVATE backtest)
+target_link_libraries(midas PRIVATE ftxui::screen ftxui::dom ftxui::component)

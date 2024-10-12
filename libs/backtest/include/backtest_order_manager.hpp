@@ -24,7 +24,7 @@ class BacktestOrderManager : public midas::OrderManager {
   std::list<std::shared_ptr<Order>> activeOrdersList, completedOrdersList;
 
 public:
-  BacktestOrderManager(std::shared_ptr<logging::thread_safe_logger_t> logger);
+  BacktestOrderManager(std::shared_ptr<logging::thread_safe_logger_t> logger): OrderManager(logger) {}
   
   virtual void transmit(std::shared_ptr<Order>) override;
   virtual bool hasActiveOrders() const override;

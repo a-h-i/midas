@@ -6,7 +6,7 @@ namespace midas {
 class Broker {
 
 public:
-  virtual ~Broker();
+  virtual ~Broker() = default;
 
   /**
    * Does nothing if not connected

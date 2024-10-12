@@ -8,7 +8,7 @@ namespace ibkr {
 namespace internal {
 class Client;
 }
-class Driver: midas::Broker {
+class Driver: public midas::Broker {
 public:
   Driver(boost::asio::ip::tcp::endpoint endpoint);
   ~Driver();

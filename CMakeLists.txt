@@ -40,6 +40,12 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 FetchContent_MakeAvailable(googletest)
 
+FetchContent_Declare(ftxui
+  GIT_REPOSITORY https://github.com/ArthurSonzogni/ftxui
+  GIT_TAG v5.0.0
+)
+FetchContent_MakeAvailable(ftxui)
+
 
 ExternalProject_Get_Property(IntelFloatingPointDownload BINARY_DIR)
 SET(INTEL_BUILD_DIR ${BINARY_DIR})
@@ -70,4 +76,4 @@ source_group(
     FILES ${PROJECT_BINARY_DIR}/include/midas/version.h
 )
 
-
+install(TARGETS midas)

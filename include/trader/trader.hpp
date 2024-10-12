@@ -1,8 +1,11 @@
 #pragma once
 #include "broker-interface/instruments.hpp"
 #include "broker-interface/order.hpp"
+#include "broker-interface/order_summary.hpp"
 #include "data/data_stream.hpp"
 #include <boost/circular_buffer.hpp>
+#include <boost/signals2.hpp>
+#include <boost/signals2/variadic_signal.hpp>
 #include <cstddef>
 #include <deque>
 #include <functional>
@@ -72,8 +75,17 @@ public:
  *
  */
 class Trader {
+public:
+  typedef boost::signals2::signal<void(TradeSummary)> signal_t;
+
 private:
   std::deque<std::shared_ptr<Order>> currentOrders, executedOrders;
+  signal_t summarySignal;
+  OrderSummaryTracker summary;
+  std::recursive_mutex orderStateMutex;
+
+  void handleOrderStatusChangeEvent(Order &order,
+                                    Order::StatusChangeEvent event);
 
 protected:
   TraderData data;
@@ -92,11 +104,14 @@ protected:
   void enterBracket(InstrumentEnum instrument, unsigned int quantity,
                     OrderDirection direction, double entryPrice,
                     double stopLossPrice, double profitPrice);
+  
 
 public:
   virtual ~Trader() = default;
   virtual void decide() = 0;
   bool hasOpenPosition();
+  boost::signals2::connection
+  connectSlot(const signal_t::slot_type &subscriber);
 };
 
 /**

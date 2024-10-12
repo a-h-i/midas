@@ -1,10 +1,5 @@
 #include "ibkr/internal/client.hpp"
 
-#include "Contract.h"
-#include "TagValue.h"
-#include "exceptions/network_error.hpp"
-#include <sstream>
-
 ibkr::internal::Client::Client(const boost::asio::ip::tcp::endpoint &endpoint)
     : connectionState(this), endpoint(endpoint),
       logger(logging::create_channel_logger("ibkr-driver")), nextTickerId(1) {}
@@ -25,12 +20,12 @@ bool ::ibkr::internal::Client::isConnected() const {
 
 bool ibkr::internal::Client::processCycle() {
   connectionState.reader->processMsgs();
-  INFO_LOG(logger) << "State : " << connectionState;
+  // INFO_LOG(logger) << "State : " << connectionState;
 
   if (!connectionState.ready()) {
     return false;
   }
   processPendingSubscriptions();
-  //TODO: cleanup subscriptions
+  // TODO: cleanup subscriptions
   return false;
 }

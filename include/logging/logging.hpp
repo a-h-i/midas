@@ -1,4 +1,4 @@
-#pragma once
+  #pragma once
 
 #include <boost/log/attributes.hpp>
 #include <boost/log/common.hpp>

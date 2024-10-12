@@ -3,9 +3,9 @@
 #include "logging/logging.hpp"
 #include "observers/observers.hpp"
 #include <atomic>
+#include <generator>
 #include <memory>
 #include <mutex>
-#include <generator>
 
 namespace midas {
 
@@ -124,6 +124,11 @@ struct OrderVisitor {
 class Order {
 
 public:
+/**
+ * Midas order ids 
+ * note that brokers may have different ids and thus these ids must be translated between by implementations
+ */
+  const unsigned int id;
   const ExecutionType execType;
 
   struct StatusChangeEvent {
@@ -201,10 +206,12 @@ public:
     fillHandlers.remove_listener(id);
   }
   /**
-    * Only valid if order in filled state.
+   * Only valid if order in filled state.
    */
   virtual double getAvgFillPrice();
   virtual unsigned int getFilledQuantity();
+
+  bool operator==(const Order &other) const;
 };
 
 /**
@@ -265,8 +272,11 @@ public:
  * Manages and executes orders
  */
 class OrderManager {
+  std::shared_ptr<logging::thread_safe_logger_t> logger;
 
 public:
+  OrderManager(std::shared_ptr<logging::thread_safe_logger_t> logger)
+      : logger(logger) {}
   virtual ~OrderManager() = default;
   virtual void transmit(std::shared_ptr<Order>) = 0;
   virtual bool hasActiveOrders() const = 0;

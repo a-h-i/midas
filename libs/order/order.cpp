@@ -3,11 +3,14 @@
 #include "logging/logging.hpp"
 #include <atomic>
 
+static std::atomic_uint ORDER_ID_COUNTER{0};
+
 midas::Order::Order(unsigned int requestedQuantity, OrderDirection direction,
                     InstrumentEnum instrument, ExecutionType execType,
                     std::shared_ptr<logging::thread_safe_logger_t> logger)
-    : execType(execType), requestedQuantity(requestedQuantity),
-      direction(direction), instrument(instrument), logger(logger) {}
+    : id(++ORDER_ID_COUNTER), execType(execType),
+      requestedQuantity(requestedQuantity), direction(direction),
+      instrument(instrument), logger(logger) {}
 
 bool midas::Order::inModifiableState() const {
   return state() == OrderStatusEnum::UnTransmitted;
@@ -59,3 +62,5 @@ void midas::Order::setState(OrderStatusEnum newState) {
 double midas::Order::getAvgFillPrice() { return avgFillPrice.load(); }
 
 unsigned int midas::Order::getFilledQuantity() { return quantityFilled.load(); }
+
+bool midas::Order::operator==(const Order &other) const { return id == other.id; }
