@@ -19,11 +19,11 @@ class MomentumTrader : public midas::trader::Trader {
                        macdSignalPeriod = 5;
   static constexpr double commissionEstimatePerUnit = 0.25;
   static constexpr double roundingCoeff = 4; // minimum of .25 index moves
-  std::array<double, 100> slowMa, fastMa, rsi, volumeMa, atr, macd, macdSignal,
+  std::array<double, 100> slowMa, fastMa, rsi, volumeMa, atr, atrMA, macd, macdSignal,
       macdHistogram;
   int slowMAOutBeg = 0, fastMAOutBeg = 0, rsiOutBegin = 0, volumeMAOutBegin = 0,
-      atrOutBegin = 0, macdOutBegin = 0, slowMAOutSize = 0, fastMAOutSize,
-      rsiOutSize = 0, volumeMAOutSize = 0, atrOutSize = 0, macdOutSize = 0;
+      atrOutBegin = 0, atrMAOutBegin = 0, macdOutBegin = 0, slowMAOutSize = 0, fastMAOutSize,
+      rsiOutSize = 0, volumeMAOutSize = 0, atrOutSize = 0, atrMAOutSize = 0, macdOutSize = 0;
   const midas::InstrumentEnum instrument;
   std::vector<unsigned int> trades;
   std::vector<double> closePrices, volumes, highs, lows, opens, vwaps;

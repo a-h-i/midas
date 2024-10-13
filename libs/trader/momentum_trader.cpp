@@ -40,23 +40,25 @@ void MomentumTrader::decide() {
   TA_EMA(0, closePrices.size() - 1, closePrices.data(), slowMATimePeriod,
          &slowMAOutBeg, &slowMAOutSize, slowMa.data());
 
-  TA_RSI(0, closePrices.size(), closePrices.data(), rsiTimePeriod, &rsiOutBegin,
+  TA_RSI(0, closePrices.size() -1, closePrices.data(), rsiTimePeriod, &rsiOutBegin,
          &rsiOutSize, rsi.data());
 
   TA_SMA(0, volumes.size() - 1, volumes.data(), volumeMATimePeriod,
          &volumeMAOutBegin, &volumeMAOutSize, volumeMa.data());
 
-  TA_ATR(0, highs.size(), highs.data(), lows.data(), closePrices.data(),
+  TA_ATR(0, highs.size() -1, highs.data(), lows.data(), closePrices.data(),
          atrTimePeriod, &atrOutBegin, &atrOutSize, atr.data());
-  TA_MACD(0, closePrices.size(), closePrices.data(), macdFastPeriod,
+  TA_MACD(0, closePrices.size() -1, closePrices.data(), macdFastPeriod,
           macdSlowPeriod, macdSignalPeriod, &macdOutBegin, &macdOutSize,
           macd.data(), macdSignal.data(), macdHistogram.data());
+  TA_EMA(0, atrOutSize - 1, atr.data(), 10, &atrMAOutBegin, &atrMAOutSize,
+         atrMA.data());
 
   bool bullishMa = fastMa[fastMAOutSize - 1] > slowMa[slowMAOutSize - 1];
   bool bullishRsi = (rsi[rsiOutSize - 1] < 70) && (rsi[rsiOutSize - 1] > 45);
   bool bullishVolume = volumes.back() > volumeMa[volumeMAOutSize - 1];
   bool bullishMacd = macd[macdOutSize - 1] > macdSignal[macdOutSize - 1];
-  double currentAtr = atr[atrOutSize - 1];
+  double currentAtr = atrMA[atrMAOutSize - 1];
 
   double entryPrice =
       std::round(closePrices.back() * roundingCoeff) / roundingCoeff;
@@ -70,8 +72,8 @@ void MomentumTrader::decide() {
   bool coversCommission = commissionEstimate < 2 * currentAtr;
 
   if (coversCommission & bullishMa & bullishRsi & bullishVolume & bullishMacd) {
-    INFO_LOG(*logger) << "entering bracket atr: " << currentAtr << " bar time: "
-                      << timestamps.back();
+    INFO_LOG(*logger) << "entering bracket atr: " << currentAtr
+                      << " bar time: " << timestamps.back();
     enterBracket(instrument, entryQuantity, midas::OrderDirection::BUY,
                  entryPrice, stopLossLimit, takeProfitLimit);
   }

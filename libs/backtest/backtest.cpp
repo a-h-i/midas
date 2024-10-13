@@ -8,7 +8,6 @@
 #include "data/data_stream.hpp"
 #include "data/export.hpp"
 #include "logging/logging.hpp"
-#include "trader/trader.hpp"
 #include <atomic>
 #include <fstream>
 #include <ios>

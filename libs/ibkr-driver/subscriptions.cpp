@@ -54,7 +54,7 @@ struct BarSizeSetting {
 static BarSizeSetting
 historicalBarSize(const midas::HistorySubscriptionStartPoint &start) {
   if (start.unit == midas::SubscriptionDurationUnits::Years ||
-      start.quantity > 6) {
+      start.quantity > 1) {
     return {.settingString = "1 min", .sizeSeconds = 60};
   } else {
     return {.settingString = "30 secs", .sizeSeconds = 30};
