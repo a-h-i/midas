@@ -72,16 +72,18 @@ public:
     bool bullishRsi = (rsi[rsiOutSize - 1] < 70) && (rsi[rsiOutSize - 1] > 45);
     bool bullishVolume = volumes.back() > volumeMa[volumeMAOutSize - 1];
     bool bullishMacd = macd[macdOutSize - 1] > macdSignal[macdOutSize - 1];
-    double takeProfitLimit = closePrices.back() + 2 * atr.back();
-    double stopLossLimit = closePrices.back() - 2 * atr.back();
-    double entryPrice = closePrices.back();
+    double currentAtr = atr[atrOutSize - 1];
+    double takeProfitLimit = closePrices.back() + 2 * currentAtr;
+    double stopLossLimit = closePrices.back() - 2 * currentAtr;
+    double entryPrice =
+        std::round(closePrices.back() * roundingCoeff) / roundingCoeff;
     takeProfitLimit =
         std::round(takeProfitLimit * roundingCoeff) / roundingCoeff;
     stopLossLimit = std::round(stopLossLimit * roundingCoeff) / roundingCoeff;
 
     const double commissionEstimate =
         commissionEstimatePerUnit * entryQuantity * 2;
-    bool coversCommission = commissionEstimate < 2 * atr.back();
+    bool coversCommission = commissionEstimate < 2 * currentAtr;
 
     if (coversCommission & bullishMa & bullishRsi & bullishVolume &
         bullishMacd) {
