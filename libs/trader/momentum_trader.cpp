@@ -27,6 +27,18 @@ class MomentumTrader : public midas::trader::Trader {
       atrOutBegin = 0, macdOutBegin = 0, slowMAOutSize = 0, fastMAOutSize,
       rsiOutSize = 0, volumeMAOutSize = 0, atrOutSize = 0, macdOutSize = 0;
   const midas::InstrumentEnum instrument;
+  std::vector<unsigned int> trades;
+  std::vector<double> closePrices, volumes, highs, lows, opens, vwaps;
+
+  inline void clearBuffers() {
+    closePrices.clear();
+    volumes.clear();
+    highs.clear();
+    highs.clear();
+    lows.clear();
+    opens.clear();
+    trades.clear();
+  }
 
 public:
   MomentumTrader(std::shared_ptr<midas::DataStream> source,
@@ -34,22 +46,23 @@ public:
                  midas::InstrumentEnum instrument,
                  std::shared_ptr<logging::thread_safe_logger_t> logger)
       : Trader(100, 120, source, orderManager, logger), instrument(instrument) {
+    closePrices.reserve(data.lookBackSize);
+    volumes.reserve(data.lookBackSize);
+    highs.reserve(data.lookBackSize);
+    lows.reserve(data.lookBackSize);
+    opens.reserve(data.lookBackSize);
+    trades.reserve(data.lookBackSize);
   }
+
   virtual ~MomentumTrader() {}
   virtual void decide() override {
+
     if (!data.ok() || hasOpenPosition()) {
       // We do not have enough data to satisfy look back requirements
       return;
     }
-    std::vector<unsigned int> trades;
-    std::vector<double> closePrices, volumes, highs, lows, opens, vwaps;
-    closePrices.reserve(data.size());
-    volumes.reserve(data.size());
-    highs.reserve(data.size());
-    lows.reserve(data.size());
-    opens.reserve(data.size());
-    trades.reserve(data.size());
-    vwaps.reserve(data.size());
+
+    clearBuffers();
     data.copy(trades, highs, lows, opens, closePrices, vwaps, volumes);
     TA_EMA(0, closePrices.size() - 1, closePrices.data(), fastMATimePeriod,
            &fastMAOutBeg, &fastMAOutSize, fastMa.data());

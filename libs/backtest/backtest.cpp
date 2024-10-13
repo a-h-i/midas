@@ -126,6 +126,7 @@ midas::backtest::BacktestResult midas::backtest::performBacktest(
     }
   }
   INFO_LOG(*logger) << "Simulation complete";
+  INFO_LOG(*logger) << "Total orders " << orderManager->totalSize();
   OrderSummaryTracker summaryTracker;
 
   for (Order *orderPtr : orderManager->getFilledOrders()) {
@@ -133,7 +134,6 @@ midas::backtest::BacktestResult midas::backtest::performBacktest(
   }
 
   BacktestResult result{.summary = summaryTracker.summary(),
-                        .originalStream = realtimeSimStream
-                        };
+                        .originalStream = realtimeSimStream};
   return result;
 }

@@ -102,321 +102,258 @@ protected:
 
 TEST_F(SimulationOrderTransmitterTest, SimpleBuyStopOrderBelow) {
 
-  MockFunction<void(double, double, bool)> mockCallback;
   auto buyStopOrder =
       createSimpleOrder(OrderDirection::BUY, ExecutionType::Stop);
   // A buy stop order is a stop loss for a short position.
   // Thus it should trigger when price is higher than target.
 
-  EXPECT_CALL(mockCallback, Call(_, _, _)).Times(0);
-
-  SimulationOrderTransmitter transmitter(&belowTriggerPriceBar,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&belowTriggerPriceBar);
 
   buyStopOrder->visit(transmitter);
+  EXPECT_NE(buyStopOrder->state(), OrderStatusEnum::Filled);
 }
 
 TEST_F(SimulationOrderTransmitterTest, SimpleBuyStopOrderOverlap) {
 
-  MockFunction<void(double, double, bool)> mockCallback;
   auto buyStopOrder =
       createSimpleOrder(OrderDirection::BUY, ExecutionType::Stop);
   // A buy stop order is a stop loss for a short position.
   // Thus it should trigger when price is higher than target.
 
-  EXPECT_CALL(mockCallback, Call(100, _, true)).Times(1);
-
-  SimulationOrderTransmitter transmitter(&overlappingTriggerPriceBar,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&overlappingTriggerPriceBar );
 
   buyStopOrder->visit(transmitter);
+  EXPECT_EQ(buyStopOrder->state(), OrderStatusEnum::Filled);
 }
 
 TEST_F(SimulationOrderTransmitterTest, SimpleBuyStopOrderAbove) {
 
-  MockFunction<void(double, double, bool)> mockCallback;
   auto buyStopOrder =
       createSimpleOrder(OrderDirection::BUY, ExecutionType::Stop);
   // A buy stop order is a stop loss for a short position.
   // Thus it should trigger when price is higher than target.
 
-  EXPECT_CALL(mockCallback, Call(100, _, true)).Times(1);
-
-  SimulationOrderTransmitter transmitter(&aboveTriggerPriceBar,
-                                         mockCallback.AsStdFunction());
-
+  SimulationOrderTransmitter transmitter(&aboveTriggerPriceBar );
   buyStopOrder->visit(transmitter);
+  EXPECT_EQ(buyStopOrder->state(), OrderStatusEnum::Filled);
 }
 
 TEST_F(SimulationOrderTransmitterTest, SimpleSellStopOrderAbove) {
-  MockFunction<void(double, double, bool)> mockCallback;
   auto sellStopOrder =
       createSimpleOrder(OrderDirection::SELL, ExecutionType::Stop);
-  EXPECT_CALL(mockCallback, Call(_, _, _)).Times(0);
-  SimulationOrderTransmitter transmitter(&aboveTriggerPriceBar,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&aboveTriggerPriceBar);
 
   sellStopOrder->visit(transmitter);
+  EXPECT_NE(sellStopOrder->state(), OrderStatusEnum::Filled);
 }
 
 TEST_F(SimulationOrderTransmitterTest, SimpleSellStopOrderOverlap) {
-  MockFunction<void(double, double, bool)> mockCallback;
+
   auto sellStopOrder =
       createSimpleOrder(OrderDirection::SELL, ExecutionType::Stop);
-  EXPECT_CALL(mockCallback, Call(100, _, true)).Times(1);
-  SimulationOrderTransmitter transmitter(&overlappingTriggerPriceBar,
-                                         mockCallback.AsStdFunction());
+
+  SimulationOrderTransmitter transmitter(&overlappingTriggerPriceBar);
 
   sellStopOrder->visit(transmitter);
+  EXPECT_EQ(sellStopOrder->state(), OrderStatusEnum::Filled);
 }
 
 TEST_F(SimulationOrderTransmitterTest, SimpleSellStopOrderBelow) {
-  MockFunction<void(double, double, bool)> mockCallback;
   auto sellStopOrder =
       createSimpleOrder(OrderDirection::SELL, ExecutionType::Stop);
-  EXPECT_CALL(mockCallback, Call(100, _, true)).Times(1);
-  SimulationOrderTransmitter transmitter(&belowTriggerPriceBar,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&belowTriggerPriceBar);
 
   sellStopOrder->visit(transmitter);
+  EXPECT_EQ(sellStopOrder->state(), OrderStatusEnum::Filled);
 }
 
 TEST_F(SimulationOrderTransmitterTest, SimpleLimitBuyOrderAbove) {
   // We are buying, meaning we enter the position if the price is below or equal
   auto order = createSimpleOrder(OrderDirection::BUY, ExecutionType::Limit);
-  MockFunction<void(double, double, bool)> mockCallback;
-  EXPECT_CALL(mockCallback, Call(_, _, _)).Times(0);
-  SimulationOrderTransmitter transmitter(&aboveTriggerPriceBar,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&aboveTriggerPriceBar);
   order->visit(transmitter);
+  EXPECT_NE(order->state(), OrderStatusEnum::Filled);
 }
 
 TEST_F(SimulationOrderTransmitterTest, SimpleLimitBuyOrderOverlap) {
   // We are buying, meaning we enter the position if the price is below or equal
   auto order = createSimpleOrder(OrderDirection::BUY, ExecutionType::Limit);
-  MockFunction<void(double, double, bool)> mockCallback;
-  EXPECT_CALL(mockCallback, Call(100, _, true)).Times(1);
-  SimulationOrderTransmitter transmitter(&overlappingTriggerPriceBar,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&overlappingTriggerPriceBar);
   order->visit(transmitter);
+  EXPECT_EQ(order->state(), OrderStatusEnum::Filled);
 }
 
 TEST_F(SimulationOrderTransmitterTest, SimpleLimitBuyOrderBelow) {
   // We are buying, meaning we enter the position if the price is below or equal
   auto order = createSimpleOrder(OrderDirection::BUY, ExecutionType::Limit);
-  MockFunction<void(double, double, bool)> mockCallback;
-  EXPECT_CALL(mockCallback, Call(100, _, true)).Times(1);
-  SimulationOrderTransmitter transmitter(&belowTriggerPriceBar,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&belowTriggerPriceBar);
   order->visit(transmitter);
+  EXPECT_EQ(order->state(), OrderStatusEnum::Filled);
 }
 
 TEST_F(SimulationOrderTransmitterTest, SimpleLimitSellOrderAbove) {
   // we are selling, so we exit the position if the price is above or equal
   auto order = createSimpleOrder(OrderDirection::SELL, ExecutionType::Limit);
-  MockFunction<void(double, double, bool)> mockCallback;
-  EXPECT_CALL(mockCallback, Call(100, _, true)).Times(1);
-  SimulationOrderTransmitter transmitter(&aboveTriggerPriceBar,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&aboveTriggerPriceBar);
   order->visit(transmitter);
+  EXPECT_EQ(order->state(), OrderStatusEnum::Filled);
 }
 
 TEST_F(SimulationOrderTransmitterTest, SimpleLimitSellOrderBelow) {
   // we are selling, so we exit the position if the price is above or equal
-  // we are selling, so we exit the position if the price is above or equal
   auto order = createSimpleOrder(OrderDirection::SELL, ExecutionType::Limit);
-  MockFunction<void(double, double, bool)> mockCallback;
-  EXPECT_CALL(mockCallback, Call(_, _, _)).Times(0);
-  SimulationOrderTransmitter transmitter(&belowTriggerPriceBar,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&belowTriggerPriceBar);
   order->visit(transmitter);
+  EXPECT_NE(order->state(), OrderStatusEnum::Filled);
 }
 
 TEST_F(SimulationOrderTransmitterTest, SimpleLimitSellOrderOverlap) {
   // we are selling, so we exit the position if the price is above or equal
-  // we are selling, so we exit the position if the price is above or equal
   auto order = createSimpleOrder(OrderDirection::SELL, ExecutionType::Limit);
-  MockFunction<void(double, double, bool)> mockCallback;
-  EXPECT_CALL(mockCallback, Call(100, _, true)).Times(1);
-  SimulationOrderTransmitter transmitter(&overlappingTriggerPriceBar,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&overlappingTriggerPriceBar);
   order->visit(transmitter);
+  EXPECT_EQ(order->state(), OrderStatusEnum::Filled);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderEntryOverlap) {
 
   auto order = createBracketedOrder(OrderDirection::BUY);
-  MockFunction<void(double, double, bool)> mockCallback;
-  EXPECT_CALL(mockCallback, Call(100, _, false)).Times(1);
   // We are buying, meaning we enter the position if the price is below or equal
-  SimulationOrderTransmitter transmitter(&overlappingTriggerPriceBar,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&overlappingTriggerPriceBar);
   order->visit(transmitter);
+  EXPECT_EQ(order->state(), OrderStatusEnum::WaitingForChildren);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderEntryBelow) {
 
   auto order = createBracketedOrder(OrderDirection::BUY);
-  MockFunction<void(double, double, bool)> mockCallback;
-  EXPECT_CALL(mockCallback, Call(100, _, false)).Times(1);
   // We are buying, meaning we enter the position if the price is below or equal
-  SimulationOrderTransmitter transmitter(&belowTriggerPriceBar,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&belowTriggerPriceBar);
   order->visit(transmitter);
+  EXPECT_EQ(order->state(), OrderStatusEnum::WaitingForChildren);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderEntryAbove) {
 
   auto order = createBracketedOrder(OrderDirection::BUY);
-  MockFunction<void(double, double, bool)> mockCallback;
-  EXPECT_CALL(mockCallback, Call(_, _, _)).Times(0);
   // We are buying, meaning we enter the position if the price is below or equal
-  SimulationOrderTransmitter transmitter(&aboveTriggerPriceBar,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&aboveTriggerPriceBar);
   order->visit(transmitter);
+  EXPECT_NE(order->state(), OrderStatusEnum::Filled);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderStopBelow) {
 
   auto order = createHoldingBracketedOrder(OrderDirection::BUY);
-  MockFunction<void(double, double, bool)> mockCallback;
-  EXPECT_CALL(mockCallback, Call(50, _, true)).Times(1);
-  SimulationOrderTransmitter transmitter(&belowBracketStop,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&belowBracketStop);
   order->visit(transmitter);
+  EXPECT_EQ(order->state(), OrderStatusEnum::Filled);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderStopAbove) {
 
   auto order = createHoldingBracketedOrder(OrderDirection::BUY);
-  MockFunction<void(double, double, bool)> mockCallback;
-  EXPECT_CALL(mockCallback, Call(_, _, _)).Times(0);
-  SimulationOrderTransmitter transmitter(&aboveBracketStop,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&aboveBracketStop);
   order->visit(transmitter);
+  EXPECT_NE(order->state(), OrderStatusEnum::Filled);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderStopOverlap) {
 
   auto order = createHoldingBracketedOrder(OrderDirection::BUY);
-  MockFunction<void(double, double, bool)> mockCallback;
-  EXPECT_CALL(mockCallback, Call(50, _, true)).Times(1);
 
-  SimulationOrderTransmitter transmitter(&overlappingBracketStop,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&overlappingBracketStop);
   order->visit(transmitter);
+  EXPECT_EQ(order->state(), OrderStatusEnum::Filled);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderLimitAbove) {
 
   auto order = createHoldingBracketedOrder(OrderDirection::BUY);
-  MockFunction<void(double, double, bool)> mockCallback;
-  EXPECT_CALL(mockCallback, Call(150, _, true)).Times(1);
 
-  SimulationOrderTransmitter transmitter(&aboveBracketLimit,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&aboveBracketLimit);
   order->visit(transmitter);
+  EXPECT_EQ(order->state(), OrderStatusEnum::Filled);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderLimitBelow) {
 
   auto order = createHoldingBracketedOrder(OrderDirection::BUY);
-  MockFunction<void(double, double, bool)> mockCallback;
-  EXPECT_CALL(mockCallback, Call(_, _, _)).Times(0);
 
-  SimulationOrderTransmitter transmitter(&belowBracketLimit,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&belowBracketLimit);
   order->visit(transmitter);
+  EXPECT_NE(order->state(), OrderStatusEnum::Filled);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedBuyOrderLimitOverlap) {
 
   auto order = createHoldingBracketedOrder(OrderDirection::BUY);
-  MockFunction<void(double, double, bool)> mockCallback;
-  EXPECT_CALL(mockCallback, Call(150, _, true)).Times(1);
 
-  SimulationOrderTransmitter transmitter(&overlappingBracketLimit,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&overlappingBracketLimit);
   order->visit(transmitter);
+  EXPECT_EQ(order->state(), OrderStatusEnum::Filled);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderEntryOverlap) {
   auto order = createBracketedOrder(OrderDirection::SELL);
-  MockFunction<void(double, double, bool)> mockCallback;
-  EXPECT_CALL(mockCallback, Call(100, _, false)).Times(1);
-  SimulationOrderTransmitter transmitter(&overlappingTriggerPriceBar,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&overlappingTriggerPriceBar);
   order->visit(transmitter);
+  EXPECT_EQ(order->state(), OrderStatusEnum::WaitingForChildren);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderEntryBelow) {
   auto order = createBracketedOrder(OrderDirection::SELL);
-  MockFunction<void(double, double, bool)> mockCallback;
-  EXPECT_CALL(mockCallback, Call(_, _, _)).Times(0);
-  SimulationOrderTransmitter transmitter(&belowTriggerPriceBar,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&belowTriggerPriceBar);
   order->visit(transmitter);
+  EXPECT_EQ(order->state(), OrderStatusEnum::Accepted);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderEntryAbove) {
   auto order = createBracketedOrder(OrderDirection::SELL);
-  MockFunction<void(double, double, bool)> mockCallback;
-  EXPECT_CALL(mockCallback, Call(100, _, false)).Times(1);
-  SimulationOrderTransmitter transmitter(&aboveTriggerPriceBar,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&aboveTriggerPriceBar);
   order->visit(transmitter);
+  EXPECT_EQ(order->state(), OrderStatusEnum::WaitingForChildren);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderStopBelow) {
   auto order = createHoldingBracketedOrder(OrderDirection::SELL);
-  MockFunction<void(double, double, bool)> mockCallback;
-  EXPECT_CALL(mockCallback, Call(_, _, _)).Times(0);
-  SimulationOrderTransmitter transmitter(&belowBracketLimit,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&belowBracketLimit);
   order->visit(transmitter);
+  EXPECT_NE(order->state(), OrderStatusEnum::Filled);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderStopAbove) {
   auto order = createHoldingBracketedOrder(OrderDirection::SELL);
-  MockFunction<void(double, double, bool)> mockCallback;
-  EXPECT_CALL(mockCallback, Call(150, _, true)).Times(1);
-  SimulationOrderTransmitter transmitter(&aboveBracketLimit,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&aboveBracketLimit);
   order->visit(transmitter);
+  EXPECT_EQ(order->state(), OrderStatusEnum::Filled);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderStopOverlap) {
   auto order = createHoldingBracketedOrder(OrderDirection::SELL);
-  MockFunction<void(double, double, bool)> mockCallback;
-  EXPECT_CALL(mockCallback, Call(150, _, true)).Times(1);
-  SimulationOrderTransmitter transmitter(&overlappingBracketLimit,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&overlappingBracketLimit);
   order->visit(transmitter);
+  EXPECT_EQ(order->state(), OrderStatusEnum::Filled);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderLimitBelow) {
   auto order = createHoldingBracketedOrder(OrderDirection::SELL);
-  MockFunction<void(double, double, bool)> mockCallback;
-  EXPECT_CALL(mockCallback, Call(50, _, true)).Times(1);
-  SimulationOrderTransmitter transmitter(&belowBracketStop,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&belowBracketStop);
   order->visit(transmitter);
+  EXPECT_EQ(order->state(), OrderStatusEnum::Filled);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderLimitAbove) {
   auto order = createHoldingBracketedOrder(OrderDirection::SELL);
-  MockFunction<void(double, double, bool)> mockCallback;
-  EXPECT_CALL(mockCallback, Call(_, _, _)).Times(0);
-  SimulationOrderTransmitter transmitter(&aboveBracketStop,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&aboveBracketStop);
   order->visit(transmitter);
+  EXPECT_NE(order->state(), OrderStatusEnum::Filled);
 }
 
 TEST_F(SimulationOrderTransmitterTest, BracketedSellOrderLimitOverlap) {
   auto order = createHoldingBracketedOrder(OrderDirection::SELL);
   MockFunction<void(double, double, bool)> mockCallback;
-  EXPECT_CALL(mockCallback, Call(50, _, true)).Times(1);
-  SimulationOrderTransmitter transmitter(&overlappingBracketStop,
-                                         mockCallback.AsStdFunction());
+  SimulationOrderTransmitter transmitter(&overlappingBracketLimit);
   order->visit(transmitter);
+  EXPECT_EQ(order->state(), OrderStatusEnum::Filled);
 }

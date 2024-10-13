@@ -48,6 +48,10 @@ midas::BracketedOrder::BracketedOrder(
       [this]([[maybe_unused]] Order &stop, FillEvent event) {
         handleStopLossFilled(event);
       });
+  profitTakerOrder->addFillEventListener(
+      [this]([[maybe_unused]] Order &stop, FillEvent event) {
+        handleProfitTakerFilled(event);
+      });
 }
 
 void midas::BracketedOrder::handleStopLossFilled(FillEvent event) {

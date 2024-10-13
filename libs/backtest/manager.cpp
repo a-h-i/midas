@@ -15,17 +15,11 @@ void midas::backtest::BacktestOrderManager::transmit(
 }
 
 void midas::backtest::BacktestOrderManager::simulate(const midas::Bar *bar) {
-
-  std::ranges::for_each(
-      activeOrdersList, [&bar](std::shared_ptr<Order> &orderPtr) {
-        SimulationOrderTransmitter transmitter(
-            bar, [&orderPtr](double price, double commission,
-                             [[maybe_unused]] bool isFinished) {
-              orderPtr->setFilled(price, commission,
-                                  orderPtr->requestedQuantity);
-            });
-        orderPtr->visit(transmitter);
-      });
+  SimulationOrderTransmitter transmitter(bar);
+  std::ranges::for_each(activeOrdersList,
+                        [&transmitter](std::shared_ptr<Order> &orderPtr) {
+                          orderPtr->visit(transmitter);
+                        });
   for (auto it = activeOrdersList.begin(); it != activeOrdersList.end(); it++) {
     if (it->get()->isDone()) {
       auto copy = std::prev(it);
@@ -48,8 +42,8 @@ static bool isTriggered(midas::OrderDirection direction, double targetPrice,
   }
 }
 
-static bool transmitHelper(const midas::SimpleOrder &order,
-                           const midas::Bar *bar) {
+static bool visitHelper(const midas::SimpleOrder &order,
+                        const midas::Bar *bar) {
   const midas::OrderDirection direction =
       order.execType == midas::ExecutionType::Stop ? ~order.direction
                                                    : order.direction;
@@ -58,8 +52,9 @@ static bool transmitHelper(const midas::SimpleOrder &order,
 
 void midas::backtest::SimulationOrderTransmitter::visit(
     midas::SimpleOrder &order) {
-  if (transmitHelper(order, bar)) {
-    triggerCallback(order.targetPrice, 0.25 * order.requestedQuantity, true);
+  if (visitHelper(order, bar)) {
+    order.setFilled(order.targetPrice, 0.25 * order.requestedQuantity,
+                    order.requestedQuantity);
   }
 }
 
@@ -67,18 +62,20 @@ void midas::backtest::SimulationOrderTransmitter::visit(
     midas::BracketedOrder &order) {
   // first check if parent has not executed
   if (order.state() == OrderStatusEnum::Accepted &&
-      transmitHelper(order.getEntryOrder(), bar)) {
-    triggerCallback(order.getEntryOrder().targetPrice,
-                    0.25 * order.getEntryOrder().requestedQuantity, false);
+      visitHelper(order.getEntryOrder(), bar)) {
+    auto &entry = order.getEntryOrder();
+    entry.setFilled(entry.targetPrice, 0.25 * entry.requestedQuantity,
+                    entry.requestedQuantity);
   } else if (order.state() == OrderStatusEnum::WaitingForChildren) {
     // first we check the stopLoss Order
-    if (transmitHelper(order.getStopOrder(), bar)) {
-      triggerCallback(order.getStopOrder().targetPrice,
-                      0.25 * order.getStopOrder().requestedQuantity, true);
-    } else if (transmitHelper(order.getProfitTakerOrder(), bar)) {
-      triggerCallback(order.getProfitTakerOrder().targetPrice,
-                      0.25 * order.getProfitTakerOrder().requestedQuantity,
-                      true);
+    if (visitHelper(order.getStopOrder(), bar)) {
+      auto &stop = order.getStopOrder();
+      stop.setFilled(stop.targetPrice, 0.25 * stop.requestedQuantity,
+                     stop.requestedQuantity);
+    } else if (visitHelper(order.getProfitTakerOrder(), bar)) {
+      auto &profit = order.getProfitTakerOrder();
+      profit.setFilled(profit.targetPrice, 0.25 * profit.requestedQuantity,
+                       profit.requestedQuantity);
     }
   }
 }

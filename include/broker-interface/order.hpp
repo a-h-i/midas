@@ -124,10 +124,11 @@ struct OrderVisitor {
 class Order {
 
 public:
-/**
- * Midas order ids 
- * note that brokers may have different ids and thus these ids must be translated between by implementations
- */
+  /**
+   * Midas order ids
+   * note that brokers may have different ids and thus these ids must be
+   * translated between by implementations
+   */
   const unsigned int id;
   const ExecutionType execType;
 
@@ -261,9 +262,9 @@ public:
   virtual OrderStatusEnum state() const override;
   virtual void visit(OrderVisitor &) override;
   virtual void setTransmitted() override;
-  inline SimpleOrder &getEntryOrder() const { return *entryOrder; }
-  inline SimpleOrder &getStopOrder() const { return *stopLossOrder; }
-  inline SimpleOrder &getProfitTakerOrder() const { return *profitTakerOrder; }
+  inline SimpleOrder &getEntryOrder() { return *entryOrder; }
+  inline SimpleOrder &getStopOrder() { return *stopLossOrder; }
+  inline SimpleOrder &getProfitTakerOrder() { return *profitTakerOrder; }
   virtual void setFilled(double avgFillPrice, double totalCommissions,
                          unsigned int filledQuantity) override;
 };
