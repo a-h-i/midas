@@ -19,7 +19,7 @@ enum SupportedCurrencies { USD };
 
 enum SupportedExchanges { COMEX };
 
-inline std::string operator+(const char * lhs, InstrumentEnum instrument) {
+inline std::string operator+(const char *lhs, InstrumentEnum instrument) {
   std::string instrumentStr;
   switch (instrument) {
 
@@ -28,6 +28,12 @@ inline std::string operator+(const char * lhs, InstrumentEnum instrument) {
     break;
   }
   return lhs + instrumentStr;
+}
+
+template <typename stream>
+stream &operator<<(stream &s, InstrumentEnum instrument) {
+  s << "" + instrument;
+  return s;
 }
 
 /**

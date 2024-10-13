@@ -4,6 +4,7 @@
 #include "ta_func.h"
 
 #include <array>
+#include <boost/date_time/posix_time/time_formatters.hpp>
 #include <cmath>
 #include <memory>
 #include <vector>
@@ -22,6 +23,7 @@ MomentumTrader::MomentumTrader(
   lows.reserve(data.lookBackSize);
   opens.reserve(data.lookBackSize);
   trades.reserve(data.lookBackSize);
+  timestamps.reserve(data.lookBackSize);
 }
 
 void MomentumTrader::decide() {
@@ -31,7 +33,8 @@ void MomentumTrader::decide() {
   }
 
   clearBuffers();
-  data.copy(trades, highs, lows, opens, closePrices, vwaps, volumes);
+  data.copy(trades, highs, lows, opens, closePrices, vwaps, volumes,
+            timestamps);
   TA_EMA(0, closePrices.size() - 1, closePrices.data(), fastMATimePeriod,
          &fastMAOutBeg, &fastMAOutSize, fastMa.data());
   TA_EMA(0, closePrices.size() - 1, closePrices.data(), slowMATimePeriod,
@@ -54,10 +57,11 @@ void MomentumTrader::decide() {
   bool bullishVolume = volumes.back() > volumeMa[volumeMAOutSize - 1];
   bool bullishMacd = macd[macdOutSize - 1] > macdSignal[macdOutSize - 1];
   double currentAtr = atr[atrOutSize - 1];
-  double takeProfitLimit = closePrices.back() + 2 * currentAtr;
-  double stopLossLimit = closePrices.back() - 2 * currentAtr;
+
   double entryPrice =
       std::round(closePrices.back() * roundingCoeff) / roundingCoeff;
+  double takeProfitLimit = entryPrice + 2 * currentAtr;
+  double stopLossLimit = entryPrice - 2 * currentAtr;
   takeProfitLimit = std::round(takeProfitLimit * roundingCoeff) / roundingCoeff;
   stopLossLimit = std::round(stopLossLimit * roundingCoeff) / roundingCoeff;
 
@@ -66,6 +70,8 @@ void MomentumTrader::decide() {
   bool coversCommission = commissionEstimate < 2 * currentAtr;
 
   if (coversCommission & bullishMa & bullishRsi & bullishVolume & bullishMacd) {
+    INFO_LOG(*logger) << "entering bracket atr: " << currentAtr << " bar time: "
+                      << timestamps.back();
     enterBracket(instrument, entryQuantity, midas::OrderDirection::BUY,
                  entryPrice, stopLossLimit, takeProfitLimit);
   }
@@ -80,4 +86,5 @@ void MomentumTrader::clearBuffers() {
   lows.clear();
   opens.clear();
   trades.clear();
+  timestamps.clear();
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "trader/base_trader.hpp"
+#include <vector>
 
 namespace midas::trader {
 /**
@@ -26,6 +27,7 @@ class MomentumTrader : public midas::trader::Trader {
   const midas::InstrumentEnum instrument;
   std::vector<unsigned int> trades;
   std::vector<double> closePrices, volumes, highs, lows, opens, vwaps;
+  std::vector<boost::posix_time::ptime> timestamps;
 
   void clearBuffers();
 

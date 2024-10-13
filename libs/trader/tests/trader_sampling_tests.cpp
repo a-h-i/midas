@@ -47,7 +47,8 @@ TEST_F(TraderDataTest, BasicDownsampling) {
   EXPECT_EQ(traderData->size(), 2);
   std::vector<unsigned int> trades;
   std::vector<double> closes, volumes, highs, lows, opens, vwaps;
-  traderData->copy(trades, highs, lows, opens, closes, vwaps, volumes);
+  std::vector<boost::posix_time::ptime> timestamps;
+  traderData->copy(trades, highs, lows, opens, closes, vwaps, volumes, timestamps);
   EXPECT_EQ(opens[0], 1.0);  // First open
   EXPECT_EQ(closes[1], 3.0); // Last close of second bar
   EXPECT_EQ(highs[0], 2.5);  // First high
@@ -112,7 +113,8 @@ TEST(VWAPTests, VWAPCalculation) {
   EXPECT_EQ(trader.size(), 1); // We expect one downsampled bar
   std::vector<unsigned int> trades;
   std::vector<double> closes, volumes, highs, lows, opens, vwaps;
-  trader.copy(trades, highs, lows, opens, closes, vwaps, volumes);
+  std::vector<boost::posix_time::ptime> timestamps;
+  trader.copy(trades, highs, lows, opens, closes, vwaps, volumes, timestamps);
   EXPECT_NEAR(vwaps.back(), expectedVWAP, 0.01);
 }
 
@@ -137,6 +139,7 @@ TEST(VWAPTests, ZeroVolumeVWAP) {
   EXPECT_EQ(trader.size(), 1); // One downsampled bar expected
   std::vector<unsigned int> trades;
   std::vector<double> closes, volumes, highs, lows, opens, vwaps;
-  trader.copy(trades, highs, lows, opens, closes, vwaps, volumes);
+  std::vector<boost::posix_time::ptime> timestamps;
+  trader.copy(trades, highs, lows, opens, closes, vwaps, volumes, timestamps);
   EXPECT_EQ(vwaps.back(), 0.0); // VWAP should be zero due to zero volume
 }

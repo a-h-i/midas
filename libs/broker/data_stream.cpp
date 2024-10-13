@@ -30,6 +30,7 @@ bool midas::DataStream::waitForData(std::chrono::milliseconds timeout) {
     const auto insertionDistance =
         std::distance(timestamps.begin(), timeUpperBound);
 
+    
     // Insert data point, they all have the same order
     timestamps.insert(timeUpperBound, bar.utcTime);
     volumes.insert(volumes.begin() + insertionDistance, bar.volume);

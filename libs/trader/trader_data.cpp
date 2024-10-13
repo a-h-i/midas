@@ -13,6 +13,7 @@ midas::trader::TraderData::TraderData(std::size_t lookBackSize,
       lastReadIndex(0), source(source), tradeCounts(lookBackSize),
       highs(lookBackSize), lows(lookBackSize), opens(lookBackSize),
       closes(lookBackSize), vwaps(lookBackSize), volumes(lookBackSize),
+      timestamps(lookBackSize),
       updateListenerId(source->addUpdateListener(
           std::bind(&TraderData::processSource, this))),
       reOrderListenerId(
@@ -69,7 +70,8 @@ void midas::trader::TraderData::processSource() {
   }
   const ParallelPolicy executionPolicy =
       downSampleRate >= 1000 ? ParallelPolicy::parallel : ParallelPolicy::unseq;
-  for (; lastReadIndex + downSampleRate <= source->size(); lastReadIndex += downSampleRate) {
+  for (; lastReadIndex + downSampleRate <= source->size();
+       lastReadIndex += downSampleRate) {
 
     // we preserve low by getting the min of the range
     const auto lowIterator = maybeParallel(
@@ -121,6 +123,7 @@ void midas::trader::TraderData::processSource() {
     double vwap = (volumeSum != 0) ? (wapSum / volumeSum) : 0.0;
     vwaps.push_back(vwap);
 
-    timestamps.push_back(source->timestamps[lastReadIndex + downSampleRate - 1]);
+    timestamps.push_back(
+        source->timestamps[lastReadIndex + downSampleRate - 1]);
   }
 }
