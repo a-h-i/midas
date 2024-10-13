@@ -69,7 +69,7 @@ void midas::trader::TraderData::processSource() {
   }
   const ParallelPolicy executionPolicy =
       downSampleRate >= 1000 ? ParallelPolicy::parallel : ParallelPolicy::unseq;
-  for (; lastReadIndex < source->size(); lastReadIndex += downSampleRate) {
+  for (; lastReadIndex + downSampleRate <= source->size(); lastReadIndex += downSampleRate) {
 
     // we preserve low by getting the min of the range
     const auto lowIterator = maybeParallel(
@@ -116,8 +116,11 @@ void midas::trader::TraderData::processSource() {
     closes.push_back(source->closes[lastReadIndex + downSampleRate - 1]);
     tradeCounts.push_back(tradesSum);
     volumes.push_back(volumeSum);
-    vwaps.push_back(wapSum /
-                    volumeSum); // divide wapSum by total volume to get vwap
-    timestamps.push_back(source->timestamps[lastReadIndex]);
+    // divide wapSum by total volume to get vwap
+    // Might be zero due to no trades happening in the interval
+    double vwap = (volumeSum != 0) ? (wapSum / volumeSum) : 0.0;
+    vwaps.push_back(vwap);
+
+    timestamps.push_back(source->timestamps[lastReadIndex + downSampleRate - 1]);
   }
 }

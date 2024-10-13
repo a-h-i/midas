@@ -1,5 +1,5 @@
 
-SET(TEST_SRCS trader_data_tests.cpp )
+SET(TEST_SRCS trader_data_tests.cpp trader_sampling_tests.cpp)
 
 add_executable(trader_tests ${TEST_SRCS})
 

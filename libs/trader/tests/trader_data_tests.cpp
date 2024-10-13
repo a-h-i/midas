@@ -53,3 +53,32 @@ TEST(TraderData, TraderDataInvalidSampleRate) {
   const auto streamPtr = std::make_shared<DataStream>(30);
   EXPECT_THROW(trader::TraderData(50, 64, streamPtr), SamplingError);
 }
+
+
+TEST(TraderData, ContinuousDataFeed) {
+  const int streamBarSeconds = 5;
+  const auto streamPtr = std::make_shared<DataStream>(streamBarSeconds);
+  trader::TraderData trader(10, 60, streamPtr);
+
+  // Feed 20 bars in two batches, enough for 2 full downsampled candles
+  for (int i = 0; i < 24; ++i) {
+      streamPtr->addBars(Bar(5, 10 + i, 8 + i, 9 + i, 10 + i, 11 + i, 50 + i, 100 + i,
+            boost::posix_time::second_clock::universal_time()));
+  }
+  streamPtr->waitForData(0ms);
+  trader.processSource();
+
+  // Check the size after processing
+  EXPECT_EQ(trader.size(), 2);  // Expect 2 downsampled bars
+
+  // Now add more bars and validate size increments as expected
+  for (int i = 0; i < 240; ++i) {
+      streamPtr->addBars(Bar(5, 12 + i, 7 + i, 8 + i, 9 + i, 10 + i, 40 + i, 90 + i,
+            boost::posix_time::second_clock::universal_time()));
+  }
+  streamPtr->waitForData(0ms);
+  trader.processSource();
+
+  EXPECT_EQ(trader.size(), 10);  // Should fill up to the lookBack limit
+  EXPECT_TRUE(trader.ok());      // Check that the lookback capacity is met
+}
