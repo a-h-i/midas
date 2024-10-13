@@ -53,16 +53,18 @@ buildFileName(unsigned int barSize, midas::InstrumentEnum instrument,
 static std::shared_ptr<midas::DataStream>
 loadHistoricalData(unsigned int barSize, midas::InstrumentEnum instrument,
                    midas::Broker &broker,
-                   const midas::HistorySubscriptionStartPoint &duration) {
-  const std::string filename =
-      buildFileName(barSize, instrument, duration);
+                   const midas::HistorySubscriptionStartPoint &duration,
+                   std::shared_ptr<logging::thread_safe_logger_t> logger) {
+  const std::string filename = buildFileName(barSize, instrument, duration);
   std::ifstream toRestore(filename, std::ios::in);
   if (toRestore) {
+    INFO_LOG(*logger) << "Loading cached data";
     std::shared_ptr<midas::DataStream> restoredStream =
         std::make_shared<midas::DataStream>(barSize);
     toRestore >> *restoredStream;
     return restoredStream;
   };
+  INFO_LOG(*logger) << "Fetching remote data";
   std::shared_ptr<midas::DataStream> fetchedStream =
       fetchHistoricalDataFromRemote(barSize, instrument, broker, duration);
   // Now we save it
@@ -87,7 +89,7 @@ midas::backtest::BacktestResult midas::backtest::performBacktest(
       broker.estimateHistoricalBarSizeSeconds(interval.duration);
   INFO_LOG(*logger) << "Fetching historical data";
   std::shared_ptr<DataStream> historicalData = loadHistoricalData(
-      historicalBarSize, instrument, broker, interval.duration);
+      historicalBarSize, instrument, broker, interval.duration, logger);
   // Now that we have the historical data, lets create our dummy real time
   // simulation source and our trader
   INFO_LOG(*logger) << "Fetched historical data";
@@ -131,7 +133,7 @@ midas::backtest::BacktestResult midas::backtest::performBacktest(
   }
 
   BacktestResult result{.summary = summaryTracker.summary(),
-                        .originalStream = historicalData,
-                        .traderDownSampledStream = realtimeSimStream};
+                        .originalStream = realtimeSimStream
+                        };
   return result;
 }

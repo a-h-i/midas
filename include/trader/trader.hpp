@@ -3,12 +3,15 @@
 #include "broker-interface/order.hpp"
 #include "broker-interface/order_summary.hpp"
 #include "data/data_stream.hpp"
+#include <algorithm>
 #include <boost/circular_buffer.hpp>
 #include <boost/signals2.hpp>
 #include <boost/signals2/variadic_signal.hpp>
 #include <cstddef>
 #include <deque>
+#include <execution>
 #include <functional>
+#include <iterator>
 #include <memory>
 #include <mutex>
 #include <utility>
@@ -49,11 +52,26 @@ public:
   operator bool() { return ok(); }
   inline std::size_t size() { return tradeCounts.size(); }
   inline bool empty() { return size() == 0; }
+  inline void copy(auto &trades, auto &highs, auto &lows,
+                   auto &opens, auto &closes, auto &vwaps,
+                   auto &volumes) {
+    std::scoped_lock buffersLock(buffersMutex);
+    std::copy(std::execution::unseq, tradeCounts.begin(), tradeCounts.end(),
+              std::back_inserter(trades));
 
-  boost::circular_buffer<double> &closesBuffer() { return closes; }
-  boost::circular_buffer<double> &volumesBuffer() { return volumes; }
-  boost::circular_buffer<double> &highsBuffer() { return highs; }
-  boost::circular_buffer<double> &lowsBuffer() { return lows; }
+    std::copy(std::execution::unseq, this->highs.begin(), this->highs.end(),
+              std::back_insert_iterator(highs));
+    std::copy(std::execution::unseq, this->lows.begin(), this->lows.end(),
+              std::back_inserter(lows));
+    std::copy(std::execution::unseq, this->opens.begin(), this->opens.end(),
+              std::back_inserter(opens));
+    std::copy(std::execution::unseq, this->closes.begin(), this->closes.end(),
+              std::back_inserter(closes));
+    std::copy(std::execution::unseq, this->vwaps.begin(), this->vwaps.end(),
+              std::back_inserter(vwaps));
+    std::copy(std::execution::unseq, this->volumes.begin(), this->volumes.end(),
+              std::back_inserter(volumes));
+  }
   /**
    * processes source, can be called manually at start to consume before any
    * updates. Otherwise data is kept in sync via source subscriptions. Note that
@@ -104,7 +122,6 @@ protected:
   void enterBracket(InstrumentEnum instrument, unsigned int quantity,
                     OrderDirection direction, double entryPrice,
                     double stopLossPrice, double profitPrice);
-  
 
 public:
   virtual ~Trader() = default;

@@ -5,6 +5,7 @@
 #include <array>
 #include <cmath>
 #include <memory>
+#include <vector>
 /**
  * Very simple momentum trader
  * Intended to scalp MNQ and MES and similar indexes.
@@ -40,27 +41,30 @@ public:
       // We do not have enough data to satisfy look back requirements
       return;
     }
-
-    auto &closePrices = data.closesBuffer();
-    auto &volumes = data.volumesBuffer();
-    auto &highs = data.highsBuffer();
-    auto &lows = data.lowsBuffer();
-
-    TA_EMA(0, closePrices.size() - 1, closePrices.linearize(), fastMATimePeriod,
+    std::vector<unsigned int> trades;
+    std::vector<double> closePrices, volumes, highs, lows, opens, vwaps;
+    closePrices.reserve(data.size());
+    volumes.reserve(data.size());
+    highs.reserve(data.size());
+    lows.reserve(data.size());
+    opens.reserve(data.size());
+    trades.reserve(data.size());
+    vwaps.reserve(data.size());
+    data.copy(trades, highs, lows, opens, closePrices, vwaps, volumes);
+    TA_EMA(0, closePrices.size() - 1, closePrices.data(), fastMATimePeriod,
            &fastMAOutBeg, &fastMAOutSize, fastMa.data());
-    TA_EMA(0, closePrices.size() - 1, closePrices.linearize(), slowMATimePeriod,
+    TA_EMA(0, closePrices.size() - 1, closePrices.data(), slowMATimePeriod,
            &slowMAOutBeg, &slowMAOutSize, slowMa.data());
 
-    TA_RSI(0, closePrices.size(), closePrices.linearize(), rsiTimePeriod,
+    TA_RSI(0, closePrices.size(), closePrices.data(), rsiTimePeriod,
            &rsiOutBegin, &rsiOutSize, rsi.data());
 
-    TA_SMA(0, volumes.size() - 1, volumes.linearize(), volumeMATimePeriod,
+    TA_SMA(0, volumes.size() - 1, volumes.data(), volumeMATimePeriod,
            &volumeMAOutBegin, &volumeMAOutSize, volumeMa.data());
 
-    TA_ATR(0, highs.size(), highs.linearize(), lows.linearize(),
-           closePrices.linearize(), atrTimePeriod, &atrOutBegin, &atrOutSize,
-           atr.data());
-    TA_MACD(0, closePrices.size(), closePrices.linearize(), macdFastPeriod,
+    TA_ATR(0, highs.size(), highs.data(), lows.data(), closePrices.data(),
+           atrTimePeriod, &atrOutBegin, &atrOutSize, atr.data());
+    TA_MACD(0, closePrices.size(), closePrices.data(), macdFastPeriod,
             macdSlowPeriod, macdSignalPeriod, &macdOutBegin, &macdOutSize,
             macd.data(), macdSignal.data(), macdHistogram.data());
 

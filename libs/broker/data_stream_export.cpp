@@ -1,6 +1,7 @@
 #include "data/export.hpp"
 #include <boost/date_time/posix_time/time_formatters.hpp>
 #include <string>
+using namespace std::chrono_literals;
 std::ostream &midas::operator<<(std::ostream &stream, const DataStream &data) {
 
   // First we write the headers
@@ -26,5 +27,6 @@ std::istream &midas::operator>>(std::istream &stream, DataStream &data) {
     line >> bar;
     data.addBars(bar);
   }
+  data.waitForData(0ms);
   return stream;
 }

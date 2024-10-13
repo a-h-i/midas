@@ -84,12 +84,12 @@ public:
    * This should be kept in mind as it can block api thread
    */
   decltype(auto) addUpdateListener(T listener) {
-    return updateListener.add_listener(listener);
+    return updateListeners.add_listener(listener);
   }
 
   template <typename ListenerId>
   void removeUpdateListener(ListenerId id) {
-    updateListener.remove_listener(id);
+    updateListeners.remove_listener(id);
   }
 
   inline std::size_t size() const { return tradeCounts.size(); }
@@ -105,6 +105,6 @@ private:
   std::mutex bufferMutex;
   std::condition_variable bufferCv;
   EventSubject<std::function<void()>> reOrderListeners;
-  EventSubject<std::function<void()>> updateListener;
+  EventSubject<std::function<void()>> updateListeners;
 };
 } // namespace midas

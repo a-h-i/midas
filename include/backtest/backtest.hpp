@@ -1,6 +1,5 @@
 #include "broker-interface/broker.hpp"
 #include "broker-interface/instruments.hpp"
-#include "broker-interface/order_summary.hpp"
 #include "broker-interface/subscription.hpp"
 #include "data/data_stream.hpp"
 #include "trader/trader.hpp"
@@ -11,7 +10,7 @@ namespace midas::backtest {
 
 struct BacktestResult {
   TradeSummary summary;
-  std::shared_ptr<DataStream> originalStream, traderDownSampledStream;
+  std::shared_ptr<DataStream> originalStream;
 };
 
 
