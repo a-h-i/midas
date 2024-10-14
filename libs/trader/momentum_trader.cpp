@@ -3,6 +3,7 @@
 #include "logging/logging.hpp"
 #include "ta_func.h"
 
+#include <algorithm>
 #include <array>
 #include <boost/date_time/posix_time/time_formatters.hpp>
 #include <cmath>
@@ -51,15 +52,15 @@ void MomentumTrader::decide() {
   TA_MACD(0, closePrices.size() - 1, closePrices.data(), macdFastPeriod,
           macdSlowPeriod, macdSignalPeriod, &macdOutBegin, &macdOutSize,
           macd.data(), macdSignal.data(), macdHistogram.data());
-  TA_SMA(0, atrOutSize - 1, atr.data(), atrSmoothingPeriod, &atrMAOutBegin, &atrMAOutSize,
-         atrMA.data());
+  TA_SMA(0, atrOutSize - 1, atr.data(), atrSmoothingPeriod, &atrMAOutBegin,
+         &atrMAOutSize, atrMA.data());
 
   bool bullishMa = fastMa[fastMAOutSize - 1] > slowMa[slowMAOutSize - 1];
   bool bullishRsi = (rsi[rsiOutSize - 1] < 70) && (rsi[rsiOutSize - 1] > 45);
   bool bullishVolume = volumes.back() > volumeMa[volumeMAOutSize - 1];
   bool bullishMacd = macd[macdOutSize - 1] > macdSignal[macdOutSize - 1];
   double currentAtr = atrMA[atrMAOutSize - 1];
-  double baseMultiplier = 1;
+  double baseMultiplier = 1.5;
   double normalizedAtr = (currentAtr / closePrices.back()) * 100;
   double atrMultiplier = baseMultiplier;
   if (normalizedAtr >= 3.0) {
@@ -71,6 +72,7 @@ void MomentumTrader::decide() {
       std::round(closePrices.back() * roundingCoeff) / roundingCoeff;
   double takeProfitLimit = entryPrice + atrMultiplier * currentAtr;
   double stopLossLimit = entryPrice - 2 * atrMultiplier * currentAtr;
+  stopLossLimit = std::min(stopLossLimit, entryPrice - 100);
   takeProfitLimit = std::round(takeProfitLimit * roundingCoeff) / roundingCoeff;
   stopLossLimit = std::round(stopLossLimit * roundingCoeff) / roundingCoeff;
 
