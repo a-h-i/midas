@@ -28,6 +28,7 @@ class MomentumTrader : public midas::trader::Trader {
   std::vector<unsigned int> trades;
   std::vector<double> closePrices, volumes, highs, lows, opens, vwaps;
   std::vector<boost::posix_time::ptime> timestamps;
+  unsigned int bullishCandles{0};
 
   void clearBuffers();
 

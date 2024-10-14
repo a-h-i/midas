@@ -62,16 +62,21 @@ void MomentumTrader::decide() {
 
   double entryPrice =
       std::round(closePrices.back() * roundingCoeff) / roundingCoeff;
-  double takeProfitLimit = entryPrice + 2 * currentAtr;
-  double stopLossLimit = entryPrice - 2 * currentAtr;
+  double takeProfitLimit = entryPrice + 0.5 * currentAtr;
+  double stopLossLimit = entryPrice - 5 * currentAtr;
   takeProfitLimit = std::round(takeProfitLimit * roundingCoeff) / roundingCoeff;
   stopLossLimit = std::round(stopLossLimit * roundingCoeff) / roundingCoeff;
 
   const double commissionEstimate =
       commissionEstimatePerUnit * entryQuantity * 2;
   bool coversCommission = commissionEstimate < 2 * currentAtr;
+  if (bullishMa && bullishRsi && bullishMacd) {
+       bullishCandles++;
+  } else {
+       bullishCandles = 0;
+  }
 
-  if (coversCommission & bullishMa & bullishRsi & bullishVolume & bullishMacd) {
+  if (coversCommission & bullishMa & bullishRsi & bullishVolume & bullishMacd & (bullishCandles >= 3)) {
     INFO_LOG(*logger) << "entering bracket atr: " << currentAtr
                       << " bar time: " << timestamps.back();
     enterBracket(instrument, entryQuantity, midas::OrderDirection::BUY,

@@ -1,4 +1,5 @@
 #include "broker-interface/order.hpp"
+#include <algorithm>
 #include <broker-interface/order_summary.hpp>
 #include <stdexcept>
 
@@ -28,6 +29,7 @@ void OrderSummaryTracker::visit(BracketedOrder &order) {
     accumulator.numberOfStopLossTriggered++;
     double stopBalance =
         stopOrder.getAvgFillPrice() * stopOrder.getFilledQuantity();
+    accumulator.maxDownTurn = std::max(accumulator.maxDownTurn, stopBalance);
     if (stopOrder.direction == OrderDirection::BUY) {
       orderBalance -= stopBalance;
     } else {
@@ -35,7 +37,10 @@ void OrderSummaryTracker::visit(BracketedOrder &order) {
     }
   } else if (order.getProfitTakerOrder().state() == OrderStatusEnum::Filled) {
     accumulator.numberOfProfitTakersTriggered++;
-    double profitBalance = profitOrder.getAvgFillPrice() * profitOrder.getFilledQuantity();
+    double profitBalance =
+        profitOrder.getAvgFillPrice() * profitOrder.getFilledQuantity();
+
+    accumulator.maxUpTurn = std::max(accumulator.maxUpTurn, profitBalance);
     if (profitOrder.direction == OrderDirection::BUY) {
       orderBalance -= profitBalance;
     } else {
@@ -46,5 +51,7 @@ void OrderSummaryTracker::visit(BracketedOrder &order) {
                            "has neither stop or profit taker filled");
   }
   accumulator.endingBalance += orderBalance;
-  accumulator.successRatio = static_cast<double>(accumulator.numberOfProfitTakersTriggered) / accumulator.numberOfEntryOrders;
+  accumulator.successRatio =
+      static_cast<double>(accumulator.numberOfProfitTakersTriggered) /
+      accumulator.numberOfEntryOrders;
 }
