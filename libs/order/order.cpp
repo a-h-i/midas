@@ -41,6 +41,8 @@ void midas::Order::setFilled(double avgFillPrice, double totalCommissions,
   this->quantityFilled.store(filledQuantity, std::memory_order::release);
   FillEvent event{
       .newFilled = filledQuantity,
+      .price = avgFillPrice,
+      .commission = totalCommissions,
       .isCompletelyFilled = filledQuantity == requestedQuantity,
   };
   if (event.isCompletelyFilled) {
@@ -63,4 +65,6 @@ double midas::Order::getAvgFillPrice() { return avgFillPrice.load(); }
 
 unsigned int midas::Order::getFilledQuantity() { return quantityFilled.load(); }
 
-bool midas::Order::operator==(const Order &other) const { return id == other.id; }
+bool midas::Order::operator==(const Order &other) const {
+  return id == other.id;
+}

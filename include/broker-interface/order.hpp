@@ -137,6 +137,8 @@ public:
   };
   struct FillEvent {
     unsigned int newFilled;
+    double price;
+    double commission;
     bool isCompletelyFilled;
   };
 
@@ -234,7 +236,8 @@ private:
   std::unique_ptr<SimpleOrder> entryOrder, stopLossOrder, profitTakerOrder;
   std::unique_ptr<internal::BracketedOrderState> phasePtr;
   std::recursive_mutex phaseMutex;
-  boost::signals2::connection entryFillConnection, stopLossFillConnection, profitTakerFillConnection;
+  boost::signals2::connection entryFillConnection, stopLossFillConnection,
+      profitTakerFillConnection;
   void handleEntryFilled(FillEvent event);
   void handleStopLossFilled(FillEvent event);
   void handleProfitTakerFilled(FillEvent event);
@@ -260,8 +263,6 @@ public:
   inline SimpleOrder &getEntryOrder() { return *entryOrder; }
   inline SimpleOrder &getStopOrder() { return *stopLossOrder; }
   inline SimpleOrder &getProfitTakerOrder() { return *profitTakerOrder; }
-  virtual void setFilled(double avgFillPrice, double totalCommissions,
-                         unsigned int filledQuantity) override;
 };
 
 /**

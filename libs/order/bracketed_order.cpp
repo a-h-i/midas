@@ -58,6 +58,8 @@ void midas::BracketedOrder::handleStopLossFilled(FillEvent event) {
   std::scoped_lock phaseLock(phaseMutex);
   if (event.isCompletelyFilled) {
     phasePtr = std::make_unique<internal::BracketTerminatedState>(this);
+    setState(OrderStatusEnum::Filled);
+    setFilled(event.price, event.commission, event.newFilled);
   }
 }
 
@@ -65,6 +67,8 @@ void midas::BracketedOrder::handleProfitTakerFilled(FillEvent event) {
   std::scoped_lock phaseLock(phaseMutex);
   if (event.isCompletelyFilled) {
     phasePtr = std::make_unique<internal::BracketTerminatedState>(this);
+    setState(OrderStatusEnum::Filled);
+    setFilled(event.price, event.commission, event.newFilled);
   }
 }
 
@@ -72,6 +76,8 @@ void midas::BracketedOrder::handleEntryFilled(
     [[maybe_unused]] FillEvent event) {
   std::scoped_lock phaseLock(phaseMutex);
   phasePtr = std::make_unique<internal::BracketHoldingPositionState>(this);
+  setState(OrderStatusEnum::WaitingForChildren);
+  
 }
 
 bool midas::BracketedOrder::inModifiableState() const {
@@ -102,13 +108,7 @@ midas::BracketedOrder::~BracketedOrder() {
   profitTakerFillConnection.disconnect();
   stopLossFillConnection.disconnect();
 }
-void midas::BracketedOrder::setFilled(
-    [[maybe_unused]] double avgFillPrice,
-    [[maybe_unused]] double totalCommissions,
-    [[maybe_unused]] unsigned int filledQuantity) {
-  // no-op on bracketed order
-  WARNING_LOG(*logger) << "setFilled called directly on bracketed order";
-}
+
 
 bool midas::internal::BracketUntransmittedState::canTransmit() { return true; }
 

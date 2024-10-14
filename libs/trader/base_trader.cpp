@@ -1,7 +1,7 @@
 #include "broker-interface/order.hpp"
 #include "broker-interface/trades_summary.hpp"
 #include "logging/logging.hpp"
-#include "trader/trader.hpp"
+#include "trader/base_trader.hpp"
 #include <algorithm>
 #include <functional>
 #include <mutex>
