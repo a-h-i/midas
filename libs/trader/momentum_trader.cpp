@@ -40,18 +40,18 @@ void MomentumTrader::decide() {
   TA_EMA(0, closePrices.size() - 1, closePrices.data(), slowMATimePeriod,
          &slowMAOutBeg, &slowMAOutSize, slowMa.data());
 
-  TA_RSI(0, closePrices.size() -1, closePrices.data(), rsiTimePeriod, &rsiOutBegin,
-         &rsiOutSize, rsi.data());
+  TA_RSI(0, closePrices.size() - 1, closePrices.data(), rsiTimePeriod,
+         &rsiOutBegin, &rsiOutSize, rsi.data());
 
   TA_SMA(0, volumes.size() - 1, volumes.data(), volumeMATimePeriod,
          &volumeMAOutBegin, &volumeMAOutSize, volumeMa.data());
 
-  TA_ATR(0, highs.size() -1, highs.data(), lows.data(), closePrices.data(),
+  TA_ATR(0, highs.size() - 1, highs.data(), lows.data(), closePrices.data(),
          atrTimePeriod, &atrOutBegin, &atrOutSize, atr.data());
-  TA_MACD(0, closePrices.size() -1, closePrices.data(), macdFastPeriod,
+  TA_MACD(0, closePrices.size() - 1, closePrices.data(), macdFastPeriod,
           macdSlowPeriod, macdSignalPeriod, &macdOutBegin, &macdOutSize,
           macd.data(), macdSignal.data(), macdHistogram.data());
-  TA_EMA(0, atrOutSize - 1, atr.data(), 10, &atrMAOutBegin, &atrMAOutSize,
+  TA_SMA(0, atrOutSize - 1, atr.data(), 20, &atrMAOutBegin, &atrMAOutSize,
          atrMA.data());
 
   bool bullishMa = fastMa[fastMAOutSize - 1] > slowMa[slowMAOutSize - 1];
@@ -59,11 +59,18 @@ void MomentumTrader::decide() {
   bool bullishVolume = volumes.back() > volumeMa[volumeMAOutSize - 1];
   bool bullishMacd = macd[macdOutSize - 1] > macdSignal[macdOutSize - 1];
   double currentAtr = atrMA[atrMAOutSize - 1];
-
+  double baseMultiplier = 1.5;
+  double normalizedAtr = (currentAtr / closePrices.back()) * 100;
+  double atrMultiplier = baseMultiplier;
+  if (normalizedAtr > 3.0) {
+    atrMultiplier *= 0.5;
+  } else if (normalizedAtr < 1.0) {
+    atrMultiplier *= 1.5;
+  }
   double entryPrice =
       std::round(closePrices.back() * roundingCoeff) / roundingCoeff;
-  double takeProfitLimit = entryPrice + 0.5 * currentAtr;
-  double stopLossLimit = entryPrice - 5 * currentAtr;
+  double takeProfitLimit = entryPrice + atrMultiplier * currentAtr;
+  double stopLossLimit = entryPrice - 1.5 * atrMultiplier * currentAtr;
   takeProfitLimit = std::round(takeProfitLimit * roundingCoeff) / roundingCoeff;
   stopLossLimit = std::round(stopLossLimit * roundingCoeff) / roundingCoeff;
 
@@ -71,12 +78,13 @@ void MomentumTrader::decide() {
       commissionEstimatePerUnit * entryQuantity * 2;
   bool coversCommission = commissionEstimate < 2 * currentAtr;
   if (bullishMa && bullishRsi && bullishMacd) {
-       bullishCandles++;
+    bullishCandles++;
   } else {
-       bullishCandles = 0;
+    bullishCandles = 0;
   }
 
-  if (coversCommission & bullishMa & bullishRsi & bullishVolume & bullishMacd & (bullishCandles >= 3)) {
+  if (coversCommission & bullishMa & bullishRsi & bullishVolume & bullishMacd &
+      (bullishCandles >= 3)) {
     INFO_LOG(*logger) << "entering bracket atr: " << currentAtr
                       << " bar time: " << timestamps.back();
     enterBracket(instrument, entryQuantity, midas::OrderDirection::BUY,

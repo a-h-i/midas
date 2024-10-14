@@ -12,7 +12,7 @@ class MomentumTrader : public midas::trader::Trader {
   static constexpr int fastMATimePeriod = 9;
   static constexpr int slowMATimePeriod = 100;
   static constexpr int volumeMATimePeriod = 10;
-  static constexpr int atrTimePeriod = 9;
+  static constexpr int atrTimePeriod = 13;
   static constexpr int rsiTimePeriod = 9;
   static constexpr int entryQuantity = 2;
   static constexpr int macdFastPeriod = 6, macdSlowPeriod = 13,
