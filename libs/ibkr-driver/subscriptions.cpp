@@ -1,9 +1,13 @@
+#include "CommonDefs.h"
 #include "Contract.h"
 #include "TagValue.h"
 #include "broker-interface/subscription.hpp"
 #include "ibkr-driver/ibkr.hpp"
+#include "ibkr/internal/active_subscription_state.hpp"
 #include "ibkr/internal/build_contracts.hpp"
 #include "ibkr/internal/client.hpp"
+#include <functional>
+#include <memory>
 #include <sstream>
 #include <vector>
 
@@ -19,15 +23,18 @@ void ibkr::internal::Client::removeActiveSubscription(const TickerId ticker) {
 }
 
 std::size_t ibkr::internal::Client::applyToActiveSubscriptions(
-    std::function<bool(midas::Subscription &)> func, const TickerId ticker) {
+    std::function<bool(midas::Subscription &, ActiveSubscriptionState &state)>
+        func,
+    const TickerId ticker) {
 
   std::size_t numberProcessed = 0;
   std::scoped_lock subscriptionManagementLock(subscriptionsMutex);
   if (activeSubscriptions.contains(ticker)) {
+    auto &subscriptionState = activeSubscriptions.at(ticker);
     std::shared_ptr<midas::Subscription> subscription =
-        activeSubscriptions.at(ticker).lock();
+        subscriptionState.subscription.lock();
     if (subscription) {
-      const bool remove = func(*subscription);
+      const bool remove = func(*subscription, subscriptionState);
       if (remove) {
         activeSubscriptions.erase(ticker);
       }
@@ -46,12 +53,7 @@ std::size_t ibkr::internal::Client::applyToActiveSubscriptions(
   return numberProcessed;
 }
 
-struct BarSizeSetting {
-  std::string settingString;
-  unsigned int sizeSeconds;
-};
-
-static BarSizeSetting
+static ibkr::internal::BarSizeSetting
 historicalBarSize(const midas::HistorySubscriptionStartPoint &start) {
   if (start.unit == midas::SubscriptionDurationUnits::Years ||
       start.quantity > 1) {
@@ -66,11 +68,11 @@ unsigned int ibkr::Driver::estimateHistoricalBarSizeSeconds(
   return historicalBarSize(duration).sizeSeconds;
 }
 
-static void requestHistoricalData(
-    const Contract &contract, const TickerId ticker,
-    EClientSocket *const socket,
-    const midas::HistorySubscriptionStartPoint &start,
-    std::unordered_map<TickerId, unsigned int> &historicalBarSizes) {
+static void
+requestHistoricalData(const Contract &contract, const TickerId ticker,
+                      EClientSocket *const socket,
+                      const midas::HistorySubscriptionStartPoint &start,
+                      ibkr::internal::BarSizeSetting &barSize) {
   std::stringstream historicalDuration;
   historicalDuration << start.quantity;
   switch (start.unit) {
@@ -83,8 +85,7 @@ static void requestHistoricalData(
     break;
   }
   const auto durationStr = historicalDuration.str();
-  BarSizeSetting barSize = historicalBarSize(start);
-  historicalBarSizes[ticker] = barSize.sizeSeconds;
+  barSize = historicalBarSize(start);
   socket->reqHistoricalData(ticker, contract, "", durationStr,
                             barSize.settingString, "TRADES", 0, 2, false,
                             TagValueListSPtr());
@@ -117,22 +118,23 @@ void ibkr::internal::Client::processPendingSubscriptions() {
   for (auto weakPtr : pendingSubscriptions) {
     std::shared_ptr<midas::Subscription> sub = weakPtr.lock();
     if (sub) {
+
       const TickerId tickerId = nextTickerId++;
-      activeSubscriptions[tickerId] = weakPtr;
+      auto &activeSub = activeSubscriptions[tickerId] = {
+          .isDone = false,
+          .subscription = weakPtr,
+          .ticker = tickerId,
+      };
       const Contract contract = build_futures_contract(sub->symbol);
       if (sub->isRealtime) {
         std::vector<int> realTimeRequestIds = requestRealtimeData(
             contract, tickerId, connectionState.clientSocket.get(),
             sub->includeTickData);
-        sub->cancelListeners.add_listener(
-            [this, tickerId,
-             realTimeRequestIds]([[maybe_unused]] const midas::Subscription &) {
-              for (auto requestId : realTimeRequestIds) {
-                connectionState.clientSocket->cancelTickByTickData(requestId);
-              }
-              connectionState.clientSocket->cancelRealTimeBars(tickerId);
-            });
+        activeSub.cancelConnection = sub->cancelSignal.connect(
+            std::bind(&Client::handleSubscriptionCancel, this, tickerId,
+                      std::placeholders::_1));
       } else {
+        BarSizeSetting barSizeSetting;
         requestHistoricalData(
             contract, tickerId, connectionState.clientSocket.get(),
             sub->historicalDuration.value_or(
@@ -140,12 +142,11 @@ void ibkr::internal::Client::processPendingSubscriptions() {
                     .unit = midas::SubscriptionDurationUnits::Months,
                     .quantity = 1,
                 }),
-            historicalBarSizes);
-        sub->cancelListeners.add_listener(
-            [this, tickerId]([[maybe_unused]] const midas::Subscription &) {
-              connectionState.clientSocket->cancelHistoricalData(tickerId);
-              historicalBarSizes.erase(tickerId);
-            });
+            barSizeSetting);
+        activeSub.historicalBarSizeSetting = barSizeSetting;
+        activeSub.cancelConnection = sub->cancelSignal.connect(
+            std::bind(&Client::handleSubscriptionCancel, this, tickerId,
+                      std::placeholders::_1));
       }
     }
   }
@@ -155,12 +156,43 @@ void ibkr::internal::Client::processPendingSubscriptions() {
 void ibkr::internal::Client::historicalDataEnd(
     int ticker, [[maybe_unused]] const std::string &startDateStr,
     [[maybe_unused]] const std::string &endDateStr) {
-  
+  {
+    std::scoped_lock lock(subscriptionsMutex);
+    if (activeSubscriptions.contains(ticker)) {
+      auto &activeSub = activeSubscriptions[ticker];
+      activeSub.isDone = true;
+      if (activeSub.cancelConnection.has_value()) {
+        activeSub.cancelConnection.value().disconnect();
+      }
+    }
+  }
   applyToActiveSubscriptions(
-      [](midas::Subscription &subscription) {
-        subscription.endListeners.notify(subscription);
+      [](midas::Subscription &subscription,
+         [[maybe_unused]] ActiveSubscriptionState &state) {
+        subscription.endSignal(subscription);
         return true;
       },
       ticker);
-  historicalBarSizes.erase(ticker);
+}
+
+void ibkr::internal::Client::handleSubscriptionCancel(
+    const TickerId ticker, const midas::Subscription &sub) {
+  std::scoped_lock lock(subscriptionsMutex);
+  if (activeSubscriptions.contains(ticker)) {
+    auto &state = activeSubscriptions[ticker];
+    if (!state.isDone) {
+      // we need to cancel pending api requests
+      if (sub.isRealtime) {
+        connectionState.clientSocket->cancelHistoricalData(ticker);
+      } else {
+        for (int requestId : state.ticksByTickRequestIds) {
+          connectionState.clientSocket->cancelTickByTickData(requestId);
+        }
+        connectionState.clientSocket->cancelRealTimeBars(ticker);
+      }
+    } else {
+      state.isDone = true;
+    }
+    activeSubscriptions.erase(ticker);
+  }
 }

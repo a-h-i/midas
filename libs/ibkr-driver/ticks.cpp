@@ -1,4 +1,5 @@
 #include "bar.h"
+#include "ibkr/internal/active_subscription_state.hpp"
 #include "ibkr/internal/bar_conversion.hpp"
 #include "ibkr/internal/client.hpp"
 #include "logging/logging.hpp"
@@ -64,11 +65,12 @@ void ibkr::internal::Client::historicalData(TickerId tickerId,
                                             const Bar &internalBar) {
 
   applyToActiveSubscriptions(
-      [&internalBar, tickerId, this](midas::Subscription &subscription) {
-        if (historicalBarSizes.contains(tickerId)) {
+      [&internalBar, tickerId, this](midas::Subscription &subscription,
+                                     ActiveSubscriptionState &state) {
+        if (state.historicalBarSizeSetting.has_value()) {
           midas::Bar bar = ibkr::internal::convertIbkrBar(
-              internalBar, historicalBarSizes[tickerId]);
-          subscription.barListeners.notify(subscription, bar);
+              internalBar, state.historicalBarSizeSetting.value().sizeSeconds);
+          subscription.barSignal(subscription, bar);
         } else {
           CRITICAL_LOG(logger)
               << "Unable to find historical bar sizes for ticker " << tickerId;
@@ -98,8 +100,8 @@ void ibkr::internal::Client::realtimeBar(TickerId tickerId, long time,
   internalBar.count = count;
   midas::Bar bar = ibkr::internal::convertIbkrBar(internalBar, 30);
   applyToActiveSubscriptions(
-      [&bar](midas::Subscription &subscription) {
-        subscription.barListeners.notify(subscription, bar);
+      [&bar](midas::Subscription &subscription, [[maybe_unused]] ActiveSubscriptionState &state) {
+        subscription.barSignal(subscription, bar);
         return false;
       },
       tickerId);

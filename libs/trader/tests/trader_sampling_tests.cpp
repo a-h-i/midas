@@ -19,6 +19,7 @@ public:
     tradeCounts.push_back(1); // Adding a trade count for simplicity
     double wap = (high + low + close) / 3.0;
     waps.push_back(wap);
+    timestamps.push_back(boost::posix_time::second_clock::universal_time());
   }
 };
 
@@ -48,7 +49,8 @@ TEST_F(TraderDataTest, BasicDownsampling) {
   std::vector<unsigned int> trades;
   std::vector<double> closes, volumes, highs, lows, opens, vwaps;
   std::vector<boost::posix_time::ptime> timestamps;
-  traderData->copy(trades, highs, lows, opens, closes, vwaps, volumes, timestamps);
+  traderData->copy(trades, highs, lows, opens, closes, vwaps, volumes,
+                   timestamps);
   EXPECT_EQ(opens[0], 1.0);  // First open
   EXPECT_EQ(closes[1], 3.0); // Last close of second bar
   EXPECT_EQ(highs[0], 2.5);  // First high

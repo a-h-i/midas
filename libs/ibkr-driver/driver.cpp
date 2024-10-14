@@ -1,16 +1,19 @@
 #include "ibkr-driver/ibkr.hpp"
 #include "ibkr/internal/client.hpp"
+#include <boost/signals2/connection.hpp>
 
 ibkr::Driver::Driver(boost::asio::ip::tcp::endpoint endpoint)
     : implementation{std::make_unique<internal::Client>(endpoint)} {}
 
-void ibkr::Driver::addConnectListener(const std::function<void()> &func) {
-  implementation->addConnectListener(func);
+boost::signals2::connection
+ibkr::Driver::addConnectListener(const std::function<void(bool)> &func) {
+  return implementation->addConnectListener(func);
 }
 
 bool ibkr::Driver::processCycle() { return implementation->processCycle(); }
 
-void ibkr::Driver::addSubscription(std::weak_ptr<midas::Subscription> subscription) {
+void ibkr::Driver::addSubscription(
+    std::weak_ptr<midas::Subscription> subscription) {
   implementation->addSubscription(subscription);
 }
 

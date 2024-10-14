@@ -40,15 +40,15 @@ midas::BracketedOrder::BracketedOrder(
       std::make_unique<SimpleOrder>(quantity, direction, instrument,
                                     ExecutionType::Limit, logger, entryPrice);
   phasePtr = std::make_unique<internal::BracketUntransmittedState>(this);
-  entryOrder->addFillEventListener(
+  entryFillConnection = entryOrder->addFillEventListener(
       [this]([[maybe_unused]] Order &entry, FillEvent event) {
         handleEntryFilled(event);
       });
-  stopLossOrder->addFillEventListener(
+  stopLossFillConnection = stopLossOrder->addFillEventListener(
       [this]([[maybe_unused]] Order &stop, FillEvent event) {
         handleStopLossFilled(event);
       });
-  profitTakerOrder->addFillEventListener(
+  profitTakerFillConnection = profitTakerOrder->addFillEventListener(
       [this]([[maybe_unused]] Order &stop, FillEvent event) {
         handleProfitTakerFilled(event);
       });
@@ -97,7 +97,11 @@ void midas::BracketedOrder::setTransmitted() {
   phasePtr = std::make_unique<internal::BracketTransmittedState>(this);
 }
 
-midas::BracketedOrder::~BracketedOrder() = default;
+midas::BracketedOrder::~BracketedOrder() {
+  entryFillConnection.disconnect();
+  profitTakerFillConnection.disconnect();
+  stopLossFillConnection.disconnect();
+}
 void midas::BracketedOrder::setFilled(
     [[maybe_unused]] double avgFillPrice,
     [[maybe_unused]] double totalCommissions,

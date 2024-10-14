@@ -25,11 +25,11 @@ static std::shared_ptr<midas::DataStream> fetchHistoricalDataFromRemote(
       new midas::DataStream(barSize));
   std::shared_ptr<midas::Subscription> historicalSubscription =
       std::make_shared<midas::Subscription>(instrument, duration, false);
-  historicalSubscription->barListeners.add_listener(
+  historicalSubscription->barSignal.connect(
       [&historicalData]([[maybe_unused]] const midas::Subscription &sub,
                         midas::Bar bar) { historicalData->addBars(bar); });
   std::atomic<bool> dataEnded{false};
-  historicalSubscription->endListeners.add_listener(
+  historicalSubscription->endSignal.connect(
       [&dataEnded]([[maybe_unused]] const midas::Subscription &sub) {
         dataEnded.store(true, std::memory_order::release);
       });

@@ -21,10 +21,8 @@ private:
   boost::circular_buffer<unsigned int> tradeCounts;
   boost::circular_buffer<double> highs, lows, opens, closes, vwaps, volumes;
   boost::circular_buffer<boost::posix_time::ptime> timestamps;
-  const decltype(std::declval<DataStream>().addUpdateListener(
-      std::function<void()>())) updateListenerId;
-  const decltype(std::declval<DataStream>().addReOrderListener(
-      std::function<void()>())) reOrderListenerId;
+  boost::signals2::connection updateListenerConnection,
+      reOrderListenerConnection;
   std::recursive_mutex buffersMutex;
 
 public:

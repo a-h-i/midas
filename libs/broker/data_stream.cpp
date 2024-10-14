@@ -25,12 +25,12 @@ bool midas::DataStream::waitForData(std::chrono::milliseconds timeout) {
     }
     const auto timeUpperBound =
         std::upper_bound(timestamps.begin(), timestamps.end(), bar.utcTime);
-    // We should always be inserting at the end, unless we receive out of order data
+    // We should always be inserting at the end, unless we receive out of order
+    // data
     reordered = reordered || (timeUpperBound != timestamps.end());
     const auto insertionDistance =
         std::distance(timestamps.begin(), timeUpperBound);
 
-    
     // Insert data point, they all have the same order
     timestamps.insert(timeUpperBound, bar.utcTime);
     volumes.insert(volumes.begin() + insertionDistance, bar.volume);
@@ -42,8 +42,18 @@ bool midas::DataStream::waitForData(std::chrono::milliseconds timeout) {
     tradeCounts.insert(tradeCounts.begin() + insertionDistance, bar.tradeCount);
   }
   if (reordered) {
-    reOrderListeners.notify();
+    reorderSignal();
   }
-  updateListeners.notify();
+  updateSignal();
   return true; // we processed the bars
+}
+
+boost::signals2::connection midas::DataStream::addUpdateListener(
+    const update_signal_t::slot_type &subscriber) {
+  return updateSignal.connect(subscriber);
+}
+
+boost::signals2::connection midas::DataStream::addReOrderListener(
+    const reorder_signal_t::slot_type &subscriber) {
+  return reorderSignal.connect(subscriber);
 }

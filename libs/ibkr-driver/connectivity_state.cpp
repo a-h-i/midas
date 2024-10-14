@@ -45,15 +45,13 @@ void ibkr::internal::Client::ConnectivityState::connect(
   // Reader initialized after connection due to api version negotiation
   reader = std::make_unique<EReader>(clientSocket.get(), &readerSignal);
   reader->start();
-  std::scoped_lock listenersMutex(connectionSubjectMutex);
-    connectionSubject.notify();
+  connectionSignal(true);
 }
 
 void ibkr::internal::Client::ConnectivityState::disconnect() {
   if (clientSocket->isConnected()) {
     clientSocket->eDisconnect();
-    std::scoped_lock listenersMutex(connectionSubjectMutex);
-    connectionSubject.notify();
+    connectionSignal(false);
   }
 }
 

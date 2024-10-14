@@ -10,6 +10,7 @@ set(SOURCE_LIST
   subscriptions.cpp
   bar_conversion.cpp
   driver.cpp
+  active_sub_state.cpp
 )
 
 add_library(ibkr_driver ${SOURCE_LIST} ${HEADER_FILES})

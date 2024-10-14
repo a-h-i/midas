@@ -2,6 +2,7 @@
 #include "broker-interface/broker.hpp"
 #include "broker-interface/subscription.hpp"
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/signals2/connection.hpp>
 #include <memory>
 namespace ibkr {
 
@@ -13,7 +14,7 @@ public:
   Driver(boost::asio::ip::tcp::endpoint endpoint);
   ~Driver();
 
-  void addConnectListener(const std::function<void()> &func);
+  boost::signals2::connection addConnectListener(const std::function<void(bool)> &func);
   virtual bool processCycle() override;
   virtual void
   addSubscription(std::weak_ptr<midas::Subscription> subscription) override;

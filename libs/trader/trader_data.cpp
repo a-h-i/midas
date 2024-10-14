@@ -14,10 +14,12 @@ midas::trader::TraderData::TraderData(std::size_t lookBackSize,
       highs(lookBackSize), lows(lookBackSize), opens(lookBackSize),
       closes(lookBackSize), vwaps(lookBackSize), volumes(lookBackSize),
       timestamps(lookBackSize),
-      updateListenerId(source->addUpdateListener(
+      updateListenerConnection(source->addUpdateListener(
           std::bind(&TraderData::processSource, this))),
-      reOrderListenerId(
+      reOrderListenerConnection(
           source->addReOrderListener(std::bind(&TraderData::clear, this))) {
+
+
   if (candleSizeSeconds % source->barSizeSeconds != 0) {
     throw SamplingError(
         "Requested candle size is not divisible by stream bar size");
@@ -25,8 +27,8 @@ midas::trader::TraderData::TraderData(std::size_t lookBackSize,
 }
 
 midas::trader::TraderData::~TraderData() {
-  source->removeReOrderListener(reOrderListenerId);
-  source->removeUpdateListener(updateListenerId);
+  updateListenerConnection.disconnect();
+  reOrderListenerConnection.disconnect();
 }
 
 bool midas::trader::TraderData::ok() {

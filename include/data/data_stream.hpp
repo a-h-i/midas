@@ -1,8 +1,8 @@
 #pragma once
 #include "bar.hpp"
-#include "observers/observers.hpp"
 #include <algorithm>
 #include <boost/date_time/posix_time/ptime.hpp>
+#include <boost/signals2.hpp>
 #include <chrono>
 #include <condition_variable>
 #include <iterator>
@@ -26,6 +26,8 @@ public:
   std::vector<unsigned int> tradeCounts;
   std::vector<double> highs, lows, opens, closes, waps, volumes;
   std::vector<boost::posix_time::ptime> timestamps;
+  typedef boost::signals2::signal<void()> update_signal_t;
+  typedef boost::signals2::signal<void()> reorder_signal_t;
 
   /**
    * Waits for new data to arrive and processed it.
@@ -59,7 +61,6 @@ public:
     bufferCv.notify_all();
   }
 
-  template <typename T>
   /**
    * Called before returning from waitForData
    * to process the new bars.
@@ -67,15 +68,8 @@ public:
    * Note that this happens while a lock on the buffers is held.
    * This should be kept in mind as it can block api thread
    */
-  decltype(auto) addReOrderListener(T listener) {
-    return reOrderListeners.add_listener(listener);
-  }
-  template <typename ListenerId>
-  void removeReOrderListener(ListenerId id) {
-    reOrderListeners.remove_listener(id);
-  }
-
-  template <typename T>
+  boost::signals2::connection
+  addUpdateListener(const update_signal_t::slot_type &subscriber);
   /**
    * Called before returning from waitForData
    * to process the new bars.
@@ -83,28 +77,24 @@ public:
    * Note that this happens while a lock on the buffers is held.
    * This should be kept in mind as it can block api thread
    */
-  decltype(auto) addUpdateListener(T listener) {
-    return updateListeners.add_listener(listener);
-  }
+  boost::signals2::connection
+  addReOrderListener(const reorder_signal_t::slot_type &subscriber);
 
-  template <typename ListenerId>
-  void removeUpdateListener(ListenerId id) {
-    updateListeners.remove_listener(id);
-  }
 
   inline std::size_t size() const { return tradeCounts.size(); }
 
 private:
   std::vector<midas::Bar> buffer
-  /**
-   * Protects the bar buffer 
-   * Which is where the API worker produces data.
-   * API worker does not interact directly with the data vectors.
-   * 
-   *  */;
+      /**
+       * Protects the bar buffer
+       * Which is where the API worker produces data.
+       * API worker does not interact directly with the data vectors.
+       *
+       *  */
+      ;
   std::mutex bufferMutex;
   std::condition_variable bufferCv;
-  EventSubject<std::function<void()>> reOrderListeners;
-  EventSubject<std::function<void()>> updateListeners;
+  reorder_signal_t reorderSignal;
+  update_signal_t updateSignal;
 };
 } // namespace midas

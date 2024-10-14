@@ -6,11 +6,14 @@
 #include "EReaderOSSignal.h"
 #include "EWrapper.h"
 
+#include "active_subscription_state.hpp"
 #include "broker-interface/subscription.hpp"
+#include "exceptions/subscription_error.hpp"
 #include "logging/logging.hpp"
-#include "observers/observers.hpp"
 #include <atomic>
 #include <boost/asio.hpp>
+#include <boost/signals2.hpp>
+#include <boost/signals2/connection.hpp>
 #include <deque>
 #include <functional>
 #include <memory>
@@ -32,6 +35,8 @@ class Client : public EWrapper {
    * as well as having a valid next order id
    */
   class ConnectivityState {
+    typedef boost::signals2::signal<void(bool)> connection_signal_t;
+
   public:
     /**
      *  next valid order id that can be used
@@ -81,23 +86,23 @@ class Client : public EWrapper {
              << " ]";
       return stream;
     }
-    void addConnectListener(const std::function<void()> &obs) {
-      std::scoped_lock listenersLock(connectionSubjectMutex);
-      connectionSubject.add_listener(obs);
+    boost::signals2::connection
+    addConnectListener(const connection_signal_t::slot_type &obs) {
+      return connectionSignal.connect(obs);
     }
 
   private:
     bool receivedManagedAccounts = false, securityDefinitionServerOk = false;
     std::atomic<int> connectedDataFarmsCount, connectedHistoricalDataFarmsCount;
-    std::mutex connectionSubjectMutex;
-    EventSubject<std::function<void()>> connectionSubject;
+    connection_signal_t connectionSignal;
   };
 
 public:
   Client(const boost::asio::ip::tcp::endpoint &endpoint);
   virtual ~Client();
-  inline void addConnectListener(const std::function<void()> &obs) {
-    connectionState.addConnectListener(obs);
+  inline boost::signals2::connection
+  addConnectListener(const std::function<void(bool)> &obs) {
+    return connectionState.addConnectListener(obs);
   }
   /**
    * Does nothing if not connected
@@ -1264,9 +1269,7 @@ private:
    * Subscriptions that have not yet been processed
    */
   std::deque<std::weak_ptr<midas::Subscription>> pendingSubscriptions;
-  std::unordered_map<TickerId, std::weak_ptr<midas::Subscription>>
-      activeSubscriptions;
-  std::unordered_map<TickerId, unsigned int> historicalBarSizes;
+  std::unordered_map<TickerId, ActiveSubscriptionState> activeSubscriptions;
 
   void processPendingSubscriptions();
   /**
@@ -1276,9 +1279,11 @@ private:
    * @returns number of processed subscriptions
    */
   std::size_t
-  applyToActiveSubscriptions(std::function<bool(midas::Subscription &)> func,
+  applyToActiveSubscriptions(std::function<bool(midas::Subscription &, ActiveSubscriptionState &state)> func,
                              const TickerId ticker);
   void removeActiveSubscription(const TickerId ticker);
+
+  void handleSubscriptionCancel(const TickerId, const midas::Subscription &);
 };
 
 } // namespace ibkr::internal

@@ -37,9 +37,10 @@ void ibkr::internal::Client::managedAccounts(const std::string &accountsList) {
   connectionState.notifyManagedAccountsReceived();
 }
 
-void ibkr::internal::Client::position(const std::string &account,
-                                      const Contract &contract,
-                                      Decimal position, double avgCost) {
+void ibkr::internal::Client::position(
+    [[maybe_unused]] const std::string &account,
+    [[maybe_unused]] const Contract &contract,
+    [[maybe_unused]] Decimal position, [[maybe_unused]] double avgCost) {
   ERROR_LOG(logger)
       << "Unsupported event, driver does not track account positions atm";
 }
@@ -49,11 +50,10 @@ void ibkr::internal::Client::positionEnd() {
       << "Unsupported event, driver does not track account positions atm";
 }
 
-void ibkr::internal::Client::accountSummary(int reqId,
-                                            const std::string &account,
-                                            const std::string &tag,
-                                            const std::string &value,
-                                            const std::string &currency) {
+void ibkr::internal::Client::accountSummary(
+    int reqId, const std::string &account,
+    [[maybe_unused]] const std::string &tag, const std::string &value,
+    const std::string &currency) {
   DEBUG_LOG(logger) << "Account summary received reqId: " << reqId
                     << " account: " << account << " value: " << value
                     << " currency " << currency;

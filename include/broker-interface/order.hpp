@@ -1,8 +1,8 @@
 #pragma once
 #include "broker-interface/instruments.hpp"
 #include "logging/logging.hpp"
-#include "observers/observers.hpp"
 #include <atomic>
+#include <boost/signals2.hpp>
 #include <generator>
 #include <memory>
 #include <mutex>
@@ -140,8 +140,9 @@ public:
     bool isCompletelyFilled;
   };
 
-  typedef std::function<void(Order &, StatusChangeEvent)> StatusChangeHandler;
-  typedef std::function<void(Order &, FillEvent)> FillEventHandler;
+  typedef boost::signals2::signal<void(Order &, StatusChangeEvent)>
+      status_change_signal_t;
+  typedef boost::signals2::signal<void(Order &, FillEvent)> fill_event_signal_t;
   /**
    * Total quantity requested in order
    */
@@ -160,8 +161,9 @@ private:
 
 protected:
   std::shared_ptr<logging::thread_safe_logger_t> logger;
-  EventSubject<StatusChangeHandler> statusObservers;
-  EventSubject<FillEventHandler> fillHandlers;
+  fill_event_signal_t fillEventSignal;
+  status_change_signal_t statusChangeSignal;
+
   virtual void setState(OrderStatusEnum newState);
 
 public:
@@ -189,23 +191,16 @@ public:
   }
   virtual OrderStatusEnum state() const;
 
-  virtual decltype(statusObservers)::ListenerIdType
-  addStatusChangeListener(StatusChangeHandler handler) {
-    return statusObservers.add_listener(handler);
-  }
-  virtual void
-  removeStatusChangeListener(decltype(statusObservers)::ListenerIdType id) {
-    statusObservers.remove_listener(id);
+  virtual boost::signals2::connection
+  addStatusChangeListener(const status_change_signal_t::slot_type &handler) {
+    return statusChangeSignal.connect(handler);
   }
 
-  virtual decltype(fillHandlers)::ListenerIdType
-  addFillEventListener(FillEventHandler handler) {
-    return fillHandlers.add_listener(handler);
+  virtual boost::signals2::connection
+  addFillEventListener(const fill_event_signal_t::slot_type &handler) {
+    return fillEventSignal.connect(handler);
   }
-  virtual void
-  removeFillEventListener(decltype(fillHandlers)::ListenerIdType id) {
-    fillHandlers.remove_listener(id);
-  }
+
   /**
    * Only valid if order in filled state.
    */
@@ -239,7 +234,7 @@ private:
   std::unique_ptr<SimpleOrder> entryOrder, stopLossOrder, profitTakerOrder;
   std::unique_ptr<internal::BracketedOrderState> phasePtr;
   std::recursive_mutex phaseMutex;
-
+  boost::signals2::connection entryFillConnection, stopLossFillConnection, profitTakerFillConnection;
   void handleEntryFilled(FillEvent event);
   void handleStopLossFilled(FillEvent event);
   void handleProfitTakerFilled(FillEvent event);
