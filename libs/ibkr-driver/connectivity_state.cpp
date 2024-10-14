@@ -19,7 +19,7 @@ inline void farmConnectionStateHelper(std::atomic<int> &counter, bool state) {
 ibkr::internal::Client::ConnectivityState::ConnectivityState(EWrapper *wrapper)
     : readerSignal(2000),
       clientSocket(new EClientSocket(wrapper, &readerSignal)) {
-  // clientSocket->setConnectOptions("+PACEAPI");
+  clientSocket->setConnectOptions("+PACEAPI");
 }
 
 ibkr::internal::Client::ConnectivityState::~ConnectivityState() {
