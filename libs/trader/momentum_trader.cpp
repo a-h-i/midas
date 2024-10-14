@@ -51,7 +51,7 @@ void MomentumTrader::decide() {
   TA_MACD(0, closePrices.size() - 1, closePrices.data(), macdFastPeriod,
           macdSlowPeriod, macdSignalPeriod, &macdOutBegin, &macdOutSize,
           macd.data(), macdSignal.data(), macdHistogram.data());
-  TA_SMA(0, atrOutSize - 1, atr.data(), 20, &atrMAOutBegin, &atrMAOutSize,
+  TA_SMA(0, atrOutSize - 1, atr.data(), atrSmoothingPeriod, &atrMAOutBegin, &atrMAOutSize,
          atrMA.data());
 
   bool bullishMa = fastMa[fastMAOutSize - 1] > slowMa[slowMAOutSize - 1];

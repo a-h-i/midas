@@ -17,6 +17,7 @@ class MomentumTrader : public midas::trader::Trader {
   static constexpr int entryQuantity = 2;
   static constexpr int macdFastPeriod = 6, macdSlowPeriod = 13,
                        macdSignalPeriod = 5;
+  static constexpr int atrSmoothingPeriod = 20;
   static constexpr double commissionEstimatePerUnit = 0.25;
   static constexpr double roundingCoeff = 4; // minimum of .25 index moves
   std::array<double, 100> slowMa, fastMa, rsi, volumeMa, atr, atrMA, macd, macdSignal,
