@@ -1,5 +1,5 @@
 #include "ibkr/internal/build_contracts.hpp"
-#include <exception>
+#include <stdexcept>
 Contract
 ibkr::internal::build_futures_contract(const midas::InstrumentEnum &future) {
   Contract contract;
