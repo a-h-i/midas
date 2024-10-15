@@ -1,6 +1,7 @@
 #include "ibkr/internal/client.hpp"
 #include <atomic>
 #include <mutex>
+#include <utility>
 
 ibkr::internal::Client::Client(const boost::asio::ip::tcp::endpoint &endpoint)
     : connectionState(this), endpoint(endpoint),
@@ -36,9 +37,13 @@ bool ibkr::internal::Client::processCycle() {
 }
 
 void ibkr::internal::Client::processPendingCommands() {
-  std::scoped_lock lock(commandsMutex);
-  for (auto &command : pendingCommands) {
+  std::list<std::function<void()>> batch;
+  {
+    std::scoped_lock lock(commandsMutex);
+    std::swap(batch, pendingCommands);
+  }
+  for (auto &command : batch) {
     command();
   }
-  pendingCommands.clear();
+  
 }
