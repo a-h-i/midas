@@ -1,5 +1,6 @@
 #include "ibkr/internal/client.hpp"
 #include <atomic>
+#include <mutex>
 
 ibkr::internal::Client::Client(const boost::asio::ip::tcp::endpoint &endpoint)
     : connectionState(this), endpoint(endpoint),
@@ -20,12 +21,24 @@ bool ::ibkr::internal::Client::isConnected() const {
 }
 
 bool ibkr::internal::Client::processCycle() {
+  // first we handle api messages
   connectionState.readerSignal.waitForSignal();
   connectionState.reader->processMsgs();
 
   if (!connectionState.ready()) {
     return false;
   }
+  // Subscriptions
   processPendingSubscriptions();
+  // commands
+  processPendingCommands();
   return false;
+}
+
+void ibkr::internal::Client::processPendingCommands() {
+  std::scoped_lock lock(commandsMutex);
+  for (auto &command : pendingCommands) {
+    command();
+  }
+  pendingCommands.clear();
 }

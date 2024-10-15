@@ -6,9 +6,14 @@
 #include "ibkr/internal/active_subscription_state.hpp"
 #include "ibkr/internal/build_contracts.hpp"
 #include "ibkr/internal/client.hpp"
+#include "ibkr/internal/historical.hpp"
 #include <functional>
 #include <memory>
-#include <sstream>
+#include <mutex>
+
+#include <stdexcept>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 void ibkr::internal::Client::addSubscription(
@@ -53,43 +58,9 @@ std::size_t ibkr::internal::Client::applyToActiveSubscriptions(
   return numberProcessed;
 }
 
-static ibkr::internal::BarSizeSetting
-historicalBarSize(const midas::HistorySubscriptionStartPoint &start) {
-  if (start.unit == midas::SubscriptionDurationUnits::Years ||
-      start.quantity > 1) {
-    return {.settingString = "1 min", .sizeSeconds = 60};
-  } else {
-    return {.settingString = "30 secs", .sizeSeconds = 30};
-  }
-}
 
-unsigned int ibkr::Driver::estimateHistoricalBarSizeSeconds(
-    const midas::HistorySubscriptionStartPoint &duration) const {
-  return historicalBarSize(duration).sizeSeconds;
-}
 
-static void
-requestHistoricalData(const Contract &contract, const TickerId ticker,
-                      EClientSocket *const socket,
-                      const midas::HistorySubscriptionStartPoint &start,
-                      ibkr::internal::BarSizeSetting &barSize) {
-  std::stringstream historicalDuration;
-  historicalDuration << start.quantity;
-  switch (start.unit) {
 
-  case midas::SubscriptionDurationUnits::Years:
-    historicalDuration << " Y";
-    break;
-  case midas::SubscriptionDurationUnits::Months:
-    historicalDuration << " M";
-    break;
-  }
-  const auto durationStr = historicalDuration.str();
-  barSize = historicalBarSize(start);
-  socket->reqHistoricalData(ticker, contract, "", durationStr,
-                            barSize.settingString, "TRADES", 0, 2, false,
-                            TagValueListSPtr());
-}
 
 static std::vector<int> requestRealtimeData(const Contract &contract,
                                             TickerId tickerId,
@@ -120,19 +91,20 @@ void ibkr::internal::Client::processPendingSubscriptions() {
     if (sub) {
 
       const TickerId tickerId = nextTickerId++;
-      auto &activeSub = activeSubscriptions[tickerId] = {
-          .isDone = false,
-          .subscription = weakPtr,
-          .ticker = tickerId,
-      };
+      auto insertedPair = activeSubscriptions.emplace(
+          std::piecewise_construct, std::forward_as_tuple(tickerId),
+          std::forward_as_tuple(weakPtr, tickerId));
+      if (!insertedPair.second) {
+        throw std::runtime_error(
+            "Unable to insert entry into active subscriptions");
+      }
+      auto &activeSub = insertedPair.first->second;
       const Contract contract = build_futures_contract(sub->symbol);
       if (sub->isRealtime) {
         std::vector<int> realTimeRequestIds = requestRealtimeData(
             contract, tickerId, connectionState.clientSocket.get(),
             sub->includeTickData);
-        activeSub.cancelConnection = sub->cancelSignal.connect(
-            std::bind(&Client::handleSubscriptionCancel, this, tickerId,
-                      std::placeholders::_1));
+
       } else {
         BarSizeSetting barSizeSetting;
         requestHistoricalData(
@@ -144,45 +116,30 @@ void ibkr::internal::Client::processPendingSubscriptions() {
                 }),
             barSizeSetting);
         activeSub.historicalBarSizeSetting = barSizeSetting;
-        activeSub.cancelConnection = sub->cancelSignal.connect(
-            std::bind(&Client::handleSubscriptionCancel, this, tickerId,
-                      std::placeholders::_1));
       }
+      // cancel slot is the same regardless if real time or historical
+      activeSub.cancelConnection = sub->cancelSignal.connect(
+          [this,
+           tickerId]([[maybe_unused]] const midas::Subscription &subscription) {
+            std::scoped_lock lock(commandsMutex);
+            // queue command for processing in next process cycle
+            pendingCommands.push_back(
+                [this, tickerId]() { handleSubscriptionCancel(tickerId); });
+          });
     }
   }
   pendingSubscriptions.clear();
 }
 
-void ibkr::internal::Client::historicalDataEnd(
-    int ticker, [[maybe_unused]] const std::string &startDateStr,
-    [[maybe_unused]] const std::string &endDateStr) {
-  {
-    std::scoped_lock lock(subscriptionsMutex);
-    if (activeSubscriptions.contains(ticker)) {
-      auto &activeSub = activeSubscriptions[ticker];
-      activeSub.isDone = true;
-      if (activeSub.cancelConnection.has_value()) {
-        activeSub.cancelConnection.value().disconnect();
-      }
-    }
-  }
-  applyToActiveSubscriptions(
-      [](midas::Subscription &subscription,
-         [[maybe_unused]] ActiveSubscriptionState &state) {
-        subscription.endSignal(subscription);
-        return true;
-      },
-      ticker);
-}
 
-void ibkr::internal::Client::handleSubscriptionCancel(
-    const TickerId ticker, const midas::Subscription &sub) {
+
+void ibkr::internal::Client::handleSubscriptionCancel(const TickerId ticker) {
   std::scoped_lock lock(subscriptionsMutex);
   if (activeSubscriptions.contains(ticker)) {
-    auto &state = activeSubscriptions[ticker];
+    auto &state = activeSubscriptions.at(ticker);
     if (!state.isDone) {
       // we need to cancel pending api requests
-      if (sub.isRealtime) {
+      if (state.isRealTime) {
         connectionState.clientSocket->cancelHistoricalData(ticker);
       } else {
         for (int requestId : state.ticksByTickRequestIds) {
@@ -195,4 +152,15 @@ void ibkr::internal::Client::handleSubscriptionCancel(
     }
     activeSubscriptions.erase(ticker);
   }
+}
+
+ibkr::internal::ActiveSubscriptionState::ActiveSubscriptionState(
+    std::weak_ptr<midas::Subscription> subscription, TickerId ticker)
+    : isDone(false), subscription(subscription), ticker(ticker) {
+  auto shared = subscription.lock();
+  if (!shared) {
+    throw std::domain_error(
+        "ActiveSubscriptionState initialized with ptr already destroyed");
+  }
+  isRealTime = shared->isRealtime;
 }

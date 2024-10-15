@@ -1265,14 +1265,21 @@ private:
   std::atomic<TickerId> nextTickerId;
 
   std::vector<std::string> managedAccountIds;
-  std::recursive_mutex subscriptionsMutex;
+  std::recursive_mutex subscriptionsMutex, commandsMutex;
   /**
    * Subscriptions that have not yet been processed
    */
   std::deque<std::weak_ptr<midas::Subscription>> pendingSubscriptions;
   std::unordered_map<TickerId, ActiveSubscriptionState> activeSubscriptions;
+  /**
+   * Usually in response to external events,
+   * They are processed by the dedicated driver thread in process cycle.
+   */
+  std::list<std::function<void()>> pendingCommands;
+
 
   void processPendingSubscriptions();
+  void processPendingCommands();
   /**
    * @param func processes function, subscriptionsMutex is locked during
    * invocation. If it returns true subscription is removed.
@@ -1284,7 +1291,7 @@ private:
                              const TickerId ticker);
   void removeActiveSubscription(const TickerId ticker);
 
-  void handleSubscriptionCancel(const TickerId, const midas::Subscription &);
+  void handleSubscriptionCancel(const TickerId);
 };
 
 } // namespace ibkr::internal

@@ -13,6 +13,7 @@ set(SOURCE_LIST
   active_sub_state.cpp
   order_manager.cpp
   transform_order.cpp
+  historical_data.cpp
 )
 
 add_library(ibkr_driver ${SOURCE_LIST} ${HEADER_FILES})

@@ -10,12 +10,14 @@ struct BarSizeSetting {
 };
 
 struct ActiveSubscriptionState {
-  bool isDone; // Whatever processing it needed is complete
+  bool isDone, isRealTime; 
   std::weak_ptr<midas::Subscription> subscription;
   TickerId ticker;
   std::optional<boost::signals2::connection> cancelConnection;
   std::list<int> ticksByTickRequestIds;
   std::optional<BarSizeSetting> historicalBarSizeSetting;
+
+  ActiveSubscriptionState(std::weak_ptr<midas::Subscription> subscription, TickerId ticker);
   ~ActiveSubscriptionState();
 };
 } // namespace ibkr::internal
