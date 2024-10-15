@@ -11,6 +11,8 @@ set(SOURCE_LIST
   bar_conversion.cpp
   driver.cpp
   active_sub_state.cpp
+  order_manager.cpp
+  transform_order.cpp
 )
 
 add_library(ibkr_driver ${SOURCE_LIST} ${HEADER_FILES})

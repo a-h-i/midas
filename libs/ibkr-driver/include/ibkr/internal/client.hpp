@@ -18,7 +18,6 @@
 #include <functional>
 #include <memory>
 #include <mutex>
-#include <optional>
 #include <ostream>
 #include <string>
 #include <unordered_map>
@@ -41,7 +40,7 @@ class Client : public EWrapper {
     /**
      *  next valid order id that can be used
      */
-    std::optional<OrderId> nextValidId;
+    std::atomic<OrderId> nextValidId{-1};
     /**
      * Signal / mutex pthreads based
      */
@@ -64,16 +63,18 @@ class Client : public EWrapper {
     void notifyHistoricalDataFarmState(bool connected);
     void notifyManagedAccountsReceived();
 
+    inline bool receivedFirstValidId() const {return nextValidId.load() != -1;}
+
     inline bool ready() const {
       return receivedManagedAccounts && securityDefinitionServerOk &&
-             nextValidId.has_value() && connectedDataFarmsCount > 0 &&
+              receivedFirstValidId() && connectedDataFarmsCount > 0 &&
              connectedHistoricalDataFarmsCount > 0 &&
              clientSocket->isConnected();
     }
     friend std::ostream &operator<<(std::ostream &stream,
                                     const ConnectivityState &state) {
-      std::string validIdState = state.nextValidId.has_value()
-                                     ? std::to_string(state.nextValidId.value())
+      std::string validIdState = state.receivedFirstValidId()
+                                     ? std::to_string(state.nextValidId.load(std::memory_order_relaxed))
                                      : " no order id received";
 
       stream << "[ready: " << state.ready() << "]"

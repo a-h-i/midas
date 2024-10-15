@@ -1,4 +1,5 @@
 #include "ibkr/internal/client.hpp"
+#include <atomic>
 
 ibkr::internal::Client::Client(const boost::asio::ip::tcp::endpoint &endpoint)
     : connectionState(this), endpoint(endpoint),
@@ -7,7 +8,7 @@ ibkr::internal::Client::Client(const boost::asio::ip::tcp::endpoint &endpoint)
 ibkr::internal::Client::~Client() { disconnect(); }
 
 void ibkr::internal::Client::nextValidId(OrderId order) {
-  connectionState.nextValidId = order;
+  connectionState.nextValidId.store(order, std::memory_order_relaxed);
 }
 
 void ibkr::internal::Client::disconnect() { connectionState.disconnect(); }
