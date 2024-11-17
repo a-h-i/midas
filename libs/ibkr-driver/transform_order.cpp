@@ -1,9 +1,9 @@
 #include "CommonDefs.h"
 #include "broker-interface/order.hpp"
-#include "ibkr/internal/build_contracts.hpp"
 #include "ibkr/internal/ibkr_order_manager.hpp"
 #include <algorithm>
 #include <iterator>
+#include <memory>
 
 inline std::string orderType(midas::ExecutionType execution) {
   switch (execution) {
@@ -25,46 +25,45 @@ inline std::string orderActionFromDirection(midas::OrderDirection direction) {
 }
 
 struct TransformationVisitor : public midas::OrderVisitor {
-  std::list<ibkr::internal::OrderInfo> &ibkrOrders;
+  std::list<std::shared_ptr<ibkr::internal::NativeOrder>> &ibkrOrders;
   std::atomic<OrderId> &orderCounter;
-  TransformationVisitor(std::list<ibkr::internal::OrderInfo> &ibkrOrder,
-                        std::atomic<OrderId> &orderCounter)
+  TransformationVisitor(
+      std::list<std::shared_ptr<ibkr::internal::NativeOrder>> &ibkrOrder,
+      std::atomic<OrderId> &orderCounter)
       : ibkrOrders(ibkrOrder), orderCounter(orderCounter) {}
   virtual void visit(midas::SimpleOrder &order) override {
-    auto &ibkrOrder = ibkrOrders.emplace_back();
-    ibkrOrder.ibkrOrder.totalQuantity = order.requestedQuantity;
-    ibkrOrder.ibkrOrder.orderType = orderType(order.execType);
-    ibkrOrder.ibkrOrder.action = orderActionFromDirection(order.direction);
-    ibkrOrder.ibkrOrder.lmtPrice = order.targetPrice;
-    ibkrOrder.ibkrOrder.orderId = orderCounter.fetch_add(1);
-    ibkrOrder.ibkrOrder.transmit = false;
-    ibkrOrder.ibkrOrder.tif =
-        "GTC"; // for now all our orders are GTC. We may want to
-               // make it configurable on midas orders later
-    ibkrOrder.ibkrOrder.rule80A = "I";
-    ibkrOrder.instrument = order.instrument;
-    ibkrOrder.ibkrContract =
-        ibkr::internal::build_futures_contract(order.instrument);
+    Order nativeOrder;
+    nativeOrder.totalQuantity = order.requestedQuantity;
+    nativeOrder.orderType = orderType(order.execType);
+    nativeOrder.action = orderActionFromDirection(order.direction);
+    nativeOrder.lmtPrice = order.targetPrice;
+    nativeOrder.orderId = orderCounter.fetch_add(1);
+    nativeOrder.transmit = false;
+    nativeOrder.tif = "GTC"; // for now all our orders are GTC. We may want to
+                             // make it configurable on midas orders later
+    nativeOrder.rule80A = "I";
+    ibkrOrders.emplace_back(nativeOrder, order);
   }
   virtual void visit(midas::BracketedOrder &order) override {
 
     order.getEntryOrder().visit(*this);
     auto parentItr = std::prev(ibkrOrders.end());
-    auto parentId = parentItr->ibkrOrder.orderId;
+    auto parentId = (*parentItr)->nativeOrder.orderId;
     order.getProfitTakerOrder().visit(*this);
     order.getStopOrder().visit(*this);
-    std::ranges::for_each(std::next(parentItr), std::end(ibkrOrders),
-                          [parentId](ibkr::internal::OrderInfo &order) {
-                            order.ibkrOrder.parentId = parentId;
-                          });
-    ibkrOrders.back().ibkrOrder.transmit = true;
+    std::ranges::for_each(
+        std::next(parentItr), std::end(ibkrOrders),
+        [parentId](std::shared_ptr<ibkr::internal::NativeOrder> &order) {
+          order->nativeOrder.parentId = parentId;
+        });
+    ibkrOrders.back()->nativeOrder.transmit = true;
   }
 };
 
-std::list<ibkr::internal::OrderInfo>
+std::list<std::shared_ptr<ibkr::internal::NativeOrder>>
 ibkr::internal::transformOrder(midas::Order &order,
                                std::atomic<OrderId> &orderCtr) {
-  std::list<OrderInfo> transformed;
+  std::list<std::shared_ptr<NativeOrder>> transformed;
   TransformationVisitor transformer(transformed, orderCtr);
   order.visit(transformer);
   return transformed;

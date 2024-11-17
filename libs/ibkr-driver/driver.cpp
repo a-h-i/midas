@@ -1,5 +1,6 @@
 #include "ibkr-driver/ibkr.hpp"
 #include "ibkr/internal/client.hpp"
+#include <atomic>
 #include <boost/signals2/connection.hpp>
 
 ibkr::Driver::Driver(boost::asio::ip::tcp::endpoint endpoint)
@@ -24,3 +25,7 @@ void ibkr::Driver::disconnect() { implementation->disconnect(); }
 bool ibkr::Driver::isConnected() const { return implementation->isConnected(); }
 
 ibkr::Driver::~Driver() = default;
+
+std::atomic<OrderId> & ibkr::Driver::orderCtr() {
+  return implementation->orderCtr();
+}

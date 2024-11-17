@@ -1,5 +1,6 @@
+#include "ibkr/internal/connectivity_state.hpp"
+
 #include "exceptions/network_error.hpp"
-#include "ibkr/internal/client.hpp"
 #include <algorithm>
 
 inline void farmConnectionStateHelper(std::atomic<int> &counter, bool state) {
@@ -16,17 +17,15 @@ inline void farmConnectionStateHelper(std::atomic<int> &counter, bool state) {
   }
 }
 
-ibkr::internal::Client::ConnectivityState::ConnectivityState(EWrapper *wrapper)
+ibkr::internal::ConnectivityState::ConnectivityState(EWrapper *wrapper)
     : readerSignal(2000),
       clientSocket(new EClientSocket(wrapper, &readerSignal)) {
   clientSocket->setConnectOptions("+PACEAPI");
 }
 
-ibkr::internal::Client::ConnectivityState::~ConnectivityState() {
-  disconnect();
-}
+ibkr::internal::ConnectivityState::~ConnectivityState() { disconnect(); }
 
-void ibkr::internal::Client::ConnectivityState::connect(
+void ibkr::internal::ConnectivityState::connect(
     const boost::asio::ip::tcp::endpoint &endpoint) {
   if (clientSocket->isConnected()) {
     return;
@@ -48,29 +47,27 @@ void ibkr::internal::Client::ConnectivityState::connect(
   connectionSignal(true);
 }
 
-void ibkr::internal::Client::ConnectivityState::disconnect() {
+void ibkr::internal::ConnectivityState::disconnect() {
   if (clientSocket->isConnected()) {
     clientSocket->eDisconnect();
     connectionSignal(false);
   }
 }
 
-void ibkr::internal::Client::ConnectivityState::notifySecDefServerState(
+void ibkr::internal::ConnectivityState::notifySecDefServerState(
     bool connected) {
   securityDefinitionServerOk = connected;
 }
 
-void ibkr::internal::Client::ConnectivityState::notifyDataFarmState(
-    bool connected) {
+void ibkr::internal::ConnectivityState::notifyDataFarmState(bool connected) {
   farmConnectionStateHelper(connectedDataFarmsCount, connected);
 }
 
-void ibkr::internal::Client::ConnectivityState::notifyHistoricalDataFarmState(
+void ibkr::internal::ConnectivityState::notifyHistoricalDataFarmState(
     bool connected) {
   farmConnectionStateHelper(connectedHistoricalDataFarmsCount, connected);
 }
 
-void ibkr::internal::Client::ConnectivityState::
-    notifyManagedAccountsReceived() {
+void ibkr::internal::ConnectivityState::notifyManagedAccountsReceived() {
   receivedManagedAccounts = true;
 }

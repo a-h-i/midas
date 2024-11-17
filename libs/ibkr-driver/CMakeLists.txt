@@ -1,5 +1,6 @@
 
 file(GLOB HEADER_FILES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/include/broker/*.hpp")
+file(GLOB INTERNAL_HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/ibkr/internal/*.hpp")
 
 set(SOURCE_LIST 
   client.cpp errors.cpp order.cpp 
@@ -14,9 +15,9 @@ set(SOURCE_LIST
   order_manager.cpp
   transform_order.cpp
   historical_data.cpp
+  native_order.cpp
 )
-
-add_library(ibkr_driver ${SOURCE_LIST} ${HEADER_FILES})
+add_library(ibkr_driver ${SOURCE_LIST} ${HEADER_FILES} ${INTERNAL_HEADERS})
 
 
 target_compile_features(ibkr_driver PUBLIC cxx_std_23)
