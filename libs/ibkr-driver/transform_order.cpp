@@ -1,6 +1,7 @@
 #include "CommonDefs.h"
 #include "broker-interface/order.hpp"
 #include "ibkr/internal/ibkr_order_manager.hpp"
+#include "ibkr/internal/order_wrapper.hpp"
 #include <algorithm>
 #include <iterator>
 #include <memory>
@@ -8,10 +9,10 @@
 inline std::string orderType(midas::ExecutionType execution) {
   switch (execution) {
 
-  case midas::ExecutionType::Limit:
-    return "LMT";
   case midas::ExecutionType::Stop:
     return "STP";
+  case midas::ExecutionType::Limit:
+    return "LMT";
   }
 }
 inline std::string orderActionFromDirection(midas::OrderDirection direction) {
@@ -42,7 +43,8 @@ struct TransformationVisitor : public midas::OrderVisitor {
     nativeOrder.tif = "GTC"; // for now all our orders are GTC. We may want to
                              // make it configurable on midas orders later
     nativeOrder.rule80A = "I";
-    ibkrOrders.emplace_back(nativeOrder, order);
+    ibkrOrders.emplace_back(
+        std::make_shared<ibkr::internal::NativeOrder>(nativeOrder, order));
   }
   virtual void visit(midas::BracketedOrder &order) override {
 

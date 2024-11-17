@@ -8,8 +8,8 @@ ibkr::internal::OrderManager::OrderManager(
 void ibkr::internal::OrderManager::transmit(
     std::shared_ptr<midas::Order> order) {
   auto transformedOrders = transformOrder(*order, driver.orderCtr());
-
   transmittedOrders.push_back(order);
+  // queue for transmission
   driver.implementation->transmitOrder(transformedOrders);
 }
 bool ibkr::internal::OrderManager::hasActiveOrders() const {}

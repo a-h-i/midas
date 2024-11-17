@@ -14,6 +14,7 @@
 #include <boost/signals2.hpp>
 #include <deque>
 #include <functional>
+#include <iterator>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -55,18 +56,15 @@ public:
   /**
    * Requests the transmission of an order
    */
-  inline void transmitOrder(NativeOrder order) {
+  inline void transmitOrder(std::shared_ptr<NativeOrder> order) {
     std::scoped_lock lock(ordersMutex);
     pendingOrders.push_back(order);
   }
-  template<typename Range>
-  inline void transmitOrder(Range &&range) {
+  template <typename Range> inline void transmitOrder(Range &&range) {
     std::scoped_lock lock(ordersMutex);
-    std::ranges::copy(range, pendingOrders);
+    std::copy(std::begin(range), std::end(range),
+              std::back_inserter(pendingOrders));
   }
-
-
-
 
 #include "ewrapper_decl_and_stubs.hpp"
 
@@ -84,7 +82,7 @@ private:
    */
   std::deque<std::weak_ptr<midas::Subscription>> pendingSubscriptions;
   std::unordered_map<TickerId, ActiveSubscriptionState> activeSubscriptions;
-  std::deque<NativeOrder> pendingOrders;
+  std::deque<std::shared_ptr<NativeOrder>> pendingOrders;
   /**
    * Usually in response to external events,
    * They are processed by the dedicated driver thread in process cycle.

@@ -17,17 +17,17 @@ TEST(IBKRDriverOrderConversion, SimpleOrder) {
                            midas::InstrumentEnum::MicroNasdaqFutures,
                            midas::ExecutionType::Limit, logger, 104.25);
   std::atomic<OrderId> orderIdCtr{0};
-  std::list<ibkr::internal::NativeOrder> transformed =
-      ibkr::internal::transformOrder(order, orderIdCtr);
+  auto transformed = ibkr::internal::transformOrder(order, orderIdCtr);
   EXPECT_EQ(transformed.size(), 1);
   EXPECT_EQ(orderIdCtr.load(), 1);
   auto &orderInfo = transformed.front();
-  EXPECT_EQ(orderInfo.nativeOrder.orderType, "LMT");
-  EXPECT_EQ(orderInfo.nativeOrder.action, "BUY");
-  EXPECT_EQ(orderInfo.nativeOrder.totalQuantity, 50);
-  EXPECT_EQ(orderInfo.nativeOrder.lmtPrice, 104.25);
-  EXPECT_EQ(orderInfo.instrument, midas::InstrumentEnum::MicroNasdaqFutures);
-  EXPECT_EQ(orderInfo.ibkrContract.symbol, "MNQ");
+  EXPECT_EQ(orderInfo->nativeOrder.orderType, "LMT");
+  EXPECT_EQ(orderInfo->nativeOrder.action, "BUY");
+  EXPECT_EQ(orderInfo->nativeOrder.totalQuantity, 50);
+  EXPECT_EQ(orderInfo->nativeOrder.lmtPrice, 104.25);
+  EXPECT_EQ(orderInfo->instrument, midas::InstrumentEnum::MicroNasdaqFutures);
+  EXPECT_EQ(orderInfo->ibkrContract.symbol, "MNQ");
+  EXPECT_EQ(order.state(), midas::OrderStatusEnum::UnTransmitted);
 }
 
 TEST(IBKRDriverOrderConversion, SimpleStopOrder) {
@@ -37,17 +37,17 @@ TEST(IBKRDriverOrderConversion, SimpleStopOrder) {
                            midas::InstrumentEnum::MicroNasdaqFutures,
                            midas::ExecutionType::Stop, logger, 104.25);
   std::atomic<OrderId> orderIdCtr{0};
-  std::list<ibkr::internal::NativeOrder> transformed =
-      ibkr::internal::transformOrder(order, orderIdCtr);
+  auto transformed = ibkr::internal::transformOrder(order, orderIdCtr);
   EXPECT_EQ(transformed.size(), 1);
   EXPECT_EQ(orderIdCtr.load(), 1);
   auto &orderInfo = transformed.front();
-  EXPECT_EQ(orderInfo.nativeOrder.orderType, "STP");
-  EXPECT_EQ(orderInfo.nativeOrder.action, "SELL");
-  EXPECT_EQ(orderInfo.nativeOrder.totalQuantity, 50);
-  EXPECT_EQ(orderInfo.nativeOrder.lmtPrice, 104.25);
-  EXPECT_EQ(orderInfo.instrument, midas::InstrumentEnum::MicroNasdaqFutures);
-  EXPECT_EQ(orderInfo.ibkrContract.symbol, "MNQ");
+  EXPECT_EQ(orderInfo->nativeOrder.orderType, "STP");
+  EXPECT_EQ(orderInfo->nativeOrder.action, "SELL");
+  EXPECT_EQ(orderInfo->nativeOrder.totalQuantity, 50);
+  EXPECT_EQ(orderInfo->nativeOrder.lmtPrice, 104.25);
+  EXPECT_EQ(orderInfo->instrument, midas::InstrumentEnum::MicroNasdaqFutures);
+  EXPECT_EQ(orderInfo->ibkrContract.symbol, "MNQ");
+  EXPECT_EQ(order.state(), midas::OrderStatusEnum::UnTransmitted);
 }
 
 TEST(IBKRDriverOrderConversion, BracketBuy) {
@@ -57,53 +57,50 @@ TEST(IBKRDriverOrderConversion, BracketBuy) {
                               midas::InstrumentEnum::MicroNasdaqFutures, 20, 30,
                               10, logger);
   std::atomic<OrderId> orderIdCtr{0};
-  std::list<ibkr::internal::NativeOrder> transformed =
-      ibkr::internal::transformOrder(order, orderIdCtr);
+  auto transformed = ibkr::internal::transformOrder(order, orderIdCtr);
   EXPECT_EQ(transformed.size(), 3);
   EXPECT_EQ(orderIdCtr.load(), 3);
   auto &parent = transformed.front();
 
   bool hasAssociatedParent = std::ranges::all_of(
       std::next(transformed.begin()), transformed.end(),
-      [&parent](ibkr::internal::NativeOrder &other) {
-        return other.nativeOrder.parentId == parent.nativeOrder.orderId;
+      [&parent](auto &other) {
+        return other->nativeOrder.parentId == parent->nativeOrder.orderId;
       });
   EXPECT_TRUE(hasAssociatedParent);
-  bool notTransmitted =
-      std::ranges::none_of(transformed.begin(), std::prev(transformed.end()),
-                           [](ibkr::internal::NativeOrder &info) {
-                             return info.nativeOrder.transmit;
-                           });
+  bool notTransmitted = std::ranges::none_of(
+      transformed.begin(), std::prev(transformed.end()),
+      [](auto &info) { return info->nativeOrder.transmit; });
   EXPECT_TRUE(notTransmitted);
   EXPECT_TRUE(
       transformed.back()
-          .nativeOrder.transmit); // only last order has transmit flag set
+          ->nativeOrder.transmit); // only last order has transmit flag set
 
-  bool correctInstrument =
-      std::ranges::all_of(transformed, [](ibkr::internal::NativeOrder &info) {
-        return info.instrument == midas::InstrumentEnum::MicroNasdaqFutures &&
-               info.ibkrContract.symbol == "MNQ";
-      });
+  bool correctInstrument = std::ranges::all_of(transformed, [](auto &info) {
+    return info->instrument == midas::InstrumentEnum::MicroNasdaqFutures &&
+           info->ibkrContract.symbol == "MNQ";
+  });
   EXPECT_TRUE(correctInstrument);
 
-  EXPECT_EQ(parent.nativeOrder.orderType, "LMT");
-  EXPECT_EQ(parent.nativeOrder.lmtPrice, 20);
-  EXPECT_EQ(parent.nativeOrder.totalQuantity, 50);
-  EXPECT_EQ(parent.nativeOrder.action, "BUY");
+  EXPECT_EQ(parent->nativeOrder.orderType, "LMT");
+  EXPECT_EQ(parent->nativeOrder.lmtPrice, 20);
+  EXPECT_EQ(parent->nativeOrder.totalQuantity, 50);
+  EXPECT_EQ(parent->nativeOrder.action, "BUY");
   auto itr = transformed.begin();
   std::advance(itr, 1);
   auto &profit = *itr;
-  EXPECT_EQ(profit.nativeOrder.orderType, "LMT");
-  EXPECT_EQ(profit.nativeOrder.lmtPrice, 30);
-  EXPECT_EQ(profit.nativeOrder.totalQuantity, 50);
-  EXPECT_EQ(profit.nativeOrder.action, "SELL");
+  EXPECT_EQ(profit->nativeOrder.orderType, "LMT");
+  EXPECT_EQ(profit->nativeOrder.lmtPrice, 30);
+  EXPECT_EQ(profit->nativeOrder.totalQuantity, 50);
+  EXPECT_EQ(profit->nativeOrder.action, "SELL");
 
   std::advance(itr, 1);
   auto &stop = *itr;
-  EXPECT_EQ(stop.nativeOrder.orderType, "STP");
-  EXPECT_EQ(stop.nativeOrder.lmtPrice, 10);
-  EXPECT_EQ(stop.nativeOrder.totalQuantity, 50);
-  EXPECT_EQ(stop.nativeOrder.action, "SELL");
+  EXPECT_EQ(stop->nativeOrder.orderType, "STP");
+  EXPECT_EQ(stop->nativeOrder.lmtPrice, 10);
+  EXPECT_EQ(stop->nativeOrder.totalQuantity, 50);
+  EXPECT_EQ(stop->nativeOrder.action, "SELL");
+  EXPECT_EQ(order.state(), midas::OrderStatusEnum::UnTransmitted);
 }
 
 TEST(IBKRDriverOrderConversion, BracketSell) {
@@ -113,51 +110,48 @@ TEST(IBKRDriverOrderConversion, BracketSell) {
                               midas::InstrumentEnum::MicroNasdaqFutures, 20, 10,
                               30, logger);
   std::atomic<OrderId> orderIdCtr{0};
-  std::list<ibkr::internal::NativeOrder> transformed =
-      ibkr::internal::transformOrder(order, orderIdCtr);
+  auto transformed = ibkr::internal::transformOrder(order, orderIdCtr);
   EXPECT_EQ(transformed.size(), 3);
   EXPECT_EQ(orderIdCtr.load(), 3);
   auto &parent = transformed.front();
 
   bool hasAssociatedParent = std::ranges::all_of(
       std::next(transformed.begin()), transformed.end(),
-      [&parent](ibkr::internal::NativeOrder &other) {
-        return other.nativeOrder.parentId == parent.nativeOrder.orderId;
+      [&parent](auto &other) {
+        return other->nativeOrder.parentId == parent->nativeOrder.orderId;
       });
   EXPECT_TRUE(hasAssociatedParent);
-  bool notTransmitted =
-      std::ranges::none_of(transformed.begin(), std::prev(transformed.end()),
-                           [](ibkr::internal::NativeOrder &info) {
-                             return info.nativeOrder.transmit;
-                           });
+  bool notTransmitted = std::ranges::none_of(
+      transformed.begin(), std::prev(transformed.end()),
+      [](auto &info) { return info->nativeOrder.transmit; });
   EXPECT_TRUE(notTransmitted);
   EXPECT_TRUE(
       transformed.back()
-          .nativeOrder.transmit); // only last order has transmit flag set
+          ->nativeOrder.transmit); // only last order has transmit flag set
 
-  bool correctInstrument =
-      std::ranges::all_of(transformed, [](ibkr::internal::NativeOrder &info) {
-        return info.instrument == midas::InstrumentEnum::MicroNasdaqFutures &&
-               info.ibkrContract.symbol == "MNQ";
-      });
+  bool correctInstrument = std::ranges::all_of(transformed, [](auto &info) {
+    return info->instrument == midas::InstrumentEnum::MicroNasdaqFutures &&
+           info->ibkrContract.symbol == "MNQ";
+  });
   EXPECT_TRUE(correctInstrument);
 
-  EXPECT_EQ(parent.nativeOrder.orderType, "LMT");
-  EXPECT_EQ(parent.nativeOrder.lmtPrice, 20);
-  EXPECT_EQ(parent.nativeOrder.totalQuantity, 50);
-  EXPECT_EQ(parent.nativeOrder.action, "SELL");
+  EXPECT_EQ(parent->nativeOrder.orderType, "LMT");
+  EXPECT_EQ(parent->nativeOrder.lmtPrice, 20);
+  EXPECT_EQ(parent->nativeOrder.totalQuantity, 50);
+  EXPECT_EQ(parent->nativeOrder.action, "SELL");
   auto itr = transformed.begin();
   std::advance(itr, 1);
   auto &profit = *itr;
-  EXPECT_EQ(profit.nativeOrder.orderType, "LMT");
-  EXPECT_EQ(profit.nativeOrder.lmtPrice, 10);
-  EXPECT_EQ(profit.nativeOrder.totalQuantity, 50);
-  EXPECT_EQ(profit.nativeOrder.action, "BUY");
+  EXPECT_EQ(profit->nativeOrder.orderType, "LMT");
+  EXPECT_EQ(profit->nativeOrder.lmtPrice, 10);
+  EXPECT_EQ(profit->nativeOrder.totalQuantity, 50);
+  EXPECT_EQ(profit->nativeOrder.action, "BUY");
 
   std::advance(itr, 1);
   auto &stop = *itr;
-  EXPECT_EQ(stop.nativeOrder.orderType, "STP");
-  EXPECT_EQ(stop.nativeOrder.lmtPrice, 30);
-  EXPECT_EQ(stop.nativeOrder.totalQuantity, 50);
-  EXPECT_EQ(stop.nativeOrder.action, "BUY");
+  EXPECT_EQ(stop->nativeOrder.orderType, "STP");
+  EXPECT_EQ(stop->nativeOrder.lmtPrice, 30);
+  EXPECT_EQ(stop->nativeOrder.totalQuantity, 50);
+  EXPECT_EQ(stop->nativeOrder.action, "BUY");
+  EXPECT_EQ(order.state(), midas::OrderStatusEnum::UnTransmitted);
 }
