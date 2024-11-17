@@ -60,3 +60,15 @@ void ibkr::internal::Client::commissionReport(
 void ibkr::internal::Client::completedOrdersEnd() {
   DEBUG_LOG(logger) << "Completed order end";
 }
+
+void ibkr::internal::Client::processPendingOrders() {
+  std::scoped_lock lock(ordersMutex);
+  for (auto &order : pendingOrders) {
+    activeOrders[order->nativeOrder.orderId] = order;
+    order->setTransmitted();
+    connectionState.clientSocket->placeOrder(
+        order->nativeOrder.orderId, order->ibkrContract, order->nativeOrder);
+  }
+  // we have processed all pending orders
+  pendingOrders.clear();
+}

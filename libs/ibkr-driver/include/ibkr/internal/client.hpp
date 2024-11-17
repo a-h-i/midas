@@ -83,6 +83,7 @@ private:
   std::deque<std::weak_ptr<midas::Subscription>> pendingSubscriptions;
   std::unordered_map<TickerId, ActiveSubscriptionState> activeSubscriptions;
   std::deque<std::shared_ptr<NativeOrder>> pendingOrders;
+  std::unordered_map<OrderId, std::shared_ptr<NativeOrder>> activeOrders;
   /**
    * Usually in response to external events,
    * They are processed by the dedicated driver thread in process cycle.
@@ -91,6 +92,7 @@ private:
 
   void processPendingSubscriptions();
   void processPendingCommands();
+  void processPendingOrders();
   /**
    * @param func processes function, subscriptionsMutex is locked during
    * invocation. If it returns true subscription is removed.

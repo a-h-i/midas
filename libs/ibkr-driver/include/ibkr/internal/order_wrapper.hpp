@@ -15,6 +15,7 @@ class NativeOrderSignals {
   cancel_signal_t cancelSignal;
 
 public:
+  void inline setTransmitted() { transmitSignal(); }
   NativeOrderSignals(midas::Order &order);
   ~NativeOrderSignals();
 };
@@ -27,5 +28,6 @@ public:
   Order nativeOrder;
   midas::InstrumentEnum instrument;
   Contract ibkrContract;
+  inline void setTransmitted() { events->setTransmitted(); }
 };
 } // namespace ibkr::internal

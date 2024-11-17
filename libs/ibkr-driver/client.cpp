@@ -31,6 +31,8 @@ bool ibkr::internal::Client::processCycle() {
   }
   // Subscriptions
   processPendingSubscriptions();
+  // Order Transmission
+  processPendingOrders();
   // commands
   processPendingCommands();
   return false;
@@ -45,5 +47,4 @@ void ibkr::internal::Client::processPendingCommands() {
   for (auto &command : batch) {
     command();
   }
-  
 }
