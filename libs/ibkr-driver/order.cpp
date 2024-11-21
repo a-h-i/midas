@@ -4,18 +4,56 @@
 #include "OrderState.h"
 #include "ibkr/internal/client.hpp"
 #include "logging/logging.hpp"
+#include <mutex>
 
 void ibkr::internal::Client::orderStatus(
     OrderId orderId, const std::string &status, Decimal filled,
-    Decimal remaining, double avgFillPrice, [[maybe_unused]] int permId,
-    [[maybe_unused]] int parentId, [[maybe_unused]] double lastFillPrice,
-    [[maybe_unused]] int clientId, [[maybe_unused]] const std::string &whyHeld,
-    [[maybe_unused]] double mktCapPrice) {
+    Decimal remaining, double avgFillPrice, int permId, int parentId,
+    double lastFillPrice, int clientId, const std::string &whyHeld,
+    double mktCapPrice) {
 
   DEBUG_LOG(logger) << "ORDER STATUS: OrderId " << orderId
                     << " status: " << status << " filled " << filled
                     << " remaining " << remaining << " avg fill price "
-                    << avgFillPrice;
+                    << avgFillPrice << " peermId " << permId << " parentId "
+                    << parentId << " lastFillPrice " << lastFillPrice
+                    << " clientId " << clientId << " whyHeld " << whyHeld
+                    << " mktCapPrice " << mktCapPrice;
+  std::scoped_lock commandsLock(commandsMutex);
+  pendingCommands.push_back([this, orderId, status]() {
+    if (!activeOrders.contains(orderId)) {
+      CRITICAL_LOG(logger) << "Can not find active order entry for order "
+                              "status event with order id: "
+                           << orderId;
+      return;
+    }
+    auto &order = activeOrders[orderId];
+    // https://www.interactivebrokers.com/campus/ibkr-api-page/twsapi-doc/#order-status
+    if (status == "PendingSubmit") {
+      // ignore
+    } else if (status == "PendingCancel") {
+      //  ignore
+    } else if (status == "PreSubmitted") {
+      // ignore
+    } else if (status == "Submitted") {
+      order->setTransmitted();
+    } else if (status == "ApiCancelled") {
+      order->setCancelled();
+      activeOrders.erase(orderId);
+    } else if (status == "Cancelled") {
+      order->setCancelled();
+      activeOrders.erase(orderId);
+    } else if (status == "Filled") {
+      // indicates that the order has been completely filled. Market orders
+      // executions will not always trigger a Filled status.
+      handleOrderFilledEvent();
+    } else if (status == "Inactive") {
+      // ignore
+    } else {
+      CRITICAL_LOG(logger) << "Received unknown order status event: " << status
+                           << " orderId: " << orderId;
+    }
+  });
 }
 
 void ibkr::internal::Client::openOrder(OrderId orderId,
@@ -30,8 +68,7 @@ void ibkr::internal::Client::openOrderEnd() {
   DEBUG_LOG(logger) << "OPEN ORDER END";
 }
 
-void ibkr::internal::Client::winError(const std::string &str,
-                                      [[maybe_unused]] int lastError) {
+void ibkr::internal::Client::winError(const std::string &str, int lastError) {
   CRITICAL_LOG(logger) << "RECEIVED WINERROR " << str;
 }
 
@@ -65,7 +102,6 @@ void ibkr::internal::Client::processPendingOrders() {
   std::scoped_lock lock(ordersMutex);
   for (auto &order : pendingOrders) {
     activeOrders[order->nativeOrder.orderId] = order;
-    order->setTransmitted();
     connectionState.clientSocket->placeOrder(
         order->nativeOrder.orderId, order->ibkrContract, order->nativeOrder);
   }

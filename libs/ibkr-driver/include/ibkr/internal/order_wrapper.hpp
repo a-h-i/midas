@@ -11,11 +11,19 @@ namespace ibkr::internal {
 class NativeOrderSignals {
   typedef boost::signals2::signal<void()> transmit_signal_t;
   typedef boost::signals2::signal<void()> cancel_signal_t;
+  typedef boost::signals2::signal<void(
+      double fillPrice, double totalCommissions, double filledQuantity)>
+      fill_signal_t;
   transmit_signal_t transmitSignal;
   cancel_signal_t cancelSignal;
+  fill_signal_t fillSignal;
 
 public:
-  void inline setTransmitted() { transmitSignal(); }
+  inline void setTransmitted() { transmitSignal(); }
+  inline void setCancelled() { cancelSignal(); }
+  inline void setFilled(double price, double commissions, double quantity) {
+    fillSignal(price, commissions, quantity);
+  }
   NativeOrderSignals(midas::Order &order);
   ~NativeOrderSignals();
 };
@@ -29,5 +37,6 @@ public:
   midas::InstrumentEnum instrument;
   Contract ibkrContract;
   inline void setTransmitted() { events->setTransmitted(); }
+  inline void setCancelled() { events->setCancelled(); }
 };
 } // namespace ibkr::internal
