@@ -1,8 +1,10 @@
 #pragma once
 
+#include "CommissionReport.h"
 #include "CommonDefs.h"
 
 #include "EWrapper.h"
+#include "Execution.h"
 #include "active_subscription_state.hpp"
 #include "broker-interface/subscription.hpp"
 #include "connectivity_state.hpp"
@@ -106,6 +108,26 @@ private:
   void removeActiveSubscription(const TickerId ticker);
 
   void handleSubscriptionCancel(const TickerId);
+
+  /**
+  @brief Combines executions of an order as they arrive asynchronously and could
+  have revisions.
+  @note is idempotent
+   */
+  void handleExecution(const Execution &);
+  /**
+    @brief combines commission reports of an order as they arrive
+    asynchronously. Each one is associated with an execution. There is no set
+    order of arrival between Commission reports and executions.
+    @note is idempotent
+   */
+  void handleCommissionReport(const CommissionReport &);
+
+  /**
+  @brief checks if the order is completely filled. Then notifies native order.
+  @note is idempotent
+   */
+  void handleOrderCompletelyFilledEvent(OrderId);
 };
 
 } // namespace ibkr::internal

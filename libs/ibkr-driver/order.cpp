@@ -46,7 +46,7 @@ void ibkr::internal::Client::orderStatus(
     } else if (status == "Filled") {
       // indicates that the order has been completely filled. Market orders
       // executions will not always trigger a Filled status.
-      handleOrderFilledEvent();
+      handleOrderCompletelyFilledEvent(orderId);
     } else if (status == "Inactive") {
       // ignore
     } else {
@@ -78,9 +78,8 @@ void ibkr::internal::Client::connectionClosed() {
 
 void ibkr::internal::Client::execDetails(int reqId, const Contract &contract,
                                          const Execution &execution) {
-  DEBUG_LOG(logger) << "ExecDetails " << reqId
-                    << " contract: " << contract.symbol << " execution "
-                    << execution.side << " shared " << execution.shares;
+  std::scoped_lock commandsLock(commandsMutex);
+  pendingCommands.push_back([this, execution] { handleExecution(execution); });
 }
 
 void ibkr::internal::Client::execDetailsEnd(int reqId) {
@@ -89,9 +88,9 @@ void ibkr::internal::Client::execDetailsEnd(int reqId) {
 
 void ibkr::internal::Client::commissionReport(
     const CommissionReport &commissionReport) {
-  DEBUG_LOG(logger) << "Received commission report" << commissionReport.execId
-                    << " commission " << commissionReport.commission << " pnl "
-                    << commissionReport.realizedPNL;
+  std::scoped_lock commandsLock(commandsMutex);
+  pendingCommands.push_back(
+      [this, commissionReport] { handleCommissionReport(commissionReport); });
 }
 
 void ibkr::internal::Client::completedOrdersEnd() {
