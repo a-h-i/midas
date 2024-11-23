@@ -1,12 +1,38 @@
 #pragma once
+#include "CommissionReport.h"
 #include "Contract.h"
+#include "Execution.h"
 #include "Order.h"
 #include "broker-interface/instruments.hpp"
 #include "broker-interface/order.hpp"
+#include <boost/date_time/posix_time/ptime.hpp>
 #include <boost/signals2.hpp>
 #include <boost/signals2/variadic_signal.hpp>
+#include <list>
 #include <memory>
+typedef Execution native_execution_t;
 namespace ibkr::internal {
+
+/*
+ * Orders have more than one execution
+ * as they are not filled in an all or nothing manner.
+ * Executions can also have corrections.
+ */
+struct ExecutionEntry {
+  const std::string id, exchange;
+  const boost::posix_time::ptime serverExecutionTime;
+  const midas::OrderDirection direction;
+  const double quantity, totalPrice, cumulativeQuantity, averagePrice;
+
+  ExecutionEntry(const native_execution_t &);
+};
+
+struct CommissionEntry {
+  const std::string executionId, currency;
+  const double commission, realizedPNL;
+
+  CommissionEntry(const CommissionReport &);
+};
 
 class NativeOrderSignals {
   typedef boost::signals2::signal<void()> transmit_signal_t;
@@ -30,13 +56,18 @@ public:
 
 class NativeOrder {
   std::unique_ptr<NativeOrderSignals> events;
+  std::list<ExecutionEntry> executions;
 
 public:
   NativeOrder(Order native, midas::Order &order);
   Order nativeOrder;
   midas::InstrumentEnum instrument;
   Contract ibkrContract;
+
   inline void setTransmitted() { events->setTransmitted(); }
   inline void setCancelled() { events->setCancelled(); }
+  inline void addExecutionEntry(const ExecutionEntry &execution) {
+    executions.push_back(execution);
+  }
 };
 } // namespace ibkr::internal

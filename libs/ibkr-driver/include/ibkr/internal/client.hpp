@@ -4,7 +4,6 @@
 #include "CommonDefs.h"
 
 #include "EWrapper.h"
-#include "Execution.h"
 #include "active_subscription_state.hpp"
 #include "broker-interface/subscription.hpp"
 #include "connectivity_state.hpp"
@@ -14,6 +13,7 @@
 #include <atomic>
 #include <boost/asio.hpp>
 #include <boost/signals2.hpp>
+#include <boost/unordered/concurrent_flat_map.hpp>
 #include <deque>
 #include <functional>
 #include <iterator>
@@ -22,7 +22,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-
 namespace ibkr::internal {
 
 class Client : public EWrapper {
@@ -85,7 +84,10 @@ private:
   std::deque<std::weak_ptr<midas::Subscription>> pendingSubscriptions;
   std::unordered_map<TickerId, ActiveSubscriptionState> activeSubscriptions;
   std::deque<std::shared_ptr<NativeOrder>> pendingOrders;
-  std::unordered_map<OrderId, std::shared_ptr<NativeOrder>> activeOrders;
+  boost::concurrent_flat_map<OrderId, std::shared_ptr<NativeOrder>>
+      activeOrders;
+  boost::concurrent_flat_map<std::string, CommissionReport>
+      unhandledCommissions;
   /**
    * Usually in response to external events,
    * They are processed by the dedicated driver thread in process cycle.
@@ -114,7 +116,7 @@ private:
   have revisions.
   @note is idempotent
    */
-  void handleExecution(const Execution &);
+  void handleExecution(const native_execution_t &);
   /**
     @brief combines commission reports of an order as they arrive
     asynchronously. Each one is associated with an execution. There is no set

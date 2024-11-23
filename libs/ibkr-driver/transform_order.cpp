@@ -12,6 +12,7 @@ inline std::string orderType(midas::ExecutionType execution) {
   case midas::ExecutionType::Stop:
     return "STP";
   case midas::ExecutionType::Limit:
+  default:
     return "LMT";
   }
 }
@@ -21,6 +22,7 @@ inline std::string orderActionFromDirection(midas::OrderDirection direction) {
   case midas::OrderDirection::BUY:
     return "BUY";
   case midas::OrderDirection::SELL:
+  default:
     return "SELL";
   }
 }

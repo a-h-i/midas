@@ -3,7 +3,9 @@
 #include "Execution.h"
 #include "OrderState.h"
 #include "ibkr/internal/client.hpp"
+#include "ibkr/internal/order_wrapper.hpp"
 #include "logging/logging.hpp"
+#include <memory>
 #include <mutex>
 
 void ibkr::internal::Client::orderStatus(
@@ -15,7 +17,7 @@ void ibkr::internal::Client::orderStatus(
   DEBUG_LOG(logger) << "ORDER STATUS: OrderId " << orderId
                     << " status: " << status << " filled " << filled
                     << " remaining " << remaining << " avg fill price "
-                    << avgFillPrice << " peermId " << permId << " parentId "
+                    << avgFillPrice << " permId " << permId << " parentId "
                     << parentId << " lastFillPrice " << lastFillPrice
                     << " clientId " << clientId << " whyHeld " << whyHeld
                     << " mktCapPrice " << mktCapPrice;
@@ -27,7 +29,10 @@ void ibkr::internal::Client::orderStatus(
                            << orderId;
       return;
     }
-    auto &order = activeOrders[orderId];
+    std::shared_ptr<NativeOrder> order;
+
+    activeOrders.visit(orderId,
+                       [&order](const auto &pair) { order = pair.second; });
     // https://www.interactivebrokers.com/campus/ibkr-api-page/twsapi-doc/#order-status
     if (status == "PendingSubmit") {
       // ignore
@@ -50,7 +55,7 @@ void ibkr::internal::Client::orderStatus(
     } else if (status == "Inactive") {
       // ignore
     } else {
-      CRITICAL_LOG(logger) << "Received unknown order status event: " << status
+      CRITICAL_LOG(logger) << "Received undknown order status event: " << status
                            << " orderId: " << orderId;
     }
   });
@@ -71,7 +76,6 @@ void ibkr::internal::Client::openOrderEnd() {
 void ibkr::internal::Client::winError(const std::string &str, int lastError) {
   CRITICAL_LOG(logger) << "RECEIVED WINERROR " << str;
 }
-
 void ibkr::internal::Client::connectionClosed() {
   ERROR_LOG(logger) << "Connection closed called";
 }
@@ -100,7 +104,7 @@ void ibkr::internal::Client::completedOrdersEnd() {
 void ibkr::internal::Client::processPendingOrders() {
   std::scoped_lock lock(ordersMutex);
   for (auto &order : pendingOrders) {
-    activeOrders[order->nativeOrder.orderId] = order;
+    activeOrders.insert({order->nativeOrder.orderId, order});
     connectionState.clientSocket->placeOrder(
         order->nativeOrder.orderId, order->ibkrContract, order->nativeOrder);
   }

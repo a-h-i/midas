@@ -16,6 +16,7 @@ set(SOURCE_LIST
   transform_order.cpp
   historical_data.cpp
   native_order.cpp
+  order_execution.cpp
 )
 add_library(ibkr_driver ${SOURCE_LIST} ${HEADER_FILES} ${INTERNAL_HEADERS})
 
