@@ -5,7 +5,6 @@
 #include "Order.h"
 #include "broker-interface/instruments.hpp"
 #include "broker-interface/order.hpp"
-#include <boost/date_time/posix_time/ptime.hpp>
 #include <boost/signals2.hpp>
 #include <boost/signals2/variadic_signal.hpp>
 #include <list>
@@ -27,7 +26,6 @@ struct CommissionEntry {
  */
 struct ExecutionEntry {
   const std::string id, exchange;
-  const boost::posix_time::ptime serverExecutionTime;
   const midas::OrderDirection direction;
   const double quantity, totalPrice, cumulativeQuantity, averagePrice;
   std::list<CommissionEntry> commissions;

@@ -10,7 +10,6 @@
 
 ibkr::internal::ExecutionEntry::ExecutionEntry(const native_execution_t &native)
     : id(native.execId), exchange(native.exchange),
-      serverExecutionTime(boost::posix_time::from_iso_string(native.time)),
       direction(native.side == "BUY" ? midas::OrderDirection::BUY
                                      : midas::OrderDirection::SELL),
       quantity(DecimalFunctions::decimalToDouble(native.shares)),
@@ -34,8 +33,8 @@ bool ibkr::internal::ExecutionEntry::corrects(
   if (posSelf == id.npos || posOther == other.id.npos) {
     return false;
   }
-  const auto indexSelf = std::stoi(id.substr(posSelf));
-  const auto indexOther = std::stoi(other.id.substr(posOther));
+  const auto indexSelf = std::stoi(id.substr(posSelf + 1));
+  const auto indexOther = std::stoi(other.id.substr(posOther + 1));
   return getBaseId() == other.getBaseId() && indexSelf > indexOther;
 }
 
