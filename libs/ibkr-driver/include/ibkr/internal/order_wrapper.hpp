@@ -75,6 +75,7 @@ public:
   void cleanCorrectedExecutions();
   inline void setTransmitted() { events->setTransmitted(); }
   inline void setCancelled() { events->setCancelled(); }
+  void setCompletelyFilled();
   inline void addExecutionEntry(const ExecutionEntry &execution) {
     executions.push_back(execution);
   }

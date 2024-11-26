@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <boost/unordered/unordered_flat_set.hpp>
 #include <iterator>
+#include <numeric>
 #include <vector>
 
 using namespace ibkr::internal;
@@ -44,4 +45,25 @@ void NativeOrder::cleanCorrectedExecutions() {
                                 !execution.corrects(other);
                        });
   });
+}
+
+void NativeOrder::setCompletelyFilled() {
+  double avgFill = std::accumulate(
+      std::begin(executions), std::end(executions), 0.0,
+      [](const auto &lhs, const auto &rhs) { return lhs + rhs.averagePrice; });
+  double totalCommissions = 0;
+  double filledQuantity = std::accumulate(
+      std::begin(executions), std::end(executions), 0.0,
+      [](const auto &lhs, const auto &rhs) { return lhs + rhs.quantity; });
+
+  for (const ExecutionEntry &execution : executions) {
+
+    totalCommissions += std::accumulate(
+        std::begin(execution.commissions), std::end(execution.commissions), 0.0,
+        [](const auto &first, const auto &second) {
+          return first + second.commission;
+        });
+  }
+  avgFill = avgFill / executions.size();
+  events->setFilled(avgFill, totalCommissions, filledQuantity);
 }
