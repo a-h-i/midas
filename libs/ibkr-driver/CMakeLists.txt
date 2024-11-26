@@ -43,6 +43,11 @@ find_package(Threads REQUIRED)
 target_link_libraries(ibkr_driver PUBLIC Threads::Threads)
 
 
+find_package(TBB REQUIRED)
+target_link_libraries(ibkr_driver PUBLIC TBB::tbb)
+
+
+
 # Boost
 find_package(Boost ${BOOST_REQUIRED_VERSION} REQUIRED COMPONENTS system log REQUIRED)
 

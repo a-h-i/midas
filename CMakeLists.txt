@@ -39,7 +39,7 @@ ExternalProject_Add(
 # If experiencing problems with hung downloads, temporarily
 # switching this option off may help diagnose which content population
 # is causing the issue.
-set(FETCHCONTENT_QUIET ON)
+set(FETCHCONTENT_QUIET OFF)
 
 FetchContent_Declare(
     googletest
