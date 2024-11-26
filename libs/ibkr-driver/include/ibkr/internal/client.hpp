@@ -86,8 +86,7 @@ private:
   std::deque<std::shared_ptr<NativeOrder>> pendingOrders;
   boost::concurrent_flat_map<OrderId, std::shared_ptr<NativeOrder>>
       activeOrders;
-  boost::concurrent_flat_map<std::string, CommissionReport>
-      unhandledCommissions;
+  boost::concurrent_flat_map<std::string, CommissionEntry> unhandledCommissions;
   /**
    * Usually in response to external events,
    * They are processed by the dedicated driver thread in process cycle.

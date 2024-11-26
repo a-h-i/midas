@@ -13,6 +13,13 @@
 typedef Execution native_execution_t;
 namespace ibkr::internal {
 
+struct CommissionEntry {
+  const std::string executionId, currency;
+  const double commission, realizedPNL;
+
+  CommissionEntry(const CommissionReport &);
+};
+
 /*
  * Orders have more than one execution
  * as they are not filled in an all or nothing manner.
@@ -23,15 +30,11 @@ struct ExecutionEntry {
   const boost::posix_time::ptime serverExecutionTime;
   const midas::OrderDirection direction;
   const double quantity, totalPrice, cumulativeQuantity, averagePrice;
+  std::list<CommissionEntry> commissions;
 
   ExecutionEntry(const native_execution_t &);
-};
-
-struct CommissionEntry {
-  const std::string executionId, currency;
-  const double commission, realizedPNL;
-
-  CommissionEntry(const CommissionReport &);
+  bool corrects(const ExecutionEntry &other) const;
+  std::string getBaseId() const;
 };
 
 class NativeOrderSignals {
@@ -50,6 +53,7 @@ public:
   inline void setFilled(double price, double commissions, double quantity) {
     fillSignal(price, commissions, quantity);
   }
+
   NativeOrderSignals(midas::Order &order);
   ~NativeOrderSignals();
 };
@@ -63,7 +67,12 @@ public:
   Order nativeOrder;
   midas::InstrumentEnum instrument;
   Contract ibkrContract;
-
+  /**
+  Adds a commission entry if it belongs to the order.
+  @returns true if entry belongs to order and was handled.
+   */
+  bool addCommissionEntry(const CommissionEntry &);
+  void cleanCorrectedExecutions();
   inline void setTransmitted() { events->setTransmitted(); }
   inline void setCancelled() { events->setCancelled(); }
   inline void addExecutionEntry(const ExecutionEntry &execution) {

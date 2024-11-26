@@ -12,6 +12,6 @@ target_compile_options(subscription PRIVATE -Wall -Wextra -Wpedantic)
 # Public interface headers
 target_include_directories(subscription PUBLIC ../../include)
 # Boost
-find_package(Boost 1.83 COMPONENTS date_time REQUIRED)
+find_package(Boost ${BOOST_REQUIRED_VERSION} REQUIRED COMPONENTS date_time REQUIRED)
 target_include_directories(subscription PUBLIC ${Boost_INCLUDE_DIR})
 target_link_libraries(subscription PUBLIC ${Boost_LIBRARIES})

@@ -1,5 +1,9 @@
 #include "ibkr/internal/build_contracts.hpp"
 #include "ibkr/internal/order_wrapper.hpp"
+#include <algorithm>
+#include <boost/unordered/unordered_flat_set.hpp>
+#include <iterator>
+#include <vector>
 
 using namespace ibkr::internal;
 
@@ -15,4 +19,29 @@ NativeOrderSignals::NativeOrderSignals(midas::Order &order) {
 
 NativeOrder::NativeOrder(Order native, midas::Order &order)
     : events(new NativeOrderSignals(order)), nativeOrder(native),
-      instrument(order.instrument), ibkrContract(ibkr::internal::build_futures_contract(order.instrument)) {}
+      instrument(order.instrument),
+      ibkrContract(ibkr::internal::build_futures_contract(order.instrument)) {}
+
+bool NativeOrder::addCommissionEntry(const CommissionEntry &entry) {
+  auto pos = std::find_if(
+      std::begin(executions), std::end(executions),
+      [&entry](const auto &exec) { return exec.id == entry.executionId; });
+  if (pos == std::end(executions)) {
+    return false;
+  }
+  pos->commissions.push_back(entry);
+  return true;
+}
+
+void NativeOrder::cleanCorrectedExecutions() {
+
+  std::erase_if(executions, [this](const ExecutionEntry &execution) {
+    const auto baseId = execution.getBaseId();
+    // we want to remove if others have same id and this doesn't correct others
+    return std::any_of(std::begin(executions), std::end(executions),
+                       [&execution, &baseId](const ExecutionEntry &other) {
+                         return baseId == other.getBaseId() &&
+                                !execution.corrects(other);
+                       });
+  });
+}

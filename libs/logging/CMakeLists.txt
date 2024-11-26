@@ -10,6 +10,6 @@ target_compile_options(logging PRIVATE -Wall -Wextra -Wpedantic -Werror)
 target_include_directories(logging PUBLIC ../../include)
 
 
-find_package(Boost 1.83 COMPONENTS log filesystem log_setup date_time REQUIRED)
+find_package(Boost ${BOOST_REQUIRED_VERSION} REQUIRED COMPONENTS log filesystem log_setup date_time REQUIRED)
 target_include_directories(logging PUBLIC ${Boost_INCLUDE_DIR})
 target_link_libraries(logging PUBLIC ${Boost_LIBRARIES})

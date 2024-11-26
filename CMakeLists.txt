@@ -2,8 +2,12 @@ cmake_minimum_required(VERSION 3.28)
 enable_testing()
 include(ExternalProject)
 include(FetchContent)
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 NEW)
+endif()
 set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "")
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
+set (BOOST_REQUIRED_VERSION 1.83)
 project(
         Midas
         VERSION 0.1.0
@@ -29,7 +33,13 @@ ExternalProject_Add(
     GIT_TAG origin/main
     INSTALL_COMMAND ""
 )
-
+# The logging output during population can be quite verbose,
+# making the configure stage quite noisy. This cache option
+# (ON by default) hides all population output unless an error is encountered.
+# If experiencing problems with hung downloads, temporarily
+# switching this option off may help diagnose which content population
+# is causing the issue.
+set(FETCHCONTENT_QUIET ON)
 
 FetchContent_Declare(
     googletest

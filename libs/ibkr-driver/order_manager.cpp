@@ -1,6 +1,5 @@
 #include "ibkr/internal/client.hpp"
 #include "ibkr/internal/ibkr_order_manager.hpp"
-
 ibkr::internal::OrderManager::OrderManager(
     std::shared_ptr<logging::thread_safe_logger_t> logger, Driver &driver)
     : midas::OrderManager(logger), driver(driver) {}
