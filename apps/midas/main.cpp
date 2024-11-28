@@ -8,17 +8,16 @@
 #include "ibkr-driver/ibkr.hpp"
 #include "logging/logging.hpp"
 #include "midas/version.h"
+#include "signal-handling/signal-handler.hpp"
 #include "trader/trader.hpp"
 #include <atomic>
 #include <boost/asio/ip/address.hpp>
 #include <boost/program_options.hpp>
-#include <condition_variable>
 #include <csignal>
 #include <fstream>
 #include <ios>
 #include <iostream>
 #include <memory>
-#include <mutex>
 #include <thread>
 
 using namespace std::chrono_literals;
@@ -30,7 +29,8 @@ static po::options_description appOptionsDesc("Midas AlgoTrading options");
 
 static po::variables_map parseCmdLine(int argc, char *argv[]) {
   appOptionsDesc.add_options()("help,h", "prints this message")(
-      "version,v", "prints program version");
+      "version,v", "prints program version")("simulate,-s", "simulation mode")(
+      "live", "live trading mode");
   po::variables_map vm;
   po::store(po::parse_command_line(argc, argv, appOptionsDesc), vm);
   po::notify(vm);
@@ -66,7 +66,8 @@ static void backtestMomentumTrader() {
             << "\nsuccess ratio " << results.summary.successRatio
             << "\nmax down turn -" << results.summary.maxDownTurn
             << "\nmax up turn " << results.summary.maxUpTurn
-            << "\nending balance " << results.summary.endingBalance << std::endl;
+            << "\nending balance " << results.summary.endingBalance
+            << std::endl;
   std::ofstream sourceCsv("source.csv", std::ios::out),
       downSampledCsv("down_sampled.csv", std::ios::out);
   sourceCsv << *results.originalStream;
@@ -75,44 +76,25 @@ static void backtestMomentumTrader() {
 
 int main(int argc, char *argv[]) {
   logging::initialize_logging();
-  // sigset_t sigset;
-  // sigemptyset(&sigset);
-  // Only listen to interrupts and terminations
-  // sigaddset(&sigset, SIGINT);
-  // sigaddset(&sigset, SIGTERM);
-  // pthread_sigmask(SIG_BLOCK, &sigset, nullptr);
-  std::atomic<bool> terminationRequested(false);
-  std::mutex signalHandlingCvMutex;
-  std::condition_variable signalHandlingCv;
-
+  midas::SignalHandler signalHandler;
   auto logger = logging::create_channel_logger("cmdline");
   INFO_LOG(logger) << "Midas v" << MIDAS_VERSION << " starting";
   auto vm = parseCmdLine(argc, argv);
 
-  // std::jthread signalHandler(
-  //     [&sigset, &terminationRequested, &signalHandlingCv, &logger]() {
-  //       int signalNumber = 0;
-  //       timespec sigTimeout;
-  //       sigTimeout.tv_sec = 0;
-  //       sigTimeout.tv_nsec = 500000000;
-  //       do {
-  //         signalNumber = sigtimedwait(&sigset, nullptr, &sigTimeout);
-  //       } while (!terminationRequested.load() && signalNumber == -1 &&
-  //                errno == EAGAIN);
-  //       INFO_LOG(logger) << "Received termination signal";
-  //       terminationRequested.store(true);
-  //       signalHandlingCv.notify_all();
-  //     });
-
   if (vm.count("help")) {
     std::cout << appOptionsDesc << '\n';
   } else if (vm.count("version")) {
-    INFO_LOG(logger) << "Midas version v" << MIDAS_VERSION << '\n';
-  } else {
+    std::cout << "Midas version v" << MIDAS_VERSION << '\n';
+  } else if (vm.count("simulate")) {
     // simulate
     backtestMomentumTrader();
+  } else if (vm.count("live")) {
+    
+  } else {
+    std::cerr
+        << "This program requires at least one command. Run midas -h for help"
+        << std::endl;
   }
-  terminationRequested.store(true);
-  signalHandlingCv.notify_all();
+
   return 0;
 }
