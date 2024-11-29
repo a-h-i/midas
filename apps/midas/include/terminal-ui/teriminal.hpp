@@ -1,6 +1,7 @@
 #pragma once
 
+#include "signal-handling/signal-handler.hpp"
 namespace ui {
 
-void startTerminalUI();
+void startTerminalUI(midas::SignalHandler &);
 }; // namespace ui
