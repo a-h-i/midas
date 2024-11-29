@@ -10,8 +10,8 @@ namespace ibkr::internal {
 
 class OrderManager : public midas::OrderManager {
   Driver &driver;
-  std::list<std::shared_ptr<midas::Order>> transmittedOrders, acceptedOrders,
-      filledOrders, cancelledOrders;
+  std::list<std::shared_ptr<midas::Order>> transmittedOrders, filledOrders,
+      cancelledOrders;
 
 public:
   OrderManager(std::shared_ptr<logging::thread_safe_logger_t> logger, Driver &);
