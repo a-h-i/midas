@@ -1,7 +1,9 @@
+#include "broker-interface/instruments.hpp"
 #include "broker-interface/order.hpp"
 #include "ibkr/internal/client.hpp"
 #include "ibkr/internal/ibkr_order_manager.hpp"
 #include <memory>
+#include <mutex>
 ibkr::internal::OrderManager::OrderManager(Driver &driver) : driver(driver) {}
 
 void ibkr::internal::OrderManager::transmit(
@@ -23,6 +25,9 @@ void ibkr::internal::OrderManager::transmit(
             } else if (event.newStatus == midas::OrderStatusEnum::Filled) {
               transmittedOrders.remove_if(removePredicate);
               filledOrders.push_back(orderPtr);
+              handlePnLUpdate(order.instrument, order.direction,
+                              order.getAvgFillPrice() *
+                                  order.getFilledQuantity());
             }
           })
           .track_foreign(orderPtr));
@@ -37,4 +42,19 @@ std::generator<midas::Order *> ibkr::internal::OrderManager::getFilledOrders() {
   for (auto &order : filledOrders) {
     co_yield order.get();
   }
+}
+
+void ibkr::internal::OrderManager::handlePnLUpdate(
+    midas::InstrumentEnum instrument, midas::OrderDirection direction,
+    double price) {
+  double directionModifier = direction == midas::OrderDirection::BUY ? 1 : -1;
+  double adjustedPrice = price * directionModifier;
+  std::scoped_lock lock(pnlMutex);
+  if (!unrealizedPnl.contains(instrument)) {
+    unrealizedPnl[instrument] = adjustedPrice;
+    return;
+  }
+  double diff = unrealizedPnl[instrument] - adjustedPrice;
+  const double realized = realizedPnl.fetch_add(diff);
+  realizedPnlSignal(realized);
 }

@@ -272,7 +272,7 @@ class OrderManager {
 public:
   typedef boost::signals2::signal<void(double pnl)> realized_pnl_signal_t;
 
-private:
+protected:
   realized_pnl_signal_t realizedPnlSignal;
 
 public:
