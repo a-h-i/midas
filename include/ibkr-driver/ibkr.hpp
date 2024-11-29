@@ -1,6 +1,7 @@
 #pragma once
 #include "CommonDefs.h"
 #include "broker-interface/broker.hpp"
+#include "broker-interface/order.hpp"
 #include "broker-interface/subscription.hpp"
 #include <atomic>
 #include <boost/asio/ip/tcp.hpp>
@@ -14,6 +15,11 @@ class OrderManager;
 } // namespace internal
 class Driver : public midas::Broker {
   friend internal::OrderManager;
+
+private:
+  std::unique_ptr<internal::Client> implementation;
+  std::shared_ptr<midas::OrderManager> orderManager;
+  std::atomic<OrderId> &orderCtr();
 
 public:
   Driver(boost::asio::ip::tcp::endpoint endpoint);
@@ -35,10 +41,7 @@ public:
   virtual bool isConnected() const override;
   virtual unsigned int estimateHistoricalBarSizeSeconds(
       const midas::HistorySubscriptionStartPoint &duration) const override;
-
-private:
-  std::unique_ptr<internal::Client> implementation;
-  std::atomic<OrderId> &orderCtr();
+  virtual std::shared_ptr<midas::OrderManager> getOrderManager() override;
 };
 
 } // namespace ibkr

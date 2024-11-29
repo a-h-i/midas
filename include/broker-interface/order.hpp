@@ -273,12 +273,9 @@ public:
   typedef boost::signals2::signal<void(double pnl)> realized_pnl_signal_t;
 
 private:
-  std::shared_ptr<logging::thread_safe_logger_t> logger;
   realized_pnl_signal_t realizedPnlSignal;
 
 public:
-  OrderManager(std::shared_ptr<logging::thread_safe_logger_t> logger)
-      : logger(logger) {}
   virtual ~OrderManager() = default;
   virtual void transmit(std::shared_ptr<Order>) = 0;
   virtual bool hasActiveOrders() const = 0;

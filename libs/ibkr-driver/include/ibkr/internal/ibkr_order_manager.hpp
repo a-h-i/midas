@@ -14,7 +14,7 @@ class OrderManager : public midas::OrderManager {
       cancelledOrders;
 
 public:
-  OrderManager(std::shared_ptr<logging::thread_safe_logger_t> logger, Driver &);
+  OrderManager(Driver &);
   virtual void transmit(std::shared_ptr<midas::Order>) override;
   virtual bool hasActiveOrders() const override;
   virtual std::generator<midas::Order *> getFilledOrders() override;

@@ -2,9 +2,7 @@
 #include "ibkr/internal/client.hpp"
 #include "ibkr/internal/ibkr_order_manager.hpp"
 #include <memory>
-ibkr::internal::OrderManager::OrderManager(
-    std::shared_ptr<logging::thread_safe_logger_t> logger, Driver &driver)
-    : midas::OrderManager(logger), driver(driver) {}
+ibkr::internal::OrderManager::OrderManager(Driver &driver) : driver(driver) {}
 
 void ibkr::internal::OrderManager::transmit(
     std::shared_ptr<midas::Order> orderPtr) {

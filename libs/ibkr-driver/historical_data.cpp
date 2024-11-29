@@ -56,7 +56,4 @@ void ibkr::internal::Client::historicalDataEnd(
 }
 
 
-unsigned int ibkr::Driver::estimateHistoricalBarSizeSeconds(
-    const midas::HistorySubscriptionStartPoint &duration) const {
-  return internal::historicalBarSize(duration).sizeSeconds;
-}
+

@@ -33,6 +33,6 @@ public:
 
   virtual unsigned int estimateHistoricalBarSizeSeconds(
       const HistorySubscriptionStartPoint &duration) const = 0;
-  virtual std::shared_ptr<OrderManager> getOrderManager();
+  virtual std::shared_ptr<OrderManager> getOrderManager() = 0;
 };
 } // namespace midas
