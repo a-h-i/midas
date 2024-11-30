@@ -1,6 +1,7 @@
 #include "terminal-ui/trader_view.hpp"
 #include "trader/base_trader.hpp"
 #include <boost/bind/placeholders.hpp>
+#include <chrono>
 #include <ftxui/component/component.hpp>
 #include <ftxui/component/component_base.hpp>
 #include <ftxui/dom/elements.hpp>
@@ -24,9 +25,11 @@ ui::TraderSummaryView::TraderSummaryView(Trader &trader)
 void ui::TraderSummaryView::refresh(midas::TradeSummary summary) {
   std::scoped_lock summaryLock(summaryMutex);
   currentSummary = summary;
+  updatedAt = std::chrono::duration_cast<std::chrono::seconds>(
+      std::chrono::utc_clock::now().time_since_epoch());
 }
 
-Component ui::TraderSummaryView::render() const {
+Component ui::TraderSummaryView::paint() {
   auto renderer = Renderer([this] {
     if (!currentSummary.has_value()) {
       auto document = text("No summary received");
@@ -63,5 +66,14 @@ Component ui::TraderSummaryView::render() const {
     auto document = window(text(traderName), vbox(fields));
     return document;
   });
+  lastPaintedAt = std::chrono::duration_cast<std::chrono::seconds>(
+      std::chrono::utc_clock::now().time_since_epoch());
   return renderer;
+}
+
+bool ui::TraderSummaryView::dirty() const {
+  if (!lastPaintedAt.has_value() || !updatedAt.has_value()) {
+    return true;
+  }
+  return lastPaintedAt <= updatedAt;
 }

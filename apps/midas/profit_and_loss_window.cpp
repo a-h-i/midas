@@ -8,11 +8,14 @@ using namespace ui;
 using namespace ftxui;
 ProfitAndLossWindow::ProfitAndLossWindow(midas::OrderManager &manager) {
 
-  slotConn = manager.addPnLListener(
-      [this](double pnlNew) { realizedPnL.store(pnlNew); });
+  slotConn = manager.addPnLListener([this](double pnlNew) {
+    realizedPnL.store(pnlNew);
+    updatedAt = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::utc_clock::now().time_since_epoch());
+  });
 }
 
-Component ProfitAndLossWindow::render() const {
+Component ProfitAndLossWindow::paint() {
 
   auto renderer = Renderer([this] {
     auto realizedPnlLabel = text("Realized: ");
@@ -31,5 +34,14 @@ Component ProfitAndLossWindow::render() const {
     auto document = window(text("PnL") | center, container);
     return document;
   });
+  lastPaintedAt = std::chrono::duration_cast<std::chrono::seconds>(
+      std::chrono::utc_clock::now().time_since_epoch());
   return renderer;
+}
+
+bool ui::ProfitAndLossWindow::dirty() const {
+  if (!lastPaintedAt.has_value() || !updatedAt.has_value()) {
+    return true;
+  }
+  return lastPaintedAt <= updatedAt;
 }

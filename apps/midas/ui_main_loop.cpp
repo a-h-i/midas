@@ -24,7 +24,7 @@ void ui::startTerminalUI(midas::SignalHandler &globalSignalHandler) {
           [&quitLoop] { quitLoop.store(true); });
 
   auto screen = ScreenInteractive::TerminalOutput();
-  
+
   auto renderer = Renderer([&] {
     auto document = pnlWindow.render();
     return window(text("Midas Algo Trader") | center, hbox(document));

@@ -11,10 +11,14 @@ using namespace ftxui;
 class ProfitAndLossWindow : public UIComponenet {
   std::atomic<double> realizedPnL{0};
   boost::signals2::scoped_connection slotConn;
+  std::optional<std::chrono::seconds> updatedAt, lastPaintedAt;
 
 public:
   ProfitAndLossWindow(midas::OrderManager &manager);
-  virtual Component render() const override;
+
+protected:
+  virtual Component paint() override;
+  virtual bool dirty() const override;
 };
 
 } // namespace ui

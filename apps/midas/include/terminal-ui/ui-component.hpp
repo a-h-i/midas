@@ -1,10 +1,19 @@
 #pragma once
 
 #include <ftxui/component/component_base.hpp>
+#include <optional>
 
 namespace ui {
-struct UIComponenet {
+class UIComponenet {
+
+  std::optional<ftxui::Component> lastPainted;
+
+protected:
+  virtual bool dirty() const = 0;
+  virtual ftxui::Component paint() = 0;
+
+public:
   virtual ~UIComponenet() = default;
-  virtual ftxui::Component render() const = 0;
+  ftxui::Component render();
 };
 } // namespace ui
