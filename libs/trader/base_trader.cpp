@@ -1,7 +1,7 @@
+#include "trader/base_trader.hpp"
 #include "broker-interface/order.hpp"
 #include "broker-interface/trades_summary.hpp"
 #include "logging/logging.hpp"
-#include "trader/base_trader.hpp"
 #include <algorithm>
 #include <functional>
 #include <mutex>
@@ -26,8 +26,8 @@ void midas::trader::Trader::enterBracket(
 
 bool midas::trader::Trader::hasOpenPosition() { return !currentOrders.empty(); }
 
-boost::signals2::connection
-midas::trader::Trader::connectSlot(const signal_t::slot_type &subscriber) {
+boost::signals2::connection midas::trader::Trader::connectSlot(
+    const trade_summary_signal_t::slot_type &subscriber) {
   return summarySignal.connect(subscriber);
 }
 

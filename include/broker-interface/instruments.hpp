@@ -30,6 +30,11 @@ inline std::string operator+(const char *lhs, InstrumentEnum instrument) {
   return lhs + instrumentStr;
 }
 
+inline std::string operator+(const std::string &lhs,
+                             InstrumentEnum instrument) {
+  return lhs.c_str() + instrument;
+}
+
 template <typename stream>
 stream &operator<<(stream &s, InstrumentEnum instrument) {
   s << "" + instrument;

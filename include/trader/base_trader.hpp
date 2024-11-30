@@ -1,10 +1,10 @@
 #pragma once
+#include "broker-interface/instruments.hpp"
+#include "broker-interface/order.hpp"
+#include "broker-interface/order_summary.hpp"
+#include "data/data_stream.hpp"
 #include "trader_data.hpp"
 #include <boost/signals2.hpp>
-#include "data/data_stream.hpp"
-#include "broker-interface/order_summary.hpp"
-#include "broker-interface/order.hpp"
-#include "broker-interface/instruments.hpp"
 namespace midas::trader {
 
 /**
@@ -17,11 +17,11 @@ namespace midas::trader {
  */
 class Trader {
 public:
-  typedef boost::signals2::signal<void(TradeSummary)> signal_t;
+  typedef boost::signals2::signal<void(TradeSummary)> trade_summary_signal_t;
 
 private:
   std::deque<std::shared_ptr<Order>> currentOrders, executedOrders;
-  signal_t summarySignal;
+  trade_summary_signal_t summarySignal;
   OrderSummaryTracker summary;
   std::recursive_mutex orderStateMutex;
 
@@ -49,8 +49,9 @@ protected:
 public:
   virtual ~Trader() = default;
   virtual void decide() = 0;
+  virtual std::string traderName() const = 0;
   bool hasOpenPosition();
   boost::signals2::connection
-  connectSlot(const signal_t::slot_type &subscriber);
+  connectSlot(const trade_summary_signal_t::slot_type &subscriber);
 };
 } // namespace midas::trader

@@ -8,6 +8,7 @@
 #include <boost/date_time/posix_time/time_formatters.hpp>
 #include <cmath>
 #include <memory>
+#include <string>
 #include <vector>
 
 using namespace midas::trader;
@@ -104,4 +105,8 @@ void MomentumTrader::clearBuffers() {
   opens.clear();
   trades.clear();
   timestamps.clear();
+}
+
+std::string MomentumTrader::traderName() const {
+  return std::string("Momentum trader - ") + instrument;
 }
