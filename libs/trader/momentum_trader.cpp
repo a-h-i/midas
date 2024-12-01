@@ -29,7 +29,7 @@ MomentumTrader::MomentumTrader(
 }
 
 void MomentumTrader::decide() {
-  if (!data.ok() || hasOpenPosition()) {
+  if (!data.ok() || hasOpenPosition() || paused()) {
     // We do not have enough data to satisfy look back requirements
     return;
   }

@@ -24,6 +24,7 @@ private:
   trade_summary_signal_t summarySignal;
   OrderSummaryTracker summary;
   std::recursive_mutex orderStateMutex;
+  bool isPaused{false};
 
   void handleOrderStatusChangeEvent(Order &order,
                                     Order::StatusChangeEvent event);
@@ -53,5 +54,8 @@ public:
   bool hasOpenPosition();
   boost::signals2::connection
   connectSlot(const trade_summary_signal_t::slot_type &subscriber);
+
+  inline bool togglePause() { return isPaused = !isPaused; }
+  inline bool paused() { return isPaused; }
 };
 } // namespace midas::trader

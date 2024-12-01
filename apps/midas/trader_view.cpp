@@ -30,11 +30,10 @@ void ui::TraderSummaryView::refresh(midas::TradeSummary summary) {
 }
 
 Component ui::TraderSummaryView::paint() {
-  auto renderer = Renderer([this] {
-    if (!currentSummary.has_value()) {
-      auto document = text("No summary received");
-      return document;
-    }
+  Element document;
+  if (!currentSummary.has_value()) {
+    document = text("No summary received");
+  } else {
     std::vector<Element> fields;
     fields.push_back(text("# entry orders: " +
                           std::to_string(currentSummary->numberOfEntryOrders)));
@@ -63,9 +62,10 @@ Component ui::TraderSummaryView::paint() {
     formatter << "has open position? " << std::boolalpha
               << currentSummary->hasOpenPosition;
     fields.push_back(text(formatter.str()));
-    auto document = window(text(traderName), vbox(fields));
-    return document;
-  });
+    document = window(text(traderName), vbox(fields));
+  }
+
+  auto renderer = Renderer([document] { return document; });
   lastPaintedAt = std::chrono::duration_cast<std::chrono::seconds>(
       std::chrono::utc_clock::now().time_since_epoch());
   return renderer;

@@ -9,6 +9,9 @@
 void midas::trader::Trader::enterBracket(
     InstrumentEnum instrument, unsigned int quantity, OrderDirection direction,
     double entryPrice, double stopLossPrice, double profitPrice) {
+  if (paused()) {
+    return;
+  }
   std::scoped_lock enterBracketLock(orderStateMutex);
   INFO_LOG(*logger) << "Entering order for " << instrument << " x" << quantity
                     << " " << direction << "" << " entryPrice: " << entryPrice
