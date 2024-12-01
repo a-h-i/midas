@@ -4,7 +4,7 @@
 ftxui::Component ui::UIComponenet::render() {
   if (!lastPainted.has_value() || dirty()) {
 
-    lastPainted = render();
+    lastPainted = paint();
   }
   return lastPainted.value();
 }
