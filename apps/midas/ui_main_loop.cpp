@@ -21,8 +21,14 @@ using namespace ftxui;
 using namespace std::chrono_literals;
 void ui::startTerminalUI(midas::SignalHandler &globalSignalHandler) {
   std::atomic<bool> quitLoop{false};
+  // sync with signal handler for exit
+  boost::signals2::scoped_connection terminationConnection =
+      globalSignalHandler.addInterruptListener(
+          [&quitLoop] { quitLoop.store(true); });
 
+  // Create broker and driver
   std::shared_ptr<midas::Broker> broker = createIBKRBroker();
+  broker->connect();
   std::jthread brokerProcessor([&broker, &quitLoop] {
     while (!quitLoop.load()) {
       broker->processCycle();
@@ -30,6 +36,7 @@ void ui::startTerminalUI(midas::SignalHandler &globalSignalHandler) {
   });
   std::shared_ptr<midas::OrderManager> orderManager = broker->getOrderManager();
 
+  // Subscribe to data stream
   std::shared_ptr<midas::DataStream> streamPtr =
       std::make_shared<midas::DataStream>(120);
   auto instrument = midas::InstrumentEnum::MicroNasdaqFutures;
@@ -41,40 +48,47 @@ void ui::startTerminalUI(midas::SignalHandler &globalSignalHandler) {
       dataSubscription->barSignal.connect(
           [&streamPtr]([[maybe_unused]] const midas::Subscription &sub,
                        midas::Bar bar) { streamPtr->addBars(bar); });
-  boost::signals2::scoped_connection terminationConnection =
-      globalSignalHandler.addInterruptListener(
-          [&quitLoop] { quitLoop.store(true); });
 
   broker->addSubscription(dataSubscription);
-  auto screen = ScreenInteractive::TerminalOutput();
+  // Create UI
+  auto screen = ScreenInteractive::Fullscreen();
 
   ProfitAndLossWindow pnlWindow(*orderManager);
   TraderSummaryView traderSummary(*trader);
-
   auto renderer = Renderer([&] {
     auto btnClr = trader->paused() ? Color::DarkRed : Color::DarkGreen;
     auto traderPauseButtonOptions = ButtonOption::Animated(btnClr);
+    traderPauseButtonOptions.transform = [](const EntryState &s) {
+      auto element = text(s.label) | center | flex;
+      if (s.focused) {
+        return element | bold | border;
+      } else {
+        return element | borderEmpty;
+      }
+    };
     auto traderPauseButton = Button(
         trader->paused() ? "continue" : "pause",
         [&trader] { trader->togglePause(); }, traderPauseButtonOptions);
-    auto traderContainer = Container::Vertical({
-        traderSummary.render(),
-        Renderer([]() { return separator(); }),
-        traderPauseButton,
+    int row = 1;
+    auto traderContainer = Container::Vertical(
+        {
+            traderSummary.renderer() | flex,
+            traderPauseButton,
 
+        },
+        &row);
+    auto traderWindow = Renderer([&trader, &traderContainer]() {
+      return window(text(trader->traderName()), traderContainer->Render());
     });
-    auto traderWindow =
-        window(text(trader->traderName()), traderContainer->Render());
-    auto document = pnlWindow.render();
-    return window(text("Midas Algo Trader") | center,
-                  hbox({
-                      pnlWindow.render()->Render(),
-                      traderWindow,
-                  }));
+    int column = 1;
+    auto mainWindow = Container::Horizontal(
+        {pnlWindow.renderer(), traderWindow | flex}, &column);
+
+    return window(text("Midas Algo Trader") | center, mainWindow->Render());
   });
   Loop loop(&screen, renderer);
+  screen.TrackMouse(true);
   while (!quitLoop.load()) {
-    loop.RunOnce();
-    std::this_thread::sleep_for(10ms);
+    loop.RunOnceBlocking();
   }
 }

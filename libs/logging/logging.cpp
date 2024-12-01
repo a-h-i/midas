@@ -8,34 +8,31 @@
 
 #include <boost/date_time.hpp>
 #include <boost/smart_ptr.hpp>
-#include <iostream>
+#include <fstream>
 
-namespace keywords = boost::log::keywords;
 namespace expr = boost::log::expressions;
 namespace src = boost::log::sources;
 
 void logging::initialize_logging() {
   boost::shared_ptr<boost::log::core> core = boost::log::core::get();
-  boost::shared_ptr<boost::log::sinks::text_ostream_backend> backend =
-      boost::make_shared<boost::log::sinks::text_ostream_backend>();
-  backend->add_stream(
-      boost::shared_ptr<std::ostream>(&std::clog, boost::null_deleter()));
-  backend->auto_flush(true);
 
-  typedef boost::log::sinks::synchronous_sink<decltype(backend)::element_type>
+  typedef boost::log::sinks::synchronous_sink<
+      boost::log::sinks::text_ostream_backend>
       sink_t;
-  boost::shared_ptr<sink_t> sink(new sink_t(backend));
+  boost::shared_ptr<sink_t> sink(new sink_t());
+  sink->locked_backend()->add_stream(
+      boost::make_shared<std::ofstream>("midas.log"));
+  sink->locked_backend()->auto_flush(true);
   sink->set_formatter(
       expr::stream
-          << "[File: " << a_file << ":" << a_line << "] "
-          << "[TimeStamp: "
-          << expr::attr<boost::log::attributes::local_clock::value_type>(
-                 "TimeStamp")
-          << "] "
-          << "[Severity: " << expr::attr<logging::SeverityLevel>("Severity")
-          << "] "
-          << "[Channel: " << expr::attr<std::string>("Channel") << "] "
-          << expr::smessage
+      << "[File: " << a_file << ":" << a_line << "] "
+      << "[TimeStamp: "
+      << expr::attr<boost::log::attributes::local_clock::value_type>(
+             "TimeStamp")
+      << "] "
+      << "[Severity: " << expr::attr<logging::SeverityLevel>("Severity") << "] "
+      << "[Channel: " << expr::attr<std::string>("Channel") << "] "
+      << expr::smessage
 
   );
 

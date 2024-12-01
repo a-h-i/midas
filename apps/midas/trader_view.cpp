@@ -44,7 +44,7 @@ Component ui::TraderSummaryView::paint() {
         text("# profit triggers: " +
              std::to_string(currentSummary->numberOfProfitTakersTriggered)));
     std::stringstream formatter;
-    formatter.imbue(std::locale("en_PT"));
+    formatter.imbue(std::locale("en_US"));
     formatter << "success ratio: " << std::setprecision(2)
               << currentSummary->successRatio;
     fields.push_back(text(formatter.str()));

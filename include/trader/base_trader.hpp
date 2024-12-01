@@ -3,6 +3,7 @@
 #include "broker-interface/order.hpp"
 #include "broker-interface/order_summary.hpp"
 #include "data/data_stream.hpp"
+#include "logging/logging.hpp"
 #include "trader_data.hpp"
 #include <boost/signals2.hpp>
 namespace midas::trader {

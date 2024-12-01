@@ -20,7 +20,7 @@ Component ProfitAndLossWindow::paint() {
   auto renderer = Renderer([this] {
     auto realizedPnlLabel = text("Realized: ");
     std::stringstream formatter;
-    formatter.imbue(std::locale("en_PT"));
+    formatter.imbue(std::locale("en_US"));
     formatter << std::put_money(realizedPnL.load());
     auto realizedPnLValue = text(formatter.str());
     if (realizedPnL.load() < 0) {

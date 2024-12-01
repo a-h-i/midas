@@ -14,6 +14,6 @@ protected:
 
 public:
   virtual ~UIComponenet() = default;
-  ftxui::Component render();
+  ftxui::Component renderer();
 };
 } // namespace ui

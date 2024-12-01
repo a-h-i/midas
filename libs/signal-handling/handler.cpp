@@ -38,7 +38,7 @@ SignalHandler::SignalHandler() {
     do {
       std::unique_lock signalsLock(signalHandlingCvMutex);
 
-      signalHandlingCv.wait_for(signalsLock, 500ms);
+      signalHandlingCv.wait_for(signalsLock, 20ms);
       if (sigtermReceived.load()) {
         terminationSignal();
       } else if (sigintReceived.load()) {
