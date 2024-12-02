@@ -55,7 +55,7 @@ jobs:
         # Version to build
         version: 1.83.0
         # Space-separated list of libraries
-        libraries: program_options log date_time system filesystem log_setup
+        libraries: program_options log date_time system filesystem
         # Toolset to use
         toolset: auto
         # Target platform
