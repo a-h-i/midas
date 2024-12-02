@@ -40,7 +40,7 @@ jobs:
           - os: ubuntu-latest
             c_compiler: clang
             cpp_compiler: clang++
-            toolset: clang
+            toolset: gcc
             boost_platform_version: 20.04
         exclude:
           - os: windows-latest
