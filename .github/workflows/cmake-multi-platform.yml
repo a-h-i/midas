@@ -30,12 +30,18 @@ jobs:
           - os: windows-latest
             c_compiler: cl
             cpp_compiler: cl
+            toolset: msvc
+            boost_platform_version: 2022
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
+            toolset: gcc
+            boost_platform_version: 20.04
           - os: ubuntu-latest
             c_compiler: clang
             cpp_compiler: clang++
+            toolset: clang
+            boost_platform_version: 20.04
         exclude:
           - os: windows-latest
             c_compiler: gcc
@@ -50,17 +56,16 @@ jobs:
       - name: Build Boost
         # You may pin to the exact commit or the version.
         # uses: egor-tensin/build-boost@6e787373b50fd7c2ddb99f85d4e472061ff54ba8
-        uses: egor-tensin/build-boost@v1
+        uses: MarkusJx/install-boost@v2.4.5
         id: boost
         with:
           # Version to build
-          version: 1.83.0
-          # Space-separated list of libraries
-          libraries: program_options log date_time system filesystem
+          boost_version: 1.83.0
           # Toolset to use
-          toolset: auto
+          toolset: ${{matrix.toolset}}
           # Target platform
-          platform: x64
+          link: static
+          platform_version: ${{matrix.boost_platform_version}}
           # Configuration to build
           #configuration: # optional, default is Release
           # Build static libraries
@@ -85,9 +90,11 @@ jobs:
           -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-          -D "BOOST_ROOT=${{ steps.boost.outputs.root }}"
-          -D "BOOST_LIBRARYDIR=${{ steps.boost.outputs.librarydir }}"
+          -DBoost_INCLUDE_DIR=${{steps.boost.outputs.BOOST_ROOT}}/include\
+          -DBoost_LIBRARY_DIRS=${{steps.boost.outputs.BOOST_ROOT}}/lib
           -S ${{ github.workspace }}
+        env:
+          BOOST_ROOT: ${{ steps.boost.outputs.BOOST_ROOT }}
 
       - name: Build
         # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
