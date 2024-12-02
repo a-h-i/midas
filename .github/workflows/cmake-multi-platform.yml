@@ -53,7 +53,7 @@ jobs:
       uses: egor-tensin/build-boost@v1
       with:
         # Version to build
-        version: 1.83
+        version: "1.83"
         # Space-separated list of libraries
         #libraries: 
         # Toolset to use
