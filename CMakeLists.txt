@@ -8,6 +8,7 @@ endif()
 set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "")
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 set (BOOST_REQUIRED_VERSION 1.83)
+add_compile_definitions(BOOST_ALL_NO_LIB)
 project(
         Midas
         VERSION 0.1.0

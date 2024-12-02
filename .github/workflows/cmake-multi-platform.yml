@@ -86,7 +86,6 @@ jobs:
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           -D "BOOST_ROOT=${{ steps.boost.outputs.root }}"
           -D "BOOST_LIBRARYDIR=${{ steps.boost.outputs.librarydir }}"
-          -D BOOST_ALL_NO_LIB
           -S ${{ github.workspace }}
 
       - name: Build
