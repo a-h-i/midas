@@ -50,6 +50,14 @@ void ui::startTerminalUI(midas::SignalHandler &globalSignalHandler) {
                        midas::Bar bar) { streamPtr->addBars(bar); });
 
   broker->addSubscription(dataSubscription);
+
+  std::jthread streamProcessingThread([&trader, &streamPtr, &quitLoop] {
+    while (!quitLoop.load()) {
+      streamPtr->waitForData(100ms);
+      trader->decide();
+    }
+  });
+
   // Create UI
   auto screen = ScreenInteractive::Fullscreen();
 
