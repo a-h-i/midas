@@ -53,13 +53,13 @@ jobs:
       uses: egor-tensin/build-boost@v1
       with:
         # Version to build
-        version: "1.83"
+        version: 1.83.0
         # Space-separated list of libraries
-        #libraries: 
+        libraries: program_options log date_time system filesystem log_setup
         # Toolset to use
-        #toolset: # optional, default is auto
+        toolset: auto
         # Target platform
-        #platform: # optional, default is x64
+        platform: x64
         # Configuration to build
         #configuration: # optional, default is Release
         # Build static libraries
@@ -85,6 +85,8 @@ jobs:
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -D "BOOST_ROOT=${{ steps.boost.outputs.root }}"
+        -D "BOOST_LIBRARYDIR=${{ steps.boost.outputs.librarydir }}"
         -S ${{ github.workspace }}
 
     - name: Build
