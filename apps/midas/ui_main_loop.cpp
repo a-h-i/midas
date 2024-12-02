@@ -38,7 +38,7 @@ void ui::startTerminalUI(midas::SignalHandler &globalSignalHandler) {
 
   // Subscribe to data stream
   std::shared_ptr<midas::DataStream> streamPtr =
-      std::make_shared<midas::DataStream>(120);
+      std::make_shared<midas::DataStream>(5);
   auto instrument = midas::InstrumentEnum::MicroNasdaqFutures;
   auto trader =
       midas::trader::momentumExploit(streamPtr, orderManager, instrument);

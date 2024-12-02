@@ -1,4 +1,5 @@
 #include "data/data_stream.hpp"
+#include <string>
 bool midas::DataStream::waitForData(std::chrono::milliseconds timeout) {
   std::vector<midas::Bar> tempBuffer;
   {
@@ -21,7 +22,9 @@ bool midas::DataStream::waitForData(std::chrono::milliseconds timeout) {
   bool reordered = false;
   for (auto bar : tempBuffer) {
     if (bar.barSizeSeconds != barSizeSeconds) {
-      throw std::runtime_error("Non uniform bar sizes");
+      throw std::runtime_error("Non uniform bar sizes " +
+                               std::to_string(bar.barSizeSeconds) + " " +
+                               std::to_string(barSizeSeconds));
     }
     const auto timeUpperBound =
         std::upper_bound(timestamps.begin(), timestamps.end(), bar.utcTime);

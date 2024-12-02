@@ -98,9 +98,10 @@ void ibkr::internal::Client::realtimeBar(TickerId tickerId, long time,
   internalBar.wap = wap;
   internalBar.volume = volume;
   internalBar.count = count;
-  midas::Bar bar = ibkr::internal::convertIbkrBar(internalBar, 30);
+  midas::Bar bar = ibkr::internal::convertIbkrBar(internalBar, 5);
   applyToActiveSubscriptions(
-      [&bar](midas::Subscription &subscription, [[maybe_unused]] ActiveSubscriptionState &state) {
+      [&bar](midas::Subscription &subscription,
+             [[maybe_unused]] ActiveSubscriptionState &state) {
         subscription.barSignal(subscription, bar);
         return false;
       },
