@@ -25,6 +25,9 @@ void midas::trader::Trader::enterBracket(
       std::bind(&Trader::handleOrderStatusChangeEvent, this,
                 std::placeholders::_1, std::placeholders::_2));
   orderManager->transmit(createdOrder);
+  auto updatedSummary = summary.summary();
+  updatedSummary.hasOpenPosition = this->hasOpenPosition();
+  summarySignal(updatedSummary);
 }
 
 bool midas::trader::Trader::hasOpenPosition() { return !currentOrders.empty(); }
@@ -52,6 +55,7 @@ void midas::trader::Trader::handleOrderStatusChangeEvent(
       // Finally we wish to invoke the signal handler but not while holding the
       // scoped lock.
       updatedSummary = summary.summary();
+      updatedSummary->hasOpenPosition = this->hasOpenPosition();
     }
   }
   if (updatedSummary.has_value()) {

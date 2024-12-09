@@ -1,5 +1,5 @@
+#include "trader/trader_data.hpp"
 #include "exceptions/sampling_error.hpp"
-#include "trader/trader.hpp"
 #include <boost/circular_buffer.hpp>
 #include <cstddef>
 #include <execution>
@@ -18,7 +18,6 @@ midas::trader::TraderData::TraderData(std::size_t lookBackSize,
           std::bind(&TraderData::processSource, this))),
       reOrderListenerConnection(
           source->addReOrderListener(std::bind(&TraderData::clear, this))) {
-
 
   if (candleSizeSeconds % source->barSizeSeconds != 0) {
     throw SamplingError(

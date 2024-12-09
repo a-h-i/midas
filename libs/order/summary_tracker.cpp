@@ -15,7 +15,7 @@ void OrderSummaryTracker::addToSummary(Order *order) {
 void OrderSummaryTracker::visit(SimpleOrder &) {}
 
 void OrderSummaryTracker::visit(BracketedOrder &order) {
-  accumulator.numberOfEntryOrders++;
+  accumulator.numberOfEntryOrdersTriggered++;
   auto &entryOrder = order.getEntryOrder();
   auto &stopOrder = order.getStopOrder();
   auto &profitOrder = order.getProfitTakerOrder();
@@ -53,5 +53,5 @@ void OrderSummaryTracker::visit(BracketedOrder &order) {
   accumulator.endingBalance += orderBalance;
   accumulator.successRatio =
       static_cast<double>(accumulator.numberOfProfitTakersTriggered) /
-      accumulator.numberOfEntryOrders;
+      accumulator.numberOfEntryOrdersTriggered;
 }

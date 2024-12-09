@@ -35,8 +35,9 @@ Component ui::TraderSummaryView::paint() {
     document = text("No summary received");
   } else {
     std::vector<Element> fields;
-    fields.push_back(text("# entry orders: " +
-                          std::to_string(currentSummary->numberOfEntryOrders)));
+    fields.push_back(
+        text("# entry orders triggers: " +
+             std::to_string(currentSummary->numberOfEntryOrdersTriggered)));
     fields.push_back(
         text("# stop loss triggers: " +
              std::to_string(currentSummary->numberOfStopLossTriggered)));

@@ -14,13 +14,13 @@ void ibkr::internal::Client::orderStatus(
     double lastFillPrice, int clientId, const std::string &whyHeld,
     double mktCapPrice) {
 
-  DEBUG_LOG(logger) << "ORDER STATUS: OrderId " << orderId
-                    << " status: " << status << " filled " << filled
-                    << " remaining " << remaining << " avg fill price "
-                    << avgFillPrice << " permId " << permId << " parentId "
-                    << parentId << " lastFillPrice " << lastFillPrice
-                    << " clientId " << clientId << " whyHeld " << whyHeld
-                    << " mktCapPrice " << mktCapPrice;
+  INFO_LOG(logger) << "ORDER STATUS: OrderId " << orderId
+                   << " status: " << status << " filled " << filled
+                   << " remaining " << remaining << " avg fill price "
+                   << avgFillPrice << " permId " << permId << " parentId "
+                   << parentId << " lastFillPrice " << lastFillPrice
+                   << " clientId " << clientId << " whyHeld " << whyHeld
+                   << " mktCapPrice " << mktCapPrice;
   std::scoped_lock commandsLock(commandsMutex);
   pendingCommands.push_back([this, orderId, status]() {
     if (!activeOrders.contains(orderId)) {
@@ -65,46 +65,53 @@ void ibkr::internal::Client::openOrder(OrderId orderId,
                                        const Contract &contract,
                                        const Order &order,
                                        const OrderState &state) {
-  DEBUG_LOG(logger) << "OPEN ORDER: OrderID" << orderId << " CONTRACT "
-                    << contract.symbol << " action" << order.action
-                    << " STATE: " << state.status;
+  INFO_LOG(logger) << "OPEN ORDER: OrderID" << orderId << " CONTRACT "
+                   << contract.symbol << " action" << order.action
+                   << " STATE: " << state.status;
 }
 void ibkr::internal::Client::openOrderEnd() {
-  DEBUG_LOG(logger) << "OPEN ORDER END";
+  INFO_LOG(logger) << "OPEN ORDER END";
 }
 
-void ibkr::internal::Client::winError(const std::string &str, int lastError) {
+void ibkr::internal::Client::winError(const std::string &str,
+                                      [[maybe_unused]] int lastError) {
   CRITICAL_LOG(logger) << "RECEIVED WINERROR " << str;
 }
 void ibkr::internal::Client::connectionClosed() {
   ERROR_LOG(logger) << "Connection closed called";
 }
 
-void ibkr::internal::Client::execDetails(int reqId, const Contract &contract,
-                                         const Execution &execution) {
+void ibkr::internal::Client::execDetails(
+    [[maybe_unused]] int reqId, [[maybe_unused]] const Contract &contract,
+    const Execution &execution) {
+  INFO_LOG(logger) << "received execution details";
   std::scoped_lock commandsLock(commandsMutex);
   pendingCommands.push_back([this, execution] { handleExecution(execution); });
 }
 
 void ibkr::internal::Client::execDetailsEnd(int reqId) {
-  DEBUG_LOG(logger) << "ExecDetailsEnd " << reqId;
+  INFO_LOG(logger) << "ExecDetailsEnd " << reqId;
 }
 
 void ibkr::internal::Client::commissionReport(
     const CommissionReport &commissionReport) {
+  INFO_LOG(logger) << "received commission report";
   std::scoped_lock commandsLock(commandsMutex);
   pendingCommands.push_back(
       [this, commissionReport] { handleCommissionReport(commissionReport); });
 }
 
 void ibkr::internal::Client::completedOrdersEnd() {
-  DEBUG_LOG(logger) << "Completed order end";
+  INFO_LOG(logger) << "Completed order end";
 }
 
 void ibkr::internal::Client::processPendingOrders() {
   std::scoped_lock lock(ordersMutex);
   for (auto &order : pendingOrders) {
     activeOrders.insert({order->nativeOrder.orderId, order});
+    INFO_LOG(logger) << "IBKR driver placing order: "
+                     << order->ibkrContract.symbol << " "
+                     << order->nativeOrder.orderId;
     connectionState.clientSocket->placeOrder(
         order->nativeOrder.orderId, order->ibkrContract, order->nativeOrder);
   }

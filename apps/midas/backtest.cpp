@@ -31,7 +31,8 @@ void backtestMomentumTrader() {
       midas::InstrumentEnum::MicroNasdaqFutures, 3_months, traderFactory,
       *broker);
   std::cout << "Trade Summary"
-            << "\nnumber  entry orders: " << results.summary.numberOfEntryOrders
+            << "\nnumber  entry orders: "
+            << results.summary.numberOfEntryOrdersTriggered
             << "\nnumber of stop loss orders triggered "
             << results.summary.numberOfStopLossTriggered
             << "\nnumber of profit takers triggered "
