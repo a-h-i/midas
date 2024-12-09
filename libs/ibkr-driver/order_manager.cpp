@@ -4,7 +4,9 @@
 #include "ibkr/internal/ibkr_order_manager.hpp"
 #include <memory>
 #include <mutex>
-ibkr::internal::OrderManager::OrderManager(Driver &driver) : driver(driver) {}
+ibkr::internal::OrderManager::OrderManager(
+    Driver &driver, std::shared_ptr<logging::thread_safe_logger_t> &logger)
+    : midas::OrderManager(logger), driver(driver) {}
 
 void ibkr::internal::OrderManager::transmit(
     std::shared_ptr<midas::Order> orderPtr) {

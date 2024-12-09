@@ -7,8 +7,9 @@
 #include <memory>
 
 ibkr::Driver::Driver(boost::asio::ip::tcp::endpoint endpoint)
-    : implementation{std::make_unique<internal::Client>(endpoint)},
-      orderManager(new internal::OrderManager(*this)) {}
+    : logger(std::make_shared<logging::thread_safe_logger_t>(logging::create_channel_logger("ibkr"))),
+      implementation{std::make_unique<internal::Client>(endpoint)},
+      orderManager(new internal::OrderManager(*this, logger)) {}
 
 boost::signals2::connection
 ibkr::Driver::addConnectListener(const std::function<void(bool)> &func) {

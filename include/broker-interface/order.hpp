@@ -274,8 +274,11 @@ public:
 
 protected:
   realized_pnl_signal_t realizedPnlSignal;
+  std::shared_ptr<logging::thread_safe_logger_t> logger;
 
 public:
+  OrderManager(std::shared_ptr<logging::thread_safe_logger_t> &logger)
+      : logger(logger) {}
   virtual ~OrderManager() = default;
   virtual void transmit(std::shared_ptr<Order>) = 0;
   virtual bool hasActiveOrders() const = 0;

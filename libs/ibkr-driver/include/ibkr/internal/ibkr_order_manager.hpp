@@ -4,6 +4,7 @@
 #include "broker-interface/order.hpp"
 #include "ibkr-driver/ibkr.hpp"
 #include "ibkr/internal/order_wrapper.hpp"
+#include "logging/logging.hpp"
 #include <atomic>
 #include <boost/unordered/concurrent_flat_map.hpp>
 #include <list>
@@ -23,7 +24,7 @@ class OrderManager : public midas::OrderManager {
                        double price);
 
 public:
-  OrderManager(Driver &);
+  OrderManager(Driver &, std::shared_ptr<logging::thread_safe_logger_t> &logger);
   virtual void transmit(std::shared_ptr<midas::Order>) override;
   virtual bool hasActiveOrders() const override;
   virtual std::generator<midas::Order *> getFilledOrders() override;

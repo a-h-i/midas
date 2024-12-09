@@ -18,7 +18,7 @@ private:
 
 public:
   MockOrderManager(std::shared_ptr<logging::thread_safe_logger_t> logger)
-      : OrderManager(), activeOrder(false) {}
+      : OrderManager(logger), activeOrder(false) {}
 
   // Mock implementation of transmit to store the last order
   void transmit(std::shared_ptr<Order> order) override {

@@ -82,7 +82,7 @@ midas::backtest::BacktestResult midas::backtest::performBacktest(
       std::make_shared<logging::thread_safe_logger_t>(
           logging::create_channel_logger("backtest " + instrument));
   std::shared_ptr<BacktestOrderManager> orderManager(
-      new BacktestOrderManager());
+      new BacktestOrderManager(logger));
   // now we need to request and wait for historical data.
   const unsigned int historicalBarSize =
       broker.estimateHistoricalBarSizeSeconds(interval.duration);
