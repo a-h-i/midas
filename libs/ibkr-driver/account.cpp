@@ -12,9 +12,10 @@ void ibkr::internal::Client::updateAccountValue(
 }
 
 void ibkr::internal::Client::updatePortfolio(
-    const Contract &contract, Decimal position, double marketPrice,
-    double marketValue, double averageCost, double unrealizedPNL,
-    double realizedPNL, const std::string &accountName) {
+    const Contract &contract, Decimal position,
+    [[maybe_unused]] double marketPrice, [[maybe_unused]] double marketValue,
+    [[maybe_unused]] double averageCost, [[maybe_unused]] double unrealizedPNL,
+    double realizedPNL, [[maybe_unused]] const std::string &accountName) {
   DEBUG_LOG(logger) << "UpdatePortfolio: contract: " << contract.symbol
                     << " Position: " << position << " unrealized "
                     << unrealizedPNL << " realized " << realizedPNL;

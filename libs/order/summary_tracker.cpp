@@ -35,7 +35,7 @@ void OrderSummaryTracker::visit(BracketedOrder &order) {
     } else {
       orderBalance += stopBalance;
     }
-  } else if (order.getProfitTakerOrder().state() == OrderStatusEnum::Filled) {
+  } else if (profitOrder.state() == OrderStatusEnum::Filled) {
     accumulator.numberOfProfitTakersTriggered++;
     double profitBalance =
         profitOrder.getAvgFillPrice() * profitOrder.getFilledQuantity();

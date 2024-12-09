@@ -36,19 +36,11 @@ void midas::Order::setShortLocatingHold() {
 
 void midas::Order::setFilled(double avgFillPrice, double totalCommissions,
                              unsigned int filledQuantity) {
-  this->avgFillPrice.store(avgFillPrice, std::memory_order::release);
-  this->totalCommissions.store(totalCommissions, std::memory_order::release);
-  this->quantityFilled.store(filledQuantity, std::memory_order::release);
-  FillEvent event{
-      .newFilled = filledQuantity,
-      .price = avgFillPrice,
-      .commission = totalCommissions,
-      .isCompletelyFilled = filledQuantity == requestedQuantity,
-  };
-  if (event.isCompletelyFilled) {
+                      
+  setFilledNoStatusUpdate(avgFillPrice, totalCommissions, filledQuantity);
+  if (filledQuantity == requestedQuantity) {
     setState(OrderStatusEnum::Filled);
   }
-  fillEventSignal(*this, event);
 }
 
 void midas::Order::setState(OrderStatusEnum newState) {
@@ -67,4 +59,22 @@ unsigned int midas::Order::getFilledQuantity() { return quantityFilled.load(); }
 
 bool midas::Order::operator==(const Order &other) const {
   return id == other.id;
+}
+
+void midas::Order::setFilledNoStatusUpdate(double avgFillPrice,
+                                           double totalCommissions,
+                                           unsigned int filledQuantity) {
+  this->avgFillPrice.store(avgFillPrice, std::memory_order::release);
+  this->totalCommissions.store(totalCommissions, std::memory_order::release);
+  this->quantityFilled.store(filledQuantity, std::memory_order::release);
+  FillEvent event{
+      .newFilled = filledQuantity,
+      .price = avgFillPrice,
+      .commission = totalCommissions,
+      .isCompletelyFilled = filledQuantity == requestedQuantity,
+  };
+  if (event.isCompletelyFilled) {
+    this->status.store(OrderStatusEnum::Filled);
+  }
+  fillEventSignal(*this, event);
 }

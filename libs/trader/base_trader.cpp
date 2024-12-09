@@ -17,19 +17,24 @@ void midas::trader::Trader::enterBracket(
                     << " " << direction << "" << " entryPrice: " << entryPrice
                     << " stopLossLimit: " << stopLossPrice
                     << " profitLimit: " << profitPrice;
-  auto &createdOrder =
-      currentOrders.emplace_back(std::make_shared<BracketedOrder>(
-          quantity, direction, instrument, entryPrice, profitPrice,
-          stopLossPrice, logger));
-  createdOrder->addStatusChangeListener(
+  auto createdOrder = std::make_shared<BracketedOrder>(
+      quantity, direction, instrument, entryPrice, profitPrice, stopLossPrice,
+      logger);
+  enterBracket(createdOrder);
+}
+
+void midas::trader::Trader::enterBracket(
+    std::shared_ptr<BracketedOrder> order) {
+
+  order->addStatusChangeListener(
       std::bind(&Trader::handleOrderStatusChangeEvent, this,
                 std::placeholders::_1, std::placeholders::_2));
-  orderManager->transmit(createdOrder);
+  currentOrders.push_back(order);
+  orderManager->transmit(order);
   auto updatedSummary = summary.summary();
   updatedSummary.hasOpenPosition = this->hasOpenPosition();
   summarySignal(updatedSummary);
 }
-
 bool midas::trader::Trader::hasOpenPosition() { return !currentOrders.empty(); }
 
 boost::signals2::connection midas::trader::Trader::connectSlot(
@@ -49,12 +54,15 @@ void midas::trader::Trader::handleOrderStatusChangeEvent(
     if (itr != currentOrders.end()) {
       executedOrders.push_back(*itr);
       // we need to update summary
-      summary.addToSummary(itr->get());
+
+      if (event.newStatus == OrderStatusEnum::Filled) {
+        summary.addToSummary(itr->get());
+        updatedSummary = summary.summary();
+      }
       // We then remove the order from the current orders list
       currentOrders.erase(itr);
       // Finally we wish to invoke the signal handler but not while holding the
       // scoped lock.
-      updatedSummary = summary.summary();
       updatedSummary->hasOpenPosition = this->hasOpenPosition();
     }
   }

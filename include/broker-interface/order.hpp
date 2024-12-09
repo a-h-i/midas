@@ -167,6 +167,9 @@ protected:
   status_change_signal_t statusChangeSignal;
 
   virtual void setState(OrderStatusEnum newState);
+  virtual void setFilledNoStatusUpdate(double avgFillPrice,
+                                       double totalCommissions,
+                                       unsigned int filledQuantity);
 
 public:
   /**
@@ -263,6 +266,8 @@ public:
   inline SimpleOrder &getEntryOrder() { return *entryOrder; }
   inline SimpleOrder &getStopOrder() { return *stopLossOrder; }
   inline SimpleOrder &getProfitTakerOrder() { return *profitTakerOrder; }
+  virtual void setFilled(double avgFillPrice, double totalCommissions,
+                         unsigned int filledQuantity) override;
 };
 
 /**

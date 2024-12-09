@@ -6,6 +6,7 @@
 #include "logging/logging.hpp"
 #include "trader_data.hpp"
 #include <boost/signals2.hpp>
+#include <memory>
 namespace midas::trader {
 
 /**
@@ -27,9 +28,6 @@ private:
   std::recursive_mutex orderStateMutex;
   bool isPaused{false};
 
-  void handleOrderStatusChangeEvent(Order &order,
-                                    Order::StatusChangeEvent event);
-
 protected:
   TraderData data;
   std::shared_ptr<midas::OrderManager> orderManager;
@@ -44,9 +42,13 @@ protected:
     data.processSource();
   }
 
+  void handleOrderStatusChangeEvent(Order &order,
+                                    Order::StatusChangeEvent event);
+
   void enterBracket(InstrumentEnum instrument, unsigned int quantity,
                     OrderDirection direction, double entryPrice,
                     double stopLossPrice, double profitPrice);
+  void enterBracket(std::shared_ptr<BracketedOrder> order);
 
 public:
   virtual ~Trader() = default;

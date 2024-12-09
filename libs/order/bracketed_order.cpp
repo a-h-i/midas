@@ -59,7 +59,7 @@ void midas::BracketedOrder::handleStopLossFilled(FillEvent event) {
   std::scoped_lock phaseLock(phaseMutex);
   if (event.isCompletelyFilled) {
     DEBUG_LOG(*logger) << "bracket #" << id << " stop loss triggered at "
-                       << event.price / requestedQuantity;
+                       << event.price;
     phasePtr = std::make_unique<internal::BracketTerminatedState>(this);
     setState(OrderStatusEnum::Filled);
     setFilled(event.price, event.commission, event.newFilled);
@@ -70,7 +70,7 @@ void midas::BracketedOrder::handleProfitTakerFilled(FillEvent event) {
   std::scoped_lock phaseLock(phaseMutex);
   if (event.isCompletelyFilled) {
     DEBUG_LOG(*logger) << "bracket #" << id << " profit taker triggered at "
-                       << event.price / requestedQuantity;
+                       << event.price;
     phasePtr = std::make_unique<internal::BracketTerminatedState>(this);
     setState(OrderStatusEnum::Filled);
     setFilled(event.price, event.commission, event.newFilled);
@@ -81,7 +81,7 @@ void midas::BracketedOrder::handleEntryFilled(
     [[maybe_unused]] FillEvent event) {
   std::scoped_lock phaseLock(phaseMutex);
   DEBUG_LOG(*logger) << "bracket #" << id << " entered at "
-                       << event.price / requestedQuantity;
+                     << event.price;
   phasePtr = std::make_unique<internal::BracketHoldingPositionState>(this);
   setState(OrderStatusEnum::WaitingForChildren);
 }
@@ -105,8 +105,11 @@ void midas::BracketedOrder::setTransmitted() {
     throw OrderStateError(
         "Can only enter transmitted state from untransmitted state");
   }
-  setState(OrderStatusEnum::Accepted);
+  profitTakerOrder->setTransmitted();
+  entryOrder->setTransmitted();
+  stopLossOrder->setTransmitted();
   phasePtr = std::make_unique<internal::BracketTransmittedState>(this);
+  setState(OrderStatusEnum::Accepted);
 }
 
 midas::BracketedOrder::~BracketedOrder() {
@@ -144,4 +147,10 @@ midas::internal::BracketHoldingPositionState::state() const {
 
 midas::OrderStatusEnum midas::internal::BracketTerminatedState::state() const {
   return OrderStatusEnum::Filled;
+}
+
+void midas::BracketedOrder::setFilled(double avgFillPrice,
+                                      double totalCommissions,
+                                      unsigned int filledQuantity) {
+  setFilledNoStatusUpdate(avgFillPrice, totalCommissions, filledQuantity);
 }
