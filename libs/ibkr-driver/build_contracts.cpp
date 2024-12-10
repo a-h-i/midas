@@ -8,11 +8,14 @@ ibkr::internal::build_futures_contract(const midas::InstrumentEnum &future) {
     contract.symbol = "MNQ";
     contract.exchange = "CME";
     contract.currency = "USD";
+    contract.secType = "FUT";
+    contract.tradingClass = "MNQ";
+    contract.multiplier = "2";
+    contract.lastTradeDateOrContractMonth = "202412";
     break;
   }
   default:
     throw std::runtime_error("Unsupported future");
   }
-  contract.secType = "CONTFUT";
   return contract;
 }

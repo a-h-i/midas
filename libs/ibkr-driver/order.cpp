@@ -111,7 +111,8 @@ void ibkr::internal::Client::processPendingOrders() {
     activeOrders.insert({order->nativeOrder.orderId, order});
     INFO_LOG(logger) << "IBKR driver placing order: "
                      << order->ibkrContract.symbol << " "
-                     << order->nativeOrder.orderId;
+                     << order->nativeOrder.orderId
+                     << " - sec type: " << order->ibkrContract.secType;
     connectionState.clientSocket->placeOrder(
         order->nativeOrder.orderId, order->ibkrContract, order->nativeOrder);
   }
