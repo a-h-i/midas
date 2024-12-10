@@ -1,4 +1,5 @@
 #include "terminal-ui/trader_view.hpp"
+#include "terminal-ui/decision_params_view.hpp"
 #include "trader/base_trader.hpp"
 #include <boost/bind/placeholders.hpp>
 #include <chrono>
@@ -18,9 +19,9 @@ using namespace ftxui;
 
 ui::TraderSummaryView::TraderSummaryView(Trader &trader)
     : tradeSummaryConnection(
-          trader.connectSlot(Trader::trade_summary_signal_t::slot_type(
+          trader.connectSummarySlot(Trader::trade_summary_signal_t::slot_type(
               &TraderSummaryView::refresh, this, boost::placeholders::_1))),
-      traderName(trader.traderName()) {}
+      paramsView(trader), traderName(trader.traderName()) {}
 
 void ui::TraderSummaryView::refresh(midas::TradeSummary summary) {
   std::scoped_lock summaryLock(summaryMutex);
@@ -30,9 +31,10 @@ void ui::TraderSummaryView::refresh(midas::TradeSummary summary) {
 }
 
 Component ui::TraderSummaryView::paint() {
-  Element document;
+  Element summary;
+  auto params = paramsView.renderer()->Render();
   if (!currentSummary.has_value()) {
-    document = text("No summary received");
+    summary = text("No summary received");
   } else {
     std::vector<Element> fields;
     fields.push_back(
@@ -63,17 +65,23 @@ Component ui::TraderSummaryView::paint() {
     formatter << "has open position? " << std::boolalpha
               << currentSummary->hasOpenPosition;
     fields.push_back(text(formatter.str()));
-    document = window(text(traderName), vbox(fields));
+    summary = vbox(fields);
   }
+  summary = window(text("Summary"), summary);
 
-  auto renderer = Renderer([document] { return document; });
+  auto renderer = Renderer([this, summary, params] {
+    auto document =
+        window(text(traderName), hbox({summary | flex, params | flex}));
+    return document;
+  });
   lastPaintedAt = std::chrono::duration_cast<std::chrono::seconds>(
       std::chrono::utc_clock::now().time_since_epoch());
   return renderer;
 }
 
 bool ui::TraderSummaryView::dirty() const {
-  if (!lastPaintedAt.has_value() || !updatedAt.has_value()) {
+  if (!lastPaintedAt.has_value() || !updatedAt.has_value() ||
+      paramsView.dirty()) {
     return true;
   }
   return lastPaintedAt <= updatedAt;

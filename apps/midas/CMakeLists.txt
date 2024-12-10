@@ -6,6 +6,7 @@ SET(SOURCES_LIST
   broker_factory.cpp
   profit_and_loss_window.cpp
   ui-component.cpp
+  decision_params_view.cpp
 )
 
 file(GLOB HEADER_FILES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/**/*.hpp")

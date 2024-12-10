@@ -37,9 +37,14 @@ void midas::trader::Trader::enterBracket(
 }
 bool midas::trader::Trader::hasOpenPosition() { return !currentOrders.empty(); }
 
-boost::signals2::connection midas::trader::Trader::connectSlot(
+boost::signals2::connection midas::trader::Trader::connectSummarySlot(
     const trade_summary_signal_t::slot_type &subscriber) {
   return summarySignal.connect(subscriber);
+}
+
+boost::signals2::connection midas::trader::Trader::connectDecisionParamsSlot(
+    const decision_params_signal_t::slot_type &subscriber) {
+  return decisionParamsSignal.connect(subscriber);
 }
 
 void midas::trader::Trader::handleOrderStatusChangeEvent(

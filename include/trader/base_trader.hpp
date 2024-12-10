@@ -6,6 +6,8 @@
 #include "logging/logging.hpp"
 #include "trader_data.hpp"
 #include <boost/signals2.hpp>
+#include <boost/signals2/connection.hpp>
+#include <boost/signals2/variadic_signal.hpp>
 #include <memory>
 namespace midas::trader {
 
@@ -20,6 +22,10 @@ namespace midas::trader {
 class Trader {
 public:
   typedef boost::signals2::signal<void(TradeSummary)> trade_summary_signal_t;
+  typedef std::pair<std::string, bool> decision_param_t;
+  typedef std::vector<decision_param_t> decision_params_t;
+  typedef boost::signals2::signal<void(decision_params_t &)>
+      decision_params_signal_t;
 
 private:
   std::deque<std::shared_ptr<Order>> currentOrders, executedOrders;
@@ -32,6 +38,7 @@ protected:
   TraderData data;
   std::shared_ptr<midas::OrderManager> orderManager;
   std::shared_ptr<logging::thread_safe_logger_t> logger;
+  decision_params_signal_t decisionParamsSignal;
   Trader(std::size_t lookBackSize, std::size_t candleSizeSeconds,
          std::shared_ptr<DataStream> source,
          std::shared_ptr<midas::OrderManager> orderManager,
@@ -56,8 +63,9 @@ public:
   virtual std::string traderName() const = 0;
   bool hasOpenPosition();
   boost::signals2::connection
-  connectSlot(const trade_summary_signal_t::slot_type &subscriber);
-
+  connectSummarySlot(const trade_summary_signal_t::slot_type &subscriber);
+  boost::signals2::connection connectDecisionParamsSlot(
+      const decision_params_signal_t::slot_type &subscriber);
   inline bool togglePause() { return isPaused = !isPaused; }
   inline bool paused() { return isPaused; }
 };

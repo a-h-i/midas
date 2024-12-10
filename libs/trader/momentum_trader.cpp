@@ -30,6 +30,10 @@ MomentumTrader::MomentumTrader(
 
 void MomentumTrader::decide() {
   if (!data.ok() || hasOpenPosition() || paused()) {
+    Trader::decision_params_t decisionParams{
+      {"Not enough data", true}
+    };
+    decisionParamsSignal(decisionParams);
     // We do not have enough data to satisfy look back requirements
     return;
   }
@@ -86,8 +90,19 @@ void MomentumTrader::decide() {
     bullishCandles = 0;
   }
 
+  bool bullishCandleSequence = bullishCandles >= 5;
+
+  Trader::decision_params_t decisionParams{
+      {"covers comission", coversCommission},
+      {"Bullish MA", bullishMa},
+      {"Bullish MACD", bullishMacd},
+      {"Bullish RSI", bullishRsi},
+      {"Bullish Volume", bullishVolume},
+      {"5 or more bullish candles", bullishCandleSequence}};
+  decisionParamsSignal(decisionParams);
+
   if (coversCommission & bullishMa & bullishRsi & bullishVolume & bullishMacd &
-      (bullishCandles >= 5)) {
+      bullishCandleSequence) {
     INFO_LOG(*logger) << "entering bracket atr: " << currentAtr
                       << " bar time: " << timestamps.back();
     enterBracket(instrument, entryQuantity, midas::OrderDirection::BUY,

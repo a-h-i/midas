@@ -1,6 +1,7 @@
 #pragma once
 
 #include "broker-interface/trades_summary.hpp"
+#include "terminal-ui/decision_params_view.hpp"
 #include "terminal-ui/ui-component.hpp"
 #include "trader/base_trader.hpp"
 #include <boost/signals2/connection.hpp>
@@ -15,6 +16,7 @@ namespace ui {
  */
 class TraderSummaryView : public UIComponenet {
   boost::signals2::scoped_connection tradeSummaryConnection;
+  DecisionParamsView paramsView;
   std::optional<midas::TradeSummary> currentSummary;
   std::mutex summaryMutex;
   const std::string traderName;
@@ -24,9 +26,9 @@ class TraderSummaryView : public UIComponenet {
 
 public:
   TraderSummaryView(midas::trader::Trader &trader);
-
+  virtual bool dirty() const override;
 protected:
   virtual ftxui::Component paint() override;
-  virtual bool dirty() const override;
+  
 };
 } // namespace ui
