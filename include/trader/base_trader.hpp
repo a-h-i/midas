@@ -59,6 +59,7 @@ protected:
 
 public:
   virtual ~Trader() = default;
+  inline void triggerSourceProcessing() { data.processSource(); }
   virtual void decide() = 0;
   virtual std::string traderName() const = 0;
   bool hasOpenPosition();

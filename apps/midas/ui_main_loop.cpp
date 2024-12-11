@@ -26,7 +26,7 @@ void ui::startTerminalUI(midas::SignalHandler &globalSignalHandler) {
   auto orderManager = tradingContext.orderManager;
   auto broker = tradingContext.broker;
 
-  TraderContext traderContext(&quitLoop, 100 * 120 / 5, &tradingContext,
+  TraderContext traderContext(&quitLoop, 100 * 120, &tradingContext,
                               midas::InstrumentEnum::MicroNasdaqFutures);
   auto &trader = traderContext.trader;
   // Create UI

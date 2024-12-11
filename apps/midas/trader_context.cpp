@@ -49,7 +49,7 @@ TraderContext::TraderContext(std::atomic<bool> *stopProcessingPtr,
             realtimeSubscription->barSignal.connect(subscriptionDataHandler);
 
         context->broker->addSubscription(realtimeSubscription);
-
+        trader->triggerSourceProcessing();
         streamProcessingThread = std::jthread([stopProcessingPtr, this] {
           while (!stopProcessingPtr->load()) {
             streamPtr->waitForData(100ms);
