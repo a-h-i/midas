@@ -102,8 +102,7 @@ void midas::BracketedOrder::setTransmitted() {
   if (!phasePtr->canTransmit()) {
     CRITICAL_LOG(*logger) << "Tried to set transmitted while order status was "
                           << state();
-    throw OrderStateError(
-        "Can only enter transmitted state from untransmitted state");
+    return;
   }
   profitTakerOrder->setTransmitted();
   entryOrder->setTransmitted();
