@@ -30,7 +30,7 @@ ExternalProject_Add(IntelFloatingPointDownload
 ExternalProject_Add(
     TechnicalAnalysisDownload
     PREFIX third-party
-    GIT_REPOSITORY "git@github.com:TA-Lib/ta-lib.git"
+    GIT_REPOSITORY "https://github.com/TA-Lib/ta-lib.git"
     GIT_TAG origin/main
     INSTALL_COMMAND ""
 )
