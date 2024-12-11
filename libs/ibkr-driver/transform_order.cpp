@@ -37,10 +37,19 @@ struct TransformationVisitor : public midas::OrderVisitor {
       : ibkrOrders(ibkrOrder), orderCounter(orderCounter) {}
   virtual void visit(midas::SimpleOrder &order) override {
     Order nativeOrder;
-    nativeOrder.totalQuantity = DecimalFunctions::doubleToDecimal(order.requestedQuantity) ;
+    nativeOrder.totalQuantity =
+        DecimalFunctions::doubleToDecimal(order.requestedQuantity);
     nativeOrder.orderType = orderType(order.execType);
     nativeOrder.action = orderActionFromDirection(order.direction);
-    nativeOrder.lmtPrice = order.targetPrice;
+    switch (order.execType) {
+
+    case midas::ExecutionType::Limit:
+      nativeOrder.lmtPrice = order.targetPrice;
+      break;
+    case midas::ExecutionType::Stop:
+      nativeOrder.auxPrice = order.targetPrice;
+      break;
+    }
     nativeOrder.orderId = orderCounter.fetch_add(1);
     nativeOrder.transmit = false;
     nativeOrder.tif = "GTC"; // for now all our orders are GTC. We may want to
