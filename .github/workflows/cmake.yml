@@ -25,13 +25,8 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         build_type: [Release]
-        c_compiler: [gcc, clang, cl]
+        c_compiler: [gcc, clang]
         include:
-          - os: windows-latest
-            c_compiler: cl
-            cpp_compiler: cl
-            toolset: msvc
-            boost_platform_version: 2022
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
@@ -42,16 +37,11 @@ jobs:
             cpp_compiler: clang++
             toolset: gcc
             boost_platform_version: 20.04
-        exclude:
-          - os: windows-latest
-            c_compiler: gcc
-          - os: windows-latest
-            c_compiler: clang
-          - os: ubuntu-latest
-            c_compiler: cl
 
     steps:
       - uses: actions/checkout@v4
+      - name: install tbb
+        run: sudo apt install libtbb-dev
 
       - name: Build Boost
         # You may pin to the exact commit or the version.
