@@ -1,5 +1,6 @@
 
 #include "CommonDefs.h"
+#include "Decimal.h"
 #include "broker-interface/instruments.hpp"
 #include "broker-interface/order.hpp"
 #include "ibkr/internal/ibkr_order_manager.hpp"
@@ -23,7 +24,7 @@ TEST(IBKRDriverOrderConversion, SimpleOrder) {
   auto &orderInfo = transformed.front();
   EXPECT_EQ(orderInfo->nativeOrder.orderType, "LMT");
   EXPECT_EQ(orderInfo->nativeOrder.action, "BUY");
-  EXPECT_EQ(orderInfo->nativeOrder.totalQuantity, 50);
+  EXPECT_EQ(orderInfo->nativeOrder.totalQuantity, DecimalFunctions::doubleToDecimal(50));
   EXPECT_EQ(orderInfo->nativeOrder.lmtPrice, 104.25);
   EXPECT_EQ(orderInfo->instrument, midas::InstrumentEnum::MicroNasdaqFutures);
   EXPECT_EQ(orderInfo->ibkrContract.symbol, "MNQ");
@@ -43,7 +44,7 @@ TEST(IBKRDriverOrderConversion, SimpleStopOrder) {
   auto &orderInfo = transformed.front();
   EXPECT_EQ(orderInfo->nativeOrder.orderType, "STP");
   EXPECT_EQ(orderInfo->nativeOrder.action, "SELL");
-  EXPECT_EQ(orderInfo->nativeOrder.totalQuantity, 50);
+  EXPECT_EQ(orderInfo->nativeOrder.totalQuantity, DecimalFunctions::doubleToDecimal(50));
   EXPECT_EQ(orderInfo->nativeOrder.lmtPrice, 104.25);
   EXPECT_EQ(orderInfo->instrument, midas::InstrumentEnum::MicroNasdaqFutures);
   EXPECT_EQ(orderInfo->ibkrContract.symbol, "MNQ");
@@ -84,21 +85,21 @@ TEST(IBKRDriverOrderConversion, BracketBuy) {
 
   EXPECT_EQ(parent->nativeOrder.orderType, "LMT");
   EXPECT_EQ(parent->nativeOrder.lmtPrice, 20);
-  EXPECT_EQ(parent->nativeOrder.totalQuantity, 50);
+  EXPECT_EQ(parent->nativeOrder.totalQuantity, DecimalFunctions::doubleToDecimal(50));
   EXPECT_EQ(parent->nativeOrder.action, "BUY");
   auto itr = transformed.begin();
   std::advance(itr, 1);
   auto &profit = *itr;
   EXPECT_EQ(profit->nativeOrder.orderType, "LMT");
   EXPECT_EQ(profit->nativeOrder.lmtPrice, 30);
-  EXPECT_EQ(profit->nativeOrder.totalQuantity, 50);
+  EXPECT_EQ(profit->nativeOrder.totalQuantity, DecimalFunctions::doubleToDecimal(50));
   EXPECT_EQ(profit->nativeOrder.action, "SELL");
 
   std::advance(itr, 1);
   auto &stop = *itr;
   EXPECT_EQ(stop->nativeOrder.orderType, "STP");
   EXPECT_EQ(stop->nativeOrder.lmtPrice, 10);
-  EXPECT_EQ(stop->nativeOrder.totalQuantity, 50);
+  EXPECT_EQ(stop->nativeOrder.totalQuantity, DecimalFunctions::doubleToDecimal(50));
   EXPECT_EQ(stop->nativeOrder.action, "SELL");
   EXPECT_EQ(order.state(), midas::OrderStatusEnum::UnTransmitted);
 }
@@ -137,21 +138,21 @@ TEST(IBKRDriverOrderConversion, BracketSell) {
 
   EXPECT_EQ(parent->nativeOrder.orderType, "LMT");
   EXPECT_EQ(parent->nativeOrder.lmtPrice, 20);
-  EXPECT_EQ(parent->nativeOrder.totalQuantity, 50);
+  EXPECT_EQ(parent->nativeOrder.totalQuantity, DecimalFunctions::doubleToDecimal(50));
   EXPECT_EQ(parent->nativeOrder.action, "SELL");
   auto itr = transformed.begin();
   std::advance(itr, 1);
   auto &profit = *itr;
   EXPECT_EQ(profit->nativeOrder.orderType, "LMT");
   EXPECT_EQ(profit->nativeOrder.lmtPrice, 10);
-  EXPECT_EQ(profit->nativeOrder.totalQuantity, 50);
+  EXPECT_EQ(profit->nativeOrder.totalQuantity, DecimalFunctions::doubleToDecimal(50));
   EXPECT_EQ(profit->nativeOrder.action, "BUY");
 
   std::advance(itr, 1);
   auto &stop = *itr;
   EXPECT_EQ(stop->nativeOrder.orderType, "STP");
   EXPECT_EQ(stop->nativeOrder.lmtPrice, 30);
-  EXPECT_EQ(stop->nativeOrder.totalQuantity, 50);
+  EXPECT_EQ(stop->nativeOrder.totalQuantity, DecimalFunctions::doubleToDecimal(50));
   EXPECT_EQ(stop->nativeOrder.action, "BUY");
   EXPECT_EQ(order.state(), midas::OrderStatusEnum::UnTransmitted);
 }

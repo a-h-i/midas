@@ -1,4 +1,5 @@
 #include "CommonDefs.h"
+#include "Decimal.h"
 #include "broker-interface/order.hpp"
 #include "ibkr/internal/ibkr_order_manager.hpp"
 #include "ibkr/internal/order_wrapper.hpp"
@@ -36,7 +37,7 @@ struct TransformationVisitor : public midas::OrderVisitor {
       : ibkrOrders(ibkrOrder), orderCounter(orderCounter) {}
   virtual void visit(midas::SimpleOrder &order) override {
     Order nativeOrder;
-    nativeOrder.totalQuantity = order.requestedQuantity;
+    nativeOrder.totalQuantity = DecimalFunctions::doubleToDecimal(order.requestedQuantity) ;
     nativeOrder.orderType = orderType(order.execType);
     nativeOrder.action = orderActionFromDirection(order.direction);
     nativeOrder.lmtPrice = order.targetPrice;
