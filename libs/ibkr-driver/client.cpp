@@ -1,4 +1,5 @@
 #include "ibkr/internal/client.hpp"
+#include "logging/logging.hpp"
 #include <atomic>
 #include <mutex>
 #include <utility>

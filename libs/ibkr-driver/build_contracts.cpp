@@ -17,7 +17,7 @@ ibkr::internal::build_futures_contract(const midas::InstrumentEnum &future) {
     contract.tradingClass = "MNQ";
     contract.multiplier = "2";
     // two months into the future
-    contract.lastTradeDateOrContractMonth = std::format("{}{:0>2}",  static_cast<int>(contractLastTradeMonth.year), contractLastTradeMonth.month.as_number());
+    contract.lastTradeDateOrContractMonth = std::format("{}{:0>2}",  2025, 3);
     break;
   }
   default:

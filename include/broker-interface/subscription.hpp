@@ -3,6 +3,7 @@
 #include "data/bar.hpp"
 #include "exceptions/subscription_error.hpp"
 #include <boost/signals2.hpp>
+#include <stdexcept>
 namespace midas {
 class Subscription;
 typedef boost::signals2::signal<void(const Subscription &)> sub_cancel_signal_t;
@@ -16,6 +17,7 @@ typedef boost::signals2::signal<void(const Subscription &, midas::Bar bar)>
 enum class SubscriptionDurationUnits {
   Years,
   Months,
+  Seconds,
 };
 
 inline std::string to_string(SubscriptionDurationUnits unit) {
@@ -24,8 +26,10 @@ inline std::string to_string(SubscriptionDurationUnits unit) {
     return "Years";
   case SubscriptionDurationUnits::Months:
     return "Months";
+  case midas::SubscriptionDurationUnits::Seconds:
+    return "Seconds";
   }
-  
+  throw std::runtime_error("Unknown unit");
 }
 
 struct HistorySubscriptionStartPoint {

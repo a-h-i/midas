@@ -64,6 +64,7 @@ data.
 void ibkr::internal::Client::historicalData(TickerId tickerId,
                                             const Bar &internalBar) {
 
+  DEBUG_LOG(logger) << "Received historical data";
   applyToActiveSubscriptions(
       [&internalBar, tickerId, this](midas::Subscription &subscription,
                                      ActiveSubscriptionState &state) {
