@@ -9,17 +9,19 @@ namespace midas::trader {
  */
 
 class MomentumTrader : public midas::trader::Trader {
+public:
   static constexpr int fastMATimePeriod = 9;
   static constexpr int slowMATimePeriod = 100;
   static constexpr int volumeMATimePeriod = 10;
   static constexpr int atrTimePeriod = 13;
   static constexpr int rsiTimePeriod = 9;
-  static constexpr int entryQuantity = 2;
+  static constexpr int entryQuantity = 4;
   static constexpr int macdFastPeriod = 6, macdSlowPeriod = 13,
                        macdSignalPeriod = 5;
   static constexpr int atrSmoothingPeriod = 20;
   static constexpr double commissionEstimatePerUnit = 0.25;
   static constexpr double roundingCoeff = 4; // minimum of .25 index moves
+private:
   std::array<double, 100> slowMa, fastMa, rsi, volumeMa, atr, atrMA, macd,
       macdSignal, macdHistogram;
   int slowMAOutBeg = 0, fastMAOutBeg = 0, rsiOutBegin = 0, volumeMAOutBegin = 0,

@@ -25,7 +25,7 @@ void midas::trader::Trader::enterBracket(
 
 void midas::trader::Trader::enterBracket(
     std::shared_ptr<BracketedOrder> order) {
-
+  std::scoped_lock enterBracketLock(orderStateMutex);
   order->addStatusChangeListener(
       std::bind(&Trader::handleOrderStatusChangeEvent, this,
                 std::placeholders::_1, std::placeholders::_2));
@@ -35,7 +35,10 @@ void midas::trader::Trader::enterBracket(
   updatedSummary.hasOpenPosition = this->hasOpenPosition();
   summarySignal(updatedSummary);
 }
-bool midas::trader::Trader::hasOpenPosition() { return !currentOrders.empty(); }
+bool midas::trader::Trader::hasOpenPosition() {
+  std::scoped_lock enterBracketLock(orderStateMutex);
+  return !currentOrders.empty();
+}
 
 boost::signals2::connection midas::trader::Trader::connectSummarySlot(
     const trade_summary_signal_t::slot_type &subscriber) {
@@ -68,10 +71,11 @@ void midas::trader::Trader::handleOrderStatusChangeEvent(
       currentOrders.erase(itr);
       // Finally we wish to invoke the signal handler but not while holding the
       // scoped lock.
-      updatedSummary->hasOpenPosition = this->hasOpenPosition();
+      ;
     }
   }
   if (updatedSummary.has_value()) {
+    updatedSummary->hasOpenPosition = this->hasOpenPosition();
     summarySignal(updatedSummary.value());
   }
 }

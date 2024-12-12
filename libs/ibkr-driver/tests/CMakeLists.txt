@@ -9,7 +9,7 @@ SET(TEST_SRCS
 add_executable(ibkr_tests ${TEST_SRCS})
 
 target_link_libraries(ibkr_tests PRIVATE ibkr_driver)
-target_link_libraries(ibkr_tests PRIVATE gtest_main)
+target_link_libraries(ibkr_tests PRIVATE gmock_main)
 target_link_libraries(ibkr_tests PRIVATE logging order)
 target_include_directories(ibkr_tests PRIVATE ${CMAKE_BINARY_DIR}/_deps/googletest-src/googletest/include)
 # Internal headers
