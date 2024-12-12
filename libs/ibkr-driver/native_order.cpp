@@ -48,6 +48,7 @@ void NativeOrder::cleanCorrectedExecutions() {
 }
 
 void NativeOrder::setCompletelyFilled() {
+
   double avgFill = std::accumulate(
       std::begin(executions), std::end(executions), 0.0,
       [](const auto &lhs, const auto &rhs) { return lhs + rhs.averagePrice; });

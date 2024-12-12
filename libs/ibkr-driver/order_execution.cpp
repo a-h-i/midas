@@ -3,6 +3,7 @@
 #include "broker-interface/order.hpp"
 #include "ibkr/internal/client.hpp"
 #include "ibkr/internal/order_wrapper.hpp"
+#include "logging/logging.hpp"
 #include <boost/date_time/posix_time/time_parsers.hpp>
 #include <memory>
 #include <stdexcept>
@@ -59,7 +60,7 @@ void ibkr::internal::Client::handleCommissionReport(
 }
 
 void ibkr::internal::Client::handleOrderCompletelyFilledEvent(OrderId orderId) {
-
+  INFO_LOG(logger) << "Handing completely filled order id: " << orderId;
   std::shared_ptr<NativeOrder> order;
   activeOrders.visit(orderId, [&order](auto &pair) { order = pair.second; });
   if (!order) {

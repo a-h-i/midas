@@ -30,9 +30,16 @@ MomentumTrader::MomentumTrader(
 
 void MomentumTrader::decide() {
   if (!data.ok() || hasOpenPosition() || paused()) {
-    Trader::decision_params_t decisionParams{
-      {"Not enough data", true}
-    };
+    std::string statusString;
+    if (hasOpenPosition()) {
+      statusString = "Maintaining position";
+
+    } else if (paused()) {
+      statusString = "Paused";
+    } else {
+      statusString = "Not enough data";
+    }
+    Trader::decision_params_t decisionParams{{statusString, true}};
     decisionParamsSignal(decisionParams);
     // We do not have enough data to satisfy look back requirements
     return;
@@ -75,7 +82,7 @@ void MomentumTrader::decide() {
   }
   double entryPrice =
       std::round(closePrices.back() * roundingCoeff) / roundingCoeff;
-  double takeProfitLimit = entryPrice + atrMultiplier * currentAtr;
+  double takeProfitLimit = entryPrice + 0.9 * atrMultiplier * currentAtr;
   double stopLossLimit = entryPrice - 2 * atrMultiplier * currentAtr;
   stopLossLimit = std::min(stopLossLimit, entryPrice - 100);
   takeProfitLimit = std::round(takeProfitLimit * roundingCoeff) / roundingCoeff;

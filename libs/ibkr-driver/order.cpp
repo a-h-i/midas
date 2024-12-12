@@ -1,5 +1,6 @@
 #include "Order.h"
 #include "CommissionReport.h"
+#include "Decimal.h"
 #include "Execution.h"
 #include "OrderState.h"
 #include "ibkr/internal/client.hpp"
@@ -15,16 +16,18 @@ void ibkr::internal::Client::orderStatus(
     double mktCapPrice) {
 
   INFO_LOG(logger) << "ORDER STATUS: OrderId " << orderId
-                   << " status: " << status << " filled " << filled
-                   << " remaining " << remaining << " avg fill price "
-                   << avgFillPrice << " permId " << permId << " parentId "
-                   << parentId << " lastFillPrice " << lastFillPrice
-                   << " clientId " << clientId << " whyHeld " << whyHeld
-                   << " mktCapPrice " << mktCapPrice;
+                   << " status: " << status << " filled "
+                   << DecimalFunctions::decimalToString(filled) << " remaining "
+                   << DecimalFunctions::decimalToString(remaining)
+                   << " avg fill price " << avgFillPrice << " permId " << permId
+                   << " parentId " << parentId << " lastFillPrice "
+                   << lastFillPrice << " clientId " << clientId << " whyHeld "
+                   << whyHeld << " mktCapPrice " << mktCapPrice;
   std::scoped_lock commandsLock(commandsMutex);
   pendingCommands.push_back([this, orderId, status]() {
     if (!activeOrders.contains(orderId)) {
-      CRITICAL_LOG(logger) << "Can not find active order entry for order "
+      // sometimes events are duplicated
+      WARNING_LOG(logger) << "Can not find active order entry for order "
                               "status event with order id: "
                            << orderId;
       return;
@@ -51,7 +54,7 @@ void ibkr::internal::Client::orderStatus(
     } else if (status == "Filled") {
       // indicates that the order has been completely filled. Market orders
       // executions will not always trigger a Filled status.
-      handleOrderCompletelyFilledEvent(orderId);
+      handleOrderCompletelyFilledEvent(orderId); // erases order
     } else if (status == "Inactive") {
       // ignore
     } else {
@@ -65,8 +68,8 @@ void ibkr::internal::Client::openOrder(OrderId orderId,
                                        const Contract &contract,
                                        const Order &order,
                                        const OrderState &state) {
-  INFO_LOG(logger) << "OPEN ORDER: OrderID" << orderId << " CONTRACT "
-                   << contract.symbol << " action" << order.action
+  INFO_LOG(logger) << "OPEN ORDER: OrderID " << orderId << " CONTRACT "
+                   << contract.symbol << " action " << order.action
                    << " STATE: " << state.status;
 }
 void ibkr::internal::Client::openOrderEnd() {
