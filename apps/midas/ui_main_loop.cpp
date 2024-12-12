@@ -87,6 +87,7 @@ void ui::startTerminalUI(midas::SignalHandler &globalSignalHandler) {
       loop.RunOnceBlocking();
     }
   } catch (...) {
+    quitLoop.store(true);
     screen.Exit();
   }
 }
