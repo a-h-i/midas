@@ -18,7 +18,7 @@ jobs:
 
       matrix:
         os: [ubuntu-24.04]
-        build_type: [Release]
+        build_type: [Debug]
         c_compiler: [gcc]
         include:
           - os: ubuntu-24.04

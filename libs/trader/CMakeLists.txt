@@ -21,7 +21,7 @@ target_link_libraries(trader PUBLIC TBB::tbb)
 
 
 
-target_link_libraries(trader PRIVATE ta_lib)
+target_link_libraries(trader PRIVATE ta-lib)
 target_link_libraries(trader PUBLIC broker)
 target_link_libraries(trader PUBLIC subscription)
 target_link_libraries(trader PUBLIC order)
