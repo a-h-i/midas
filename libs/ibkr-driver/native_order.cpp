@@ -1,3 +1,4 @@
+#include "Decimal.h"
 #include "ibkr/internal/build_contracts.hpp"
 #include "ibkr/internal/order_wrapper.hpp"
 #include <algorithm>
@@ -11,11 +12,16 @@ using namespace ibkr::internal;
 NativeOrderSignals::~NativeOrderSignals() {
   transmitSignal.disconnect_all_slots();
   cancelSignal.disconnect_all_slots();
+  fillSignal.disconnect_all_slots();
 }
 
 NativeOrderSignals::NativeOrderSignals(midas::Order &order) {
   transmitSignal.connect([&order]() { order.setTransmitted(); });
   cancelSignal.connect([&order]() { order.setCancelled(); });
+  fillSignal.connect(
+      [&order](double price, double commission, double quantity) {
+        order.setFilled(price, commission, quantity);
+      });
 }
 
 NativeOrder::NativeOrder(Order native, midas::Order &order)
@@ -31,6 +37,9 @@ bool NativeOrder::addCommissionEntry(const CommissionEntry &entry) {
     return false;
   }
   pos->commissions.push_back(entry);
+
+  checkCommissionsComplete();
+  processStateChange();
   return true;
 }
 
@@ -47,7 +56,34 @@ void NativeOrder::cleanCorrectedExecutions() {
   });
 }
 
+void NativeOrder::checkCommissionsComplete() {
+  // we don't really care about comissions right now
+  // TODO: actually implement
+  state.commissionsCompletelyReceived.store(true);
+}
+
 void NativeOrder::setCompletelyFilled() {
+  state.fillEventReceived.store(true);
+  processStateChange();
+}
+
+void NativeOrder::addExecutionEntry(const ExecutionEntry &execution) {
+  state.commissionsCompletelyReceived.store(false);
+  executions.push_back(execution);
+  auto totalExecuted = std::accumulate(
+      std::begin(executions), std::end(executions), 0.0,
+      [](const auto &lhs, const auto &rhs) { return lhs + rhs.quantity; });
+  state.executionsCompletelyReceived.store(
+      totalExecuted >=
+      DecimalFunctions::decimalToDouble(nativeOrder.totalQuantity));
+  checkCommissionsComplete();
+}
+
+void NativeOrder::processStateChange() {
+
+  if (!inCompletelyFilledState()) {
+    return;
+  }
 
   double avgFill = std::accumulate(
       std::begin(executions), std::end(executions), 0.0,

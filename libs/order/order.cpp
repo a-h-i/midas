@@ -1,5 +1,4 @@
 #include "broker-interface/order.hpp"
-#include "exceptions/order_state_error.hpp"
 #include "logging/logging.hpp"
 #include <atomic>
 
@@ -22,8 +21,7 @@ void midas::Order::setTransmitted() {
   if (status != OrderStatusEnum::UnTransmitted) {
     CRITICAL_LOG(*logger) << "Tried to set transmitted while order status was "
                           << state();
-    throw OrderStateError(
-        "Can only enter transmitted state from untransmitted state");
+    return;
   }
   status = OrderStatusEnum::Accepted;
 }

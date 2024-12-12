@@ -5,6 +5,7 @@
 #include "Order.h"
 #include "broker-interface/instruments.hpp"
 #include "broker-interface/order.hpp"
+#include <atomic>
 #include <boost/signals2.hpp>
 #include <boost/signals2/variadic_signal.hpp>
 #include <list>
@@ -57,8 +58,13 @@ public:
 };
 
 class NativeOrder {
+  struct NativeOrderState {
+    std::atomic<bool> executionsCompletelyReceived{false},
+        commissionsCompletelyReceived{false}, fillEventReceived{false};
+  };
   std::unique_ptr<NativeOrderSignals> events;
   std::list<ExecutionEntry> executions;
+  NativeOrderState state;
 
 public:
   NativeOrder(Order native, midas::Order &order);
@@ -74,8 +80,13 @@ public:
   inline void setTransmitted() { events->setTransmitted(); }
   inline void setCancelled() { events->setCancelled(); }
   void setCompletelyFilled();
-  inline void addExecutionEntry(const ExecutionEntry &execution) {
-    executions.push_back(execution);
+  void checkCommissionsComplete();
+  void addExecutionEntry(const ExecutionEntry &execution);
+  inline bool inCompletelyFilledState() {
+    return state.commissionsCompletelyReceived.load() &&
+           state.executionsCompletelyReceived.load() &&
+           state.fillEventReceived.load();
   }
+  void processStateChange();
 };
 } // namespace ibkr::internal
