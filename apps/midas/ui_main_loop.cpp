@@ -16,72 +16,77 @@ using namespace std::chrono_literals;
 
 void ui::startTerminalUI(midas::SignalHandler &globalSignalHandler) {
   std::atomic<bool> quitLoop{false};
-  // sync with signal handler for exit
-  boost::signals2::scoped_connection terminationConnection =
-      globalSignalHandler.addInterruptListener(
-          [&quitLoop] { quitLoop.store(true); });
-
-  // Create broker and driver
-  TradingContext tradingContext(&quitLoop);
-  auto orderManager = tradingContext.orderManager;
-  auto broker = tradingContext.broker;
-
-  TraderContext traderContext(&quitLoop, 100 * 120, &tradingContext,
-                              midas::InstrumentEnum::MicroNasdaqFutures);
-  auto &trader = traderContext.trader;
-  // Create UI
   auto screen = ScreenInteractive::Fullscreen();
+  try {
+    // sync with signal handler for exit
+    boost::signals2::scoped_connection terminationConnection =
+        globalSignalHandler.addInterruptListener(
+            [&quitLoop] { quitLoop.store(true); });
 
-  ProfitAndLossWindow pnlWindow(*orderManager);
-  TraderSummaryView traderSummary(*trader);
+    // Create broker and driver
+    TradingContext tradingContext(&quitLoop);
+    auto orderManager = tradingContext.orderManager;
+    auto broker = tradingContext.broker;
 
-  auto pauseBtn = Renderer([&](bool focused) {
-    auto btnClr = trader->paused() ? Color::DarkRed : Color::DarkGreen;
-    auto traderPauseButtonOptions = ButtonOption::Animated(btnClr);
-    traderPauseButtonOptions.transform = [](const EntryState &s) {
-      auto element = text(s.label) | flex;
-      if (s.focused) {
-        return element | bold | border;
-      } else {
-        return element | borderEmpty;
-      }
-    };
-    std::string labelStr = trader->paused() ? "continue" : "pause";
-    auto label = text(labelStr) | bgcolor(btnClr) | center | flex;
-    if (focused) {
-      label = label | bold | border;
-    } else {
-      label |= borderEmpty;
-    }
-    return label;
-  });
+    TraderContext traderContext(&quitLoop, 100 * 120, &tradingContext,
+                                midas::InstrumentEnum::MicroNasdaqFutures);
+    auto &trader = traderContext.trader;
 
-  auto renderer =
-      Renderer([&] {
-        auto traderContainer = Container::Vertical({
-            traderSummary.renderer() | flex,
-            pauseBtn,
+    ProfitAndLossWindow pnlWindow(*orderManager);
+    TraderSummaryView traderSummary(*trader);
 
-        });
-        auto traderWindow = Renderer([&trader, &traderContainer]() {
-          return window(text(trader->traderName()), traderContainer->Render());
-        });
-        auto mainWindow =
-            Container::Horizontal({pnlWindow.renderer(), traderWindow | flex});
-
-        return window(text("Midas Algo Trader") | center, mainWindow->Render());
-      }) |
-      CatchEvent([&trader](Event event) {
-        if (event == Event::Character('\n')) {
-          trader->togglePause();
-          return true;
+    auto pauseBtn = Renderer([&](bool focused) {
+      auto btnClr = trader->paused() ? Color::DarkRed : Color::DarkGreen;
+      auto traderPauseButtonOptions = ButtonOption::Animated(btnClr);
+      traderPauseButtonOptions.transform = [](const EntryState &s) {
+        auto element = text(s.label) | flex;
+        if (s.focused) {
+          return element | bold | border;
         } else {
-          return false;
+          return element | borderEmpty;
         }
-      });
-  Loop loop(&screen, renderer);
-  screen.TrackMouse(true);
-  while (!quitLoop.load()) {
-    loop.RunOnceBlocking();
+      };
+      std::string labelStr = trader->paused() ? "continue" : "pause";
+      auto label = text(labelStr) | bgcolor(btnClr) | center | flex;
+      if (focused) {
+        label = label | bold | border;
+      } else {
+        label |= borderEmpty;
+      }
+      return label;
+    });
+
+    auto renderer = Renderer([&] {
+                      auto traderContainer = Container::Vertical({
+                          traderSummary.renderer() | flex,
+                          pauseBtn,
+
+                      });
+                      auto traderWindow =
+                          Renderer([&trader, &traderContainer]() {
+                            return window(text(trader->traderName()),
+                                          traderContainer->Render());
+                          });
+                      auto mainWindow = Container::Horizontal(
+                          {pnlWindow.renderer(), traderWindow | flex});
+
+                      return window(text("Midas Algo Trader") | center,
+                                    mainWindow->Render());
+                    }) |
+                    CatchEvent([&trader](Event event) {
+                      if (event == Event::Character('\n')) {
+                        trader->togglePause();
+                        return true;
+                      } else {
+                        return false;
+                      }
+                    });
+    Loop loop(&screen, renderer);
+    screen.TrackMouse(true);
+    while (!quitLoop.load()) {
+      loop.RunOnceBlocking();
+    }
+  } catch (...) {
+    screen.Exit();
   }
 }
