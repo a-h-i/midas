@@ -31,7 +31,7 @@ public:
    * i.e stop orders triggered, limit orders triggered, etc.
    */
   void simulate(const midas::Bar *);
-  virtual std::generator<Order *> getFilledOrders() override;
+  virtual std::list<Order *> getFilledOrders() override;
   std::size_t inline totalSize() {
     return activeOrdersList.size() + completedOrdersList.size();
   }

@@ -3,7 +3,6 @@
 #include "logging/logging.hpp"
 #include <atomic>
 #include <boost/signals2.hpp>
-#include <generator>
 #include <memory>
 #include <mutex>
 
@@ -287,7 +286,7 @@ public:
   virtual ~OrderManager() = default;
   virtual void transmit(std::shared_ptr<Order>) = 0;
   virtual bool hasActiveOrders() const = 0;
-  virtual std::generator<Order *> getFilledOrders() = 0;
+  virtual std::list<Order *> getFilledOrders() = 0;
 
   auto addPnLListener(const realized_pnl_signal_t::slot_type &listener) {
     return realizedPnlSignal.connect(listener);

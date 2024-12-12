@@ -40,10 +40,11 @@ public:
     activeOrder = false;
   }
 
-  std::generator<midas::Order *> getFilledOrders() {
-    if (activeOrder && lastOrder) {
-      co_yield lastOrder.get();
-    }
+  std::list<midas::Order *> getFilledOrders() override {
+    std::list<midas::Order *> orderPtrs;
+
+    orderPtrs.push_back(lastOrder.get());
+    return orderPtrs;
   }
 };
 

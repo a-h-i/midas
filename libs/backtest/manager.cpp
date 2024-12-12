@@ -2,6 +2,7 @@
 #include "broker-interface/order.hpp"
 #include "data/bar.hpp"
 #include <algorithm>
+#include <list>
 #include <memory>
 
 bool midas::backtest::BacktestOrderManager::hasActiveOrders() const {
@@ -80,9 +81,12 @@ void midas::backtest::SimulationOrderTransmitter::visit(
   }
 }
 
-std::generator<midas::Order *>
+std::list<midas::Order *>
 midas::backtest::BacktestOrderManager::getFilledOrders() {
+  std::list<midas::Order *> orderPtrs;
+
   for (auto &orderPtr : completedOrdersList) {
-    co_yield orderPtr.get();
+    orderPtrs.push_back(orderPtr.get());
   }
+  return orderPtrs;
 }

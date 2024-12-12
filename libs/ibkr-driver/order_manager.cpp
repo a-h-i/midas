@@ -39,11 +39,13 @@ void ibkr::internal::OrderManager::transmit(
 bool ibkr::internal::OrderManager::hasActiveOrders() const {
   return !transmittedOrders.empty();
 }
-std::generator<midas::Order *> ibkr::internal::OrderManager::getFilledOrders() {
+std::list<midas::Order *> ibkr::internal::OrderManager::getFilledOrders() {
+  std::list<midas::Order *> orderPtrs;
 
-  for (auto &order : filledOrders) {
-    co_yield order.get();
+  for (auto &orderPtr : filledOrders) {
+    orderPtrs.push_back(orderPtr.get());
   }
+  return orderPtrs;
 }
 
 void ibkr::internal::OrderManager::handlePnLUpdate(

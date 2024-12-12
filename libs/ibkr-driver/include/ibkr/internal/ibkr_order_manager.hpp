@@ -27,7 +27,7 @@ public:
   OrderManager(Driver &, std::shared_ptr<logging::thread_safe_logger_t> &logger);
   virtual void transmit(std::shared_ptr<midas::Order>) override;
   virtual bool hasActiveOrders() const override;
-  virtual std::generator<midas::Order *> getFilledOrders() override;
+  virtual std::list<midas::Order *> getFilledOrders() override;
 };
 
 /**
