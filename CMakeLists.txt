@@ -69,8 +69,7 @@ SET(TA_BUILD_DIR ${BINARY_DIR})
 ExternalProject_Get_Property(TechnicalAnalysisDownload SOURCE_DIR)
 SET(TA_INCLUDE_DIR ${SOURCE_DIR}/include)
 add_library(TechnicalAnalysis STATIC IMPORTED)
-set_target_properties(TechnicalAnalysis PROPERTIES IMPORTED_LOCATION ${TA_BUILD_DIR}/libta_lib.a)
-
+link_directories(${TA_BUILD_DIR})
 
 add_subdirectory(third-party)
 add_subdirectory(apps)
