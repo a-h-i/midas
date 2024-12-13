@@ -1,6 +1,7 @@
 #include "Decimal.h"
 #include "ibkr/internal/build_contracts.hpp"
 #include "ibkr/internal/order_wrapper.hpp"
+#include "logging/logging.hpp"
 #include <algorithm>
 #include <boost/unordered/unordered_flat_set.hpp>
 #include <iterator>
@@ -24,8 +25,8 @@ NativeOrderSignals::NativeOrderSignals(midas::Order &order) {
       });
 }
 
-NativeOrder::NativeOrder(Order native, midas::Order &order)
-    : events(new NativeOrderSignals(order)), nativeOrder(native),
+NativeOrder::NativeOrder(Order native, midas::Order &order, std::shared_ptr<logging::thread_safe_logger_t> & logger)
+    : logger(logger), events(new NativeOrderSignals(order)), nativeOrder(native),
       instrument(order.instrument),
       ibkrContract(ibkr::internal::build_futures_contract(order.instrument)) {}
 
@@ -102,5 +103,6 @@ void NativeOrder::processStateChange() {
         });
   }
   avgFill = avgFill / executions.size();
+  INFO_LOG(*logger) << "Signalling filled event: avgFill:  " << avgFill << " totalCommissions: " << totalCommissions << "quantity: " << filledQuantity;
   events->setFilled(avgFill, totalCommissions, filledQuantity);
 }

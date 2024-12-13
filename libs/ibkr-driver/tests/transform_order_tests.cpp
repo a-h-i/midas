@@ -18,7 +18,7 @@ TEST(IBKRDriverOrderConversion, SimpleOrder) {
                            midas::InstrumentEnum::MicroNasdaqFutures,
                            midas::ExecutionType::Limit, logger, 104.25);
   std::atomic<OrderId> orderIdCtr{0};
-  auto transformed = ibkr::internal::transformOrder(order, orderIdCtr);
+  auto transformed = ibkr::internal::transformOrder(order, orderIdCtr, logger);
   EXPECT_EQ(transformed.size(), 1);
   EXPECT_EQ(orderIdCtr.load(), 1);
   auto &orderInfo = transformed.front();
@@ -38,7 +38,7 @@ TEST(IBKRDriverOrderConversion, SimpleStopOrder) {
                            midas::InstrumentEnum::MicroNasdaqFutures,
                            midas::ExecutionType::Stop, logger, 104.25);
   std::atomic<OrderId> orderIdCtr{0};
-  auto transformed = ibkr::internal::transformOrder(order, orderIdCtr);
+  auto transformed = ibkr::internal::transformOrder(order, orderIdCtr, logger);
   EXPECT_EQ(transformed.size(), 1);
   EXPECT_EQ(orderIdCtr.load(), 1);
   auto &orderInfo = transformed.front();
@@ -58,7 +58,7 @@ TEST(IBKRDriverOrderConversion, BracketBuy) {
                               midas::InstrumentEnum::MicroNasdaqFutures, 20, 30,
                               10, logger);
   std::atomic<OrderId> orderIdCtr{0};
-  auto transformed = ibkr::internal::transformOrder(order, orderIdCtr);
+  auto transformed = ibkr::internal::transformOrder(order, orderIdCtr, logger);
   EXPECT_EQ(transformed.size(), 3);
   EXPECT_EQ(orderIdCtr.load(), 3);
   auto &parent = transformed.front();
@@ -111,7 +111,7 @@ TEST(IBKRDriverOrderConversion, BracketSell) {
                               midas::InstrumentEnum::MicroNasdaqFutures, 20, 10,
                               30, logger);
   std::atomic<OrderId> orderIdCtr{0};
-  auto transformed = ibkr::internal::transformOrder(order, orderIdCtr);
+  auto transformed = ibkr::internal::transformOrder(order, orderIdCtr, logger);
   EXPECT_EQ(transformed.size(), 3);
   EXPECT_EQ(orderIdCtr.load(), 3);
   auto &parent = transformed.front();

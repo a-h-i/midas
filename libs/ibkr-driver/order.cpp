@@ -29,7 +29,7 @@ void ibkr::internal::Client::orderStatus(
       // sometimes events are duplicated
       WARNING_LOG(logger) << "Can not find active order entry for order "
                               "status event with order id: "
-                           << orderId;
+                           << orderId  << " status " << status;
       return;
     }
     std::shared_ptr<NativeOrder> order;

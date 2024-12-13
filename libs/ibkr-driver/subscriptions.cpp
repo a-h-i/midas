@@ -108,7 +108,6 @@ void ibkr::internal::Client::processPendingSubscriptions() {
 
       } else {
         BarSizeSetting barSizeSetting;
-        INFO_LOG(logger) << "Requesting historical data";
         requestHistoricalData(
             contract, tickerId, connectionState.clientSocket.get(),
             sub->historicalDuration.value_or(
@@ -118,7 +117,6 @@ void ibkr::internal::Client::processPendingSubscriptions() {
                 }),
             barSizeSetting);
         activeSub.historicalBarSizeSetting = barSizeSetting;
-        INFO_LOG(logger) << "Requested historical data";
       }
       // cancel slot is the same regardless if real time or historical
       activeSub.cancelConnection = sub->cancelSignal.connect(

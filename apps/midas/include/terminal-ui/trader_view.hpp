@@ -18,7 +18,7 @@ class TraderSummaryView : public UIComponenet {
   boost::signals2::scoped_connection tradeSummaryConnection;
   DecisionParamsView paramsView;
   std::optional<midas::TradeSummary> currentSummary;
-  std::mutex summaryMutex;
+  std::recursive_mutex summaryMutex;
   const std::string traderName;
   std::optional<std::chrono::seconds> updatedAt, lastPaintedAt;
 

@@ -285,7 +285,7 @@ public:
       : logger(logger) {}
   virtual ~OrderManager() = default;
   virtual void transmit(std::shared_ptr<Order>) = 0;
-  virtual bool hasActiveOrders() const = 0;
+  virtual bool hasActiveOrders() = 0;
   virtual std::list<Order *> getFilledOrders() = 0;
 
   auto addPnLListener(const realized_pnl_signal_t::slot_type &listener) {

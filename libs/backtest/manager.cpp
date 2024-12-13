@@ -5,7 +5,7 @@
 #include <list>
 #include <memory>
 
-bool midas::backtest::BacktestOrderManager::hasActiveOrders() const {
+bool midas::backtest::BacktestOrderManager::hasActiveOrders() {
   return !activeOrdersList.empty();
 }
 

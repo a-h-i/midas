@@ -25,7 +25,7 @@ public:
   BacktestOrderManager(std::shared_ptr<logging::thread_safe_logger_t> &logger)
       : midas::OrderManager(logger) {}
   virtual void transmit(std::shared_ptr<Order>) override;
-  virtual bool hasActiveOrders() const override;
+  virtual bool hasActiveOrders() override;
   /**
    * Simulates what happens to the orders when the bar elapses.
    * i.e stop orders triggered, limit orders triggered, etc.

@@ -82,7 +82,7 @@ void MomentumTrader::decide() {
   }
   double entryPrice =
       std::round(closePrices.back() * roundingCoeff) / roundingCoeff;
-  double takeProfitLimit = entryPrice + 0.9 * atrMultiplier * currentAtr;
+  double takeProfitLimit = entryPrice + 1.0 * atrMultiplier * currentAtr;
   double stopLossLimit = entryPrice - 2 * atrMultiplier * currentAtr;
   stopLossLimit = std::min(stopLossLimit, entryPrice - 100);
   takeProfitLimit = std::round(takeProfitLimit * roundingCoeff) / roundingCoeff;
@@ -91,25 +91,15 @@ void MomentumTrader::decide() {
   const double commissionEstimate =
       commissionEstimatePerUnit * entryQuantity * 2;
   bool coversCommission = commissionEstimate < 2 * currentAtr;
-  if (bullishMa & bullishRsi & bullishMacd & bullishVolume) {
-    bullishCandles++;
-  } else {
-    bullishCandles = 0;
-  }
-
-  bool bullishCandleSequence = bullishCandles >= 5;
 
   Trader::decision_params_t decisionParams{
-      {"covers comission", coversCommission},
-      {"Bullish MA", bullishMa},
-      {"Bullish MACD", bullishMacd},
-      {"Bullish RSI", bullishRsi},
+      {"covers comission", coversCommission}, {"Bullish MA", bullishMa},
+      {"Bullish MACD", bullishMacd},          {"Bullish RSI", bullishRsi},
       {"Bullish Volume", bullishVolume},
-      {"5 or more bullish candles", bullishCandleSequence}};
+  };
   decisionParamsSignal(decisionParams);
 
-  if (coversCommission & bullishMa & bullishRsi & bullishVolume & bullishMacd &
-      bullishCandleSequence) {
+  if (coversCommission & bullishMa & bullishRsi & bullishVolume & bullishMacd) {
     INFO_LOG(*logger) << "entering bracket atr: " << currentAtr
                       << " bar time: " << timestamps.back();
     enterBracket(instrument, entryQuantity, midas::OrderDirection::BUY,

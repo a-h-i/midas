@@ -2,6 +2,7 @@
 #include "broker-interface/order.hpp"
 #include "ibkr/internal/client.hpp"
 #include "ibkr/internal/ibkr_order_manager.hpp"
+#include "logging/logging.hpp"
 #include <memory>
 #include <mutex>
 ibkr::internal::OrderManager::OrderManager(
@@ -10,13 +11,18 @@ ibkr::internal::OrderManager::OrderManager(
 
 void ibkr::internal::OrderManager::transmit(
     std::shared_ptr<midas::Order> orderPtr) {
-  auto transformedOrders = transformOrder(*orderPtr, driver.orderCtr());
+  std::scoped_lock ordersLock(ordersMutex);
+  auto transformedOrders = transformOrder(*orderPtr, driver.orderCtr(), logger);
   transmittedOrders.push_back(orderPtr);
   // we need to listen for order fill status and cancel events
   orderPtr->addStatusChangeListener(
       midas::Order::status_change_signal_t::slot_type(
           [this, &orderPtr](midas::Order &order,
                             midas::Order::StatusChangeEvent event) {
+            std::scoped_lock ordersLock(ordersMutex);
+            INFO_LOG(*logger) << "IBKR order manager status change listener "
+                                "triggered for internal id: "
+                             << order.id;
             auto removePredicate = [&order](const auto &elemPtr) {
               return (*elemPtr) == order;
             };
@@ -36,10 +42,12 @@ void ibkr::internal::OrderManager::transmit(
   // queue for transmission
   driver.implementation->transmitOrder(transformedOrders);
 }
-bool ibkr::internal::OrderManager::hasActiveOrders() const {
+bool ibkr::internal::OrderManager::hasActiveOrders() {
+  std::scoped_lock ordersLock(ordersMutex);
   return !transmittedOrders.empty();
 }
 std::list<midas::Order *> ibkr::internal::OrderManager::getFilledOrders() {
+  std::scoped_lock ordersLock(ordersMutex);
   std::list<midas::Order *> orderPtrs;
 
   for (auto &orderPtr : filledOrders) {
@@ -51,6 +59,7 @@ std::list<midas::Order *> ibkr::internal::OrderManager::getFilledOrders() {
 void ibkr::internal::OrderManager::handlePnLUpdate(
     midas::InstrumentEnum instrument, midas::OrderDirection direction,
     double price) {
+  INFO_LOG(*logger) << "IBKR order manager handling pnl update";
   double directionModifier = direction == midas::OrderDirection::BUY ? 1 : -1;
   double adjustedPrice = price * directionModifier;
   std::scoped_lock lock(pnlMutex);

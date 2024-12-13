@@ -5,8 +5,10 @@
 #include "Order.h"
 #include "broker-interface/instruments.hpp"
 #include "broker-interface/order.hpp"
+#include "logging/logging.hpp"
 #include <atomic>
 #include <boost/signals2.hpp>
+#include <boost/signals2/connection.hpp>
 #include <boost/signals2/variadic_signal.hpp>
 #include <list>
 #include <memory>
@@ -62,12 +64,13 @@ class NativeOrder {
     std::atomic<bool> executionsCompletelyReceived{false},
         commissionsCompletelyReceived{false}, fillEventReceived{false};
   };
+  std::shared_ptr<logging::thread_safe_logger_t> logger;
   std::unique_ptr<NativeOrderSignals> events;
   std::list<ExecutionEntry> executions;
   NativeOrderState state;
 
 public:
-  NativeOrder(Order native, midas::Order &order);
+  NativeOrder(Order native, midas::Order &order, std::shared_ptr<logging::thread_safe_logger_t> &logger);
   Order nativeOrder;
   midas::InstrumentEnum instrument;
   Contract ibkrContract;

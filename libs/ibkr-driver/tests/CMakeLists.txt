@@ -4,6 +4,7 @@ SET(TEST_SRCS
   transform_order_tests.cpp
   execution_entry_tests.cpp
   build_futures_contract_tests.cpp
+  native_order.cpp
 )
 
 add_executable(ibkr_tests ${TEST_SRCS})

@@ -6,7 +6,6 @@
 #include "logging/logging.hpp"
 #include <boost/date_time/posix_time/time_parsers.hpp>
 #include <memory>
-#include <stdexcept>
 #include <string>
 
 ibkr::internal::ExecutionEntry::ExecutionEntry(const native_execution_t &native)
@@ -64,8 +63,9 @@ void ibkr::internal::Client::handleOrderCompletelyFilledEvent(OrderId orderId) {
   std::shared_ptr<NativeOrder> order;
   activeOrders.visit(orderId, [&order](auto &pair) { order = pair.second; });
   if (!order) {
-    throw std::runtime_error("Could not find active order with id " +
-                             std::to_string(orderId));
+    ERROR_LOG(logger) << "Could not find active order with id " +
+                              std::to_string(orderId);
+    return;
   }
   // now we must get all executions
   unhandledCommissions.erase_if([&order](const auto &pair) {

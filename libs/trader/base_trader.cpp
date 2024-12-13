@@ -52,6 +52,7 @@ boost::signals2::connection midas::trader::Trader::connectDecisionParamsSlot(
 
 void midas::trader::Trader::handleOrderStatusChangeEvent(
     Order &order, Order::StatusChangeEvent event) {
+  DEBUG_LOG(*logger) << "Base trader handling order status change new state: " << event.newStatus;
   std::optional<TradeSummary> updatedSummary;
   if (event.newStatus == OrderStatusEnum::Filled ||
       event.newStatus == OrderStatusEnum::Cancelled) {
@@ -64,6 +65,7 @@ void midas::trader::Trader::handleOrderStatusChangeEvent(
       // we need to update summary
 
       if (event.newStatus == OrderStatusEnum::Filled) {
+        DEBUG_LOG(*logger) << "updating filled summary";
         summary.addToSummary(itr->get());
         updatedSummary = summary.summary();
       }
@@ -72,7 +74,11 @@ void midas::trader::Trader::handleOrderStatusChangeEvent(
       // Finally we wish to invoke the signal handler but not while holding the
       // scoped lock.
       ;
+    } else {
+      ERROR_LOG(*logger) << "Base trader could not find order";
     }
+  } { 
+    DEBUG_LOG(*logger) << "None accepted or filled state " << event.newStatus;
   }
   if (updatedSummary.has_value()) {
     updatedSummary->hasOpenPosition = this->hasOpenPosition();

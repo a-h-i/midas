@@ -3,6 +3,7 @@
 #include "broker-interface/order.hpp"
 #include "ibkr/internal/ibkr_order_manager.hpp"
 #include "ibkr/internal/order_wrapper.hpp"
+#include "logging/logging.hpp"
 #include <algorithm>
 #include <iterator>
 #include <memory>
@@ -29,12 +30,14 @@ inline std::string orderActionFromDirection(midas::OrderDirection direction) {
 }
 
 struct TransformationVisitor : public midas::OrderVisitor {
+  std::shared_ptr<logging::thread_safe_logger_t> logger;
   std::list<std::shared_ptr<ibkr::internal::NativeOrder>> &ibkrOrders;
   std::atomic<OrderId> &orderCounter;
   TransformationVisitor(
       std::list<std::shared_ptr<ibkr::internal::NativeOrder>> &ibkrOrder,
-      std::atomic<OrderId> &orderCounter)
-      : ibkrOrders(ibkrOrder), orderCounter(orderCounter) {}
+      std::atomic<OrderId> &orderCounter,
+      std::shared_ptr<logging::thread_safe_logger_t> logger)
+      : logger(logger), ibkrOrders(ibkrOrder), orderCounter(orderCounter) {}
   virtual void visit(midas::SimpleOrder &order) override {
     Order nativeOrder;
     nativeOrder.totalQuantity =
@@ -55,8 +58,8 @@ struct TransformationVisitor : public midas::OrderVisitor {
     nativeOrder.tif = "GTC"; // for now all our orders are GTC. We may want to
                              // make it configurable on midas orders later
     nativeOrder.rule80A = "I";
-    ibkrOrders.emplace_back(
-        std::make_shared<ibkr::internal::NativeOrder>(nativeOrder, order));
+    ibkrOrders.emplace_back(std::make_shared<ibkr::internal::NativeOrder>(
+        nativeOrder, order, logger));
   }
   virtual void visit(midas::BracketedOrder &order) override {
 
@@ -76,9 +79,9 @@ struct TransformationVisitor : public midas::OrderVisitor {
 
 std::list<std::shared_ptr<ibkr::internal::NativeOrder>>
 ibkr::internal::transformOrder(midas::Order &order,
-                               std::atomic<OrderId> &orderCtr) {
+                               std::atomic<OrderId> &orderCtr, std::shared_ptr<logging::thread_safe_logger_t> logger) {
   std::list<std::shared_ptr<NativeOrder>> transformed;
-  TransformationVisitor transformer(transformed, orderCtr);
+  TransformationVisitor transformer(transformed, orderCtr, logger);
   order.visit(transformer);
   return transformed;
 }

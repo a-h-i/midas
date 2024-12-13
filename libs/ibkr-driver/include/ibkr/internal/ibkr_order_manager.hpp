@@ -16,7 +16,7 @@ class OrderManager : public midas::OrderManager {
   Driver &driver;
   std::list<std::shared_ptr<midas::Order>> transmittedOrders, filledOrders,
       cancelledOrders;
-  std::recursive_mutex pnlMutex;
+  std::recursive_mutex pnlMutex, ordersMutex;
   std::unordered_map<midas::InstrumentEnum, double> unrealizedPnl;
   std::atomic<double> realizedPnl{0};
 
@@ -26,7 +26,7 @@ class OrderManager : public midas::OrderManager {
 public:
   OrderManager(Driver &, std::shared_ptr<logging::thread_safe_logger_t> &logger);
   virtual void transmit(std::shared_ptr<midas::Order>) override;
-  virtual bool hasActiveOrders() const override;
+  virtual bool hasActiveOrders() override;
   virtual std::list<midas::Order *> getFilledOrders() override;
 };
 
@@ -36,6 +36,6 @@ public:
  \param orderCtr order id counter
  */
 std::list<std::shared_ptr<NativeOrder>>
-transformOrder(midas::Order &, std::atomic<OrderId> &orderCtr);
+transformOrder(midas::Order &, std::atomic<OrderId> &orderCtr, std::shared_ptr<logging::thread_safe_logger_t>);
 
 }; // namespace ibkr::internal

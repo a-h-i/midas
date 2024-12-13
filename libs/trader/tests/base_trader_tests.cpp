@@ -16,7 +16,7 @@ struct MockOrderManager : public OrderManager {
   std::vector<std::shared_ptr<BracketedOrder>> activeOrders;
 
   MOCK_METHOD(std::list<Order *>, getFilledOrders, ());
-  MOCK_METHOD(bool, hasActiveOrders, (), (const));
+  MOCK_METHOD(bool, hasActiveOrders, ());
   MockOrderManager(std::shared_ptr<logging::thread_safe_logger_t> &logger)
       : OrderManager(logger) {}
 
