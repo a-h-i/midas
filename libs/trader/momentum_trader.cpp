@@ -78,12 +78,12 @@ void MomentumTrader::decide() {
   if (normalizedAtr >= 3.0) {
     atrMultiplier *= 0.5;
   } else if (normalizedAtr <= 1.0) {
-    atrMultiplier *= 1.5;
+    atrMultiplier *= 1.1;
   }
   double entryPrice =
       std::round(closePrices.back() * roundingCoeff) / roundingCoeff;
-  double takeProfitLimit = entryPrice + 1.0 * atrMultiplier * currentAtr;
-  double stopLossLimit = entryPrice - 2 * atrMultiplier * currentAtr;
+  double takeProfitLimit = entryPrice + 1.25 * atrMultiplier * currentAtr;
+  double stopLossLimit = entryPrice - 1.5 * atrMultiplier * currentAtr;
   stopLossLimit = std::min(stopLossLimit, entryPrice - 100);
   takeProfitLimit = std::round(takeProfitLimit * roundingCoeff) / roundingCoeff;
   stopLossLimit = std::round(stopLossLimit * roundingCoeff) / roundingCoeff;
@@ -99,7 +99,9 @@ void MomentumTrader::decide() {
   };
   decisionParamsSignal(decisionParams);
 
-  if (coversCommission & bullishMa & bullishRsi & bullishVolume & bullishMacd) {
+  int numberIndicators = static_cast<int>(bullishMa) + bullishMacd;
+
+  if (coversCommission && bullishVolume && numberIndicators >= 2) {
     INFO_LOG(*logger) << "entering bracket atr: " << currentAtr
                       << " bar time: " << timestamps.back();
     enterBracket(instrument, entryQuantity, midas::OrderDirection::BUY,

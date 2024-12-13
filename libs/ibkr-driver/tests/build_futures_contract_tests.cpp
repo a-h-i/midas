@@ -41,9 +41,9 @@ TEST_F(BuildFuturesContractTest, StandardQuarterContract) {
 }
 
 TEST_F(BuildFuturesContractTest, SwitchToNextQuarter) {
-  // Test for a case where the day is >= 19
+  // Test for a case where in last month of quarter
   Contract contract =
-      buildContract(InstrumentEnum::MicroNasdaqFutures, 2024, 3, 19);
+      buildContract(InstrumentEnum::MicroNasdaqFutures, 2024, 3, 5);
 
   EXPECT_EQ(contract.symbol, "MNQ");
   EXPECT_EQ(contract.exchange, "CME");
@@ -57,7 +57,7 @@ TEST_F(BuildFuturesContractTest, SwitchToNextQuarter) {
 TEST_F(BuildFuturesContractTest, QuarterAndYearRollover) {
   // Test for a case where the quarter and year rolls over
   Contract contract =
-      buildContract(InstrumentEnum::MicroNasdaqFutures, 2024, 12, 19);
+      buildContract(InstrumentEnum::MicroNasdaqFutures, 2024, 12, 20);
 
   EXPECT_EQ(contract.symbol, "MNQ");
   EXPECT_EQ(contract.exchange, "CME");

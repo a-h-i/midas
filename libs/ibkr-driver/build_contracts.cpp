@@ -34,7 +34,7 @@ ibkr::internal::build_futures_contract(const midas::InstrumentEnum &future, cons
        boost::gregorian::months(calcMonthsOffset(currentQuarter, currentMonth)))
           .year_month_day();
 
-  if (contractLastTradeMonth.month == currentMonth && today.day() >= 19) {
+  if (contractLastTradeMonth.month == currentMonth) {
     currentQuarter = (currentQuarter  % 4) + 1;
     contractLastTradeMonth =
       (today +

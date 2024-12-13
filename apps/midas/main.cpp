@@ -14,7 +14,7 @@ static po::options_description appOptionsDesc("Midas AlgoTrading options");
 static po::variables_map parseCmdLine(int argc, char *argv[]) {
   appOptionsDesc.add_options()("help,h", "prints this message")(
       "version,v", "prints program version")("simulate,-s", "simulation mode")(
-      "live", "live trading mode");
+      "live,-l", "live trading mode");
   po::variables_map vm;
   po::store(po::parse_command_line(argc, argv, appOptionsDesc), vm);
   po::notify(vm);
