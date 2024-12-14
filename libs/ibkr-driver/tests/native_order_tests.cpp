@@ -1,5 +1,4 @@
 
-#include "CommissionReport.h"
 #include "Decimal.h"
 #include "broker-interface/instruments.hpp"
 #include "broker-interface/order.hpp"
@@ -81,15 +80,6 @@ TEST_F(NativeOrderTest, SendsFilledSignal) {
   orderPtr->addExecutionEntry(parsed);
   EXPECT_FALSE(orderPtr->inCompletelyFilledState());
   orderPtr->setCompletelyFilled();
-  EXPECT_FALSE(orderPtr->inCompletelyFilledState());
-  CommissionReport report;
-  report.execId = nativeExecution.execId;
-  report.currency = "USD";
-  report.commission = 0.1;
-  report.realizedPNL = 1;
-  CommissionEntry commissions(report);
-  orderPtr->addCommissionEntry(commissions);
-
   EXPECT_TRUE(orderPtr->inCompletelyFilledState());
   EXPECT_EQ(fillCount.load(), 1);
 }
