@@ -48,7 +48,7 @@ std::basic_ostream<CharT, TraitsT> &
 operator<<(std::basic_ostream<CharT, TraitsT> &stream, OrderStatusEnum status) {
   switch (status) {
   case OrderStatusEnum::Filled:
-    stream << "filled";
+    stream << "Filled";
     break;
   case OrderStatusEnum::WaitingForChildren:
     stream << "WaitingForChildren";

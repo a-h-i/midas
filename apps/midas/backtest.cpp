@@ -39,7 +39,7 @@ void backtestMomentumTrader() {
             << "\nnumber of profit takers triggered "
             << results.summary.numberOfProfitTakersTriggered
             << "\nsuccess ratio " << results.summary.successRatio
-            << "\nmax down turn -" << results.summary.maxDownTurn
+            << "\nmax down turn " << results.summary.maxDownTurn
             << "\nmax up turn " << results.summary.maxUpTurn
             << "\nending balance " << results.summary.endingBalance
             << std::endl;

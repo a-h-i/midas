@@ -14,38 +14,29 @@ void OrderSummaryTracker::addToSummary(Order *order) {
 }
 void OrderSummaryTracker::visit(SimpleOrder &) {}
 
+double getFillPriceWithSign(Order &order) {
+  return order.direction == OrderDirection::SELL
+             ? -order.getAvgFillPrice() * order.getFilledQuantity()
+             : order.getAvgFillPrice() * order.getFilledQuantity();
+}
+
 void OrderSummaryTracker::visit(BracketedOrder &order) {
   accumulator.numberOfEntryOrdersTriggered++;
   auto &entryOrder = order.getEntryOrder();
   auto &stopOrder = order.getStopOrder();
   auto &profitOrder = order.getProfitTakerOrder();
-  double orderBalance =
-      entryOrder.getAvgFillPrice() * entryOrder.getFilledQuantity();
-  if (entryOrder.direction == OrderDirection::BUY) {
-    orderBalance *= -1;
-  }
+  double orderBalance = getFillPriceWithSign(entryOrder);
 
   if (stopOrder.state() == OrderStatusEnum::Filled) {
     accumulator.numberOfStopLossTriggered++;
-    double stopBalance =
-        stopOrder.getAvgFillPrice() * stopOrder.getFilledQuantity();
-    accumulator.maxDownTurn = std::max(accumulator.maxDownTurn, stopBalance);
-    if (stopOrder.direction == OrderDirection::BUY) {
-      orderBalance -= stopBalance;
-    } else {
-      orderBalance += stopBalance;
-    }
+    double stopBalance = getFillPriceWithSign(stopOrder);
+    orderBalance += stopBalance;
+    accumulator.maxDownTurn = std::min(accumulator.maxDownTurn, orderBalance);
   } else if (profitOrder.state() == OrderStatusEnum::Filled) {
     accumulator.numberOfProfitTakersTriggered++;
-    double profitBalance =
-        profitOrder.getAvgFillPrice() * profitOrder.getFilledQuantity();
-
-    accumulator.maxUpTurn = std::max(accumulator.maxUpTurn, profitBalance);
-    if (profitOrder.direction == OrderDirection::BUY) {
-      orderBalance -= profitBalance;
-    } else {
-      orderBalance += profitBalance;
-    }
+    double profitBalance = getFillPriceWithSign(profitOrder);
+    orderBalance += profitBalance;
+    accumulator.maxUpTurn = std::max(accumulator.maxUpTurn, orderBalance);
   } else {
     throw std::logic_error("Attempted to get summary for bracket order that "
                            "has neither stop or profit taker filled");

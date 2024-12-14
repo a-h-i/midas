@@ -15,7 +15,7 @@ public:
   static constexpr int volumeMATimePeriod = 10;
   static constexpr int atrTimePeriod = 13;
   static constexpr int rsiTimePeriod = 9;
-  static constexpr int entryQuantity = 1;
+  static constexpr int entryQuantity = 4;
   static constexpr int macdFastPeriod = 6, macdSlowPeriod = 13,
                        macdSignalPeriod = 5;
   static constexpr int atrSmoothingPeriod = 20;

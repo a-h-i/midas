@@ -78,8 +78,8 @@ void MomentumTrader::decide() {
   }
   double entryPrice =
       std::round(closePrices.back() * roundingCoeff) / roundingCoeff;
-  double takeProfitLimit = entryPrice + 5;
-  double stopLossLimit = entryPrice - 20;
+  double takeProfitLimit = entryPrice + 20;
+  double stopLossLimit = entryPrice - 50;
   stopLossLimit = std::min(stopLossLimit, entryPrice - 100);
   takeProfitLimit = std::round(takeProfitLimit * roundingCoeff) / roundingCoeff;
   stopLossLimit = std::round(stopLossLimit * roundingCoeff) / roundingCoeff;

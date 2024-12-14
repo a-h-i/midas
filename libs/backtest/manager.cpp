@@ -73,10 +73,12 @@ void midas::backtest::SimulationOrderTransmitter::visit(
       auto &stop = order.getStopOrder();
       stop.setFilled(stop.targetPrice, 0.25 * stop.requestedQuantity,
                      stop.requestedQuantity);
+      order.getProfitTakerOrder().setCancelled();
     } else if (visitHelper(order.getProfitTakerOrder(), bar)) {
       auto &profit = order.getProfitTakerOrder();
       profit.setFilled(profit.targetPrice, 0.25 * profit.requestedQuantity,
                        profit.requestedQuantity);
+      order.getStopOrder().setCancelled();
     }
   }
 }
