@@ -44,7 +44,11 @@ ibkr::internal::CommissionEntry::CommissionEntry(const CommissionReport &native)
 
 void ibkr::internal::Client::handleExecution(
     const native_execution_t &execution) {
-
+  INFO_LOG(logger) << "Received Execution " << execution.execId 
+  <<  " shares " << DecimalFunctions::decimalStringToDisplay(execution.shares)
+  << " time " << execution.time << " side " << execution.side
+  << " price " << execution.price << " avg price " << execution.avgPrice << " cumQty "
+  << DecimalFunctions::decimalStringToDisplay(execution.cumQty);
   activeOrders.visit(execution.orderId, [&execution](const auto &pair) {
     pair.second->addExecutionEntry(ExecutionEntry(execution));
   });
