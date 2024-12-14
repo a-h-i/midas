@@ -44,11 +44,13 @@ ibkr::internal::CommissionEntry::CommissionEntry(const CommissionReport &native)
 
 void ibkr::internal::Client::handleExecution(
     const native_execution_t &execution) {
-  INFO_LOG(logger) << "Received Execution " << execution.execId 
-  <<  " shares " << DecimalFunctions::decimalStringToDisplay(execution.shares)
-  << " time " << execution.time << " side " << execution.side
-  << " price " << execution.price << " avg price " << execution.avgPrice << " cumQty "
+  INFO_LOG(logger) << "Received Execution " << execution.execId << " for order "
+                   << execution.orderId 
+  << " shares " << DecimalFunctions::decimalStringToDisplay(execution.shares)
+  << " time " << execution.time << " side " << execution.side << " price "
+  << execution.price << " avg price " << execution.avgPrice << " cumQty "
   << DecimalFunctions::decimalStringToDisplay(execution.cumQty);
+
   activeOrders.visit(execution.orderId, [&execution](const auto &pair) {
     pair.second->addExecutionEntry(ExecutionEntry(execution));
   });
@@ -68,7 +70,7 @@ void ibkr::internal::Client::handleOrderCompletelyFilledEvent(OrderId orderId) {
   activeOrders.visit(orderId, [&order](auto &pair) { order = pair.second; });
   if (!order) {
     ERROR_LOG(logger) << "Could not find active order with id " +
-                              std::to_string(orderId);
+                             std::to_string(orderId);
     return;
   }
   // now we must get all executions
