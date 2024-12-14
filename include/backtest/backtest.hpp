@@ -11,6 +11,7 @@ namespace midas::backtest {
 struct BacktestResult {
   TradeSummary summary;
   std::shared_ptr<DataStream> originalStream;
+  std::string orderDetails;
 };
 
 

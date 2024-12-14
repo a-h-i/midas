@@ -7,6 +7,7 @@
 #include "ibkr-driver/ibkr.hpp"
 #include "trader/trader.hpp"
 #include <boost/asio/ip/address.hpp>
+#include <fstream>
 
 using namespace midas::backtest::literals;
 
@@ -28,10 +29,10 @@ void backtestMomentumTrader() {
     }
   });
   midas::backtest::BacktestResult results = midas::backtest::performBacktest(
-      midas::InstrumentEnum::MicroNasdaqFutures, 3_months, traderFactory,
+      midas::InstrumentEnum::MicroNasdaqFutures, 1_months, traderFactory,
       *broker);
   std::cout << "Trade Summary"
-            << "\nnumber  entry orders: "
+            << "\nnumber entry orders: "
             << results.summary.numberOfEntryOrdersTriggered
             << "\nnumber of stop loss orders triggered "
             << results.summary.numberOfStopLossTriggered
@@ -43,7 +44,9 @@ void backtestMomentumTrader() {
             << "\nending balance " << results.summary.endingBalance
             << std::endl;
   std::ofstream sourceCsv("source.csv", std::ios::out),
-      downSampledCsv("down_sampled.csv", std::ios::out);
+      downSampledCsv("down_sampled.csv", std::ios::out),
+      orderDetails("orders", std::ios::out);
   sourceCsv << *results.originalStream;
+  orderDetails << results.orderDetails;
   driverWorkerTermination.store(true);
 }

@@ -53,9 +53,6 @@ void MomentumTrader::decide() {
   TA_EMA(0, closePrices.size() - 1, closePrices.data(), slowMATimePeriod,
          &slowMAOutBeg, &slowMAOutSize, slowMa.data());
 
-  TA_RSI(0, closePrices.size() - 1, closePrices.data(), rsiTimePeriod,
-         &rsiOutBegin, &rsiOutSize, rsi.data());
-
   TA_SMA(0, volumes.size() - 1, volumes.data(), volumeMATimePeriod,
          &volumeMAOutBegin, &volumeMAOutSize, volumeMa.data());
 
@@ -68,11 +65,10 @@ void MomentumTrader::decide() {
          &atrMAOutSize, atrMA.data());
 
   bool bullishMa = fastMa[fastMAOutSize - 1] > slowMa[slowMAOutSize - 1];
-  bool bullishRsi = (rsi[rsiOutSize - 1] < 70) && (rsi[rsiOutSize - 1] > 45);
   bool bullishVolume = volumes.back() > volumeMa[volumeMAOutSize - 1];
   bool bullishMacd = macd[macdOutSize - 1] > macdSignal[macdOutSize - 1];
   double currentAtr = atrMA[atrMAOutSize - 1];
-  double baseMultiplier = 1.5;
+  double baseMultiplier = 1;
   double normalizedAtr = (currentAtr / closePrices.back()) * 100;
   double atrMultiplier = baseMultiplier;
   if (normalizedAtr >= 3.0) {
@@ -82,8 +78,8 @@ void MomentumTrader::decide() {
   }
   double entryPrice =
       std::round(closePrices.back() * roundingCoeff) / roundingCoeff;
-  double takeProfitLimit = entryPrice + 1.25 * atrMultiplier * currentAtr;
-  double stopLossLimit = entryPrice - 1.5 * atrMultiplier * currentAtr;
+  double takeProfitLimit = entryPrice + 5;
+  double stopLossLimit = entryPrice - 20;
   stopLossLimit = std::min(stopLossLimit, entryPrice - 100);
   takeProfitLimit = std::round(takeProfitLimit * roundingCoeff) / roundingCoeff;
   stopLossLimit = std::round(stopLossLimit * roundingCoeff) / roundingCoeff;
@@ -93,15 +89,16 @@ void MomentumTrader::decide() {
   bool coversCommission = commissionEstimate < 2 * currentAtr;
 
   Trader::decision_params_t decisionParams{
-      {"covers comission", coversCommission}, {"Bullish MA", bullishMa},
-      {"Bullish MACD", bullishMacd},          {"Bullish RSI", bullishRsi},
+      {"covers comission", coversCommission},
+      {"Bullish MA", bullishMa},
+      {"Bullish MACD", bullishMacd},
       {"Bullish Volume", bullishVolume},
   };
   decisionParamsSignal(decisionParams);
 
   int numberIndicators = static_cast<int>(bullishMa) + bullishMacd;
 
-  if (coversCommission && bullishVolume && numberIndicators >= 2) {
+  if (coversCommission && bullishVolume && numberIndicators >= 1) {
     INFO_LOG(*logger) << "entering bracket atr: " << currentAtr
                       << " bar time: " << timestamps.back();
     enterBracket(instrument, entryQuantity, midas::OrderDirection::BUY,

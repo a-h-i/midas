@@ -92,7 +92,24 @@ operator<<(std::basic_ostream<CharT, TraitsT> &stream,
 
 OrderDirection operator~(OrderDirection original);
 
+
+
 enum class ExecutionType { Limit, Stop };
+
+template <typename CharT, typename TraitsT>
+std::basic_ostream<CharT, TraitsT> &
+operator<<(std::basic_ostream<CharT, TraitsT> &stream,
+           ExecutionType execution) {
+  switch (execution) {
+  case ExecutionType::Limit:
+    stream << "LMT";
+    break;
+  case ExecutionType::Stop:
+    stream << "STP";
+    break;
+  }
+  return stream;
+};
 
 class SimpleOrder;
 class BracketedOrder;

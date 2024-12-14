@@ -22,12 +22,11 @@ public:
   static constexpr double commissionEstimatePerUnit = 0.25;
   static constexpr double roundingCoeff = 4; // minimum of .25 index moves
 private:
-  std::array<double, 100> slowMa, fastMa, rsi, volumeMa, atr, atrMA, macd,
+  std::array<double, 100> slowMa, fastMa, volumeMa, atr, atrMA, macd,
       macdSignal, macdHistogram;
-  int slowMAOutBeg = 0, fastMAOutBeg = 0, rsiOutBegin = 0, volumeMAOutBegin = 0,
-      atrOutBegin = 0, atrMAOutBegin = 0, macdOutBegin = 0, slowMAOutSize = 0,
-      fastMAOutSize, rsiOutSize = 0, volumeMAOutSize = 0, atrOutSize = 0,
-      atrMAOutSize = 0, macdOutSize = 0;
+  int slowMAOutBeg = 0, fastMAOutBeg = 0, volumeMAOutBegin = 0, atrOutBegin = 0,
+      atrMAOutBegin = 0, macdOutBegin = 0, slowMAOutSize = 0, fastMAOutSize,
+      volumeMAOutSize = 0, atrOutSize = 0, atrMAOutSize = 0, macdOutSize = 0;
   const midas::InstrumentEnum instrument;
   std::vector<unsigned int> trades;
   std::vector<double> closePrices, volumes, highs, lows, opens, vwaps;

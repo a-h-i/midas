@@ -7,6 +7,7 @@ set(SOURCE_LIST
   bracketed_order.cpp
   operators.cpp
   summary_tracker.cpp
+  order_printer.cpp
 )
 
 add_library(order ${SOURCE_LIST} ${HEADER_FILES})

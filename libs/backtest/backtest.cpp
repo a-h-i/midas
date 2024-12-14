@@ -2,6 +2,7 @@
 #include "backtest_order_manager.hpp"
 #include "broker-interface/broker.hpp"
 #include "broker-interface/instruments.hpp"
+#include "broker-interface/order_printer.hpp"
 #include "broker-interface/order_summary.hpp"
 #include "broker-interface/subscription.hpp"
 #include "data/bar.hpp"
@@ -127,12 +128,15 @@ midas::backtest::BacktestResult midas::backtest::performBacktest(
   INFO_LOG(*logger) << "Simulation complete";
   INFO_LOG(*logger) << "Total orders " << orderManager->totalSize();
   OrderSummaryTracker summaryTracker;
-
+  OrderPrinter printer;
   for (Order *orderPtr : orderManager->getFilledOrders()) {
     summaryTracker.addToSummary(orderPtr);
+    orderPtr->visit(printer);
   }
 
-  BacktestResult result{.summary = summaryTracker.summary(),
-                        .originalStream = realtimeSimStream};
+  BacktestResult result {
+    .summary = summaryTracker.summary(), .originalStream = realtimeSimStream,
+    .orderDetails = printer.str()
+  };
   return result;
 }
