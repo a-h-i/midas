@@ -14,7 +14,7 @@ TEST(BuildFuturesContract, lastTradeDate) {
       std::regex_match(contract.lastTradeDateOrContractMonth, dateRegex));
 }
 
-class BuildFuturesContractTest : public ::testing::Test {
+class BuildFuturesContractTest : public testing::Test {
 protected:
 
 

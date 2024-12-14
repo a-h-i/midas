@@ -103,6 +103,6 @@ void NativeOrder::processStateChange() {
         });
   }
   avgFill = avgFill / executions.size();
-  INFO_LOG(*logger) << "Signalling filled event: avgFill:  " << avgFill << " totalCommissions: " << totalCommissions << "quantity: " << filledQuantity;
+  INFO_LOG(*logger) << "Signalling filled event: avgFill:  " << avgFill << " totalCommissions: " << totalCommissions << " quantity: " << filledQuantity;
   events->setFilled(avgFill, totalCommissions, filledQuantity);
 }
