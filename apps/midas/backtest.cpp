@@ -45,7 +45,7 @@ void backtestMomentumTrader() {
             << std::endl;
   std::ofstream sourceCsv("source.csv", std::ios::out),
       downSampledCsv("down_sampled.csv", std::ios::out),
-      orderDetails("orders", std::ios::out);
+      orderDetails("orders.txt", std::ios::out);
   sourceCsv << *results.originalStream;
   orderDetails << results.orderDetails;
   driverWorkerTermination.store(true);
