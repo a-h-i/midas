@@ -25,18 +25,20 @@ void OrderSummaryTracker::visit(BracketedOrder &order) {
   auto &entryOrder = order.getEntryOrder();
   auto &stopOrder = order.getStopOrder();
   auto &profitOrder = order.getProfitTakerOrder();
-  double orderBalance = getFillPriceWithSign(entryOrder);
-
+  double entryPrice = getFillPriceWithSign(entryOrder);
+  double orderBalance = 0;
   if (stopOrder.state() == OrderStatusEnum::Filled) {
     accumulator.numberOfStopLossTriggered++;
     double stopBalance = getFillPriceWithSign(stopOrder);
-    orderBalance += stopBalance;
-    accumulator.maxDownTurn = std::min(accumulator.maxDownTurn, orderBalance);
+    double diff = entryPrice + stopBalance;
+    orderBalance += diff * 2;
+    accumulator.maxDownTurn = std::max(accumulator.maxDownTurn, std::abs(diff * 2));
   } else if (profitOrder.state() == OrderStatusEnum::Filled) {
     accumulator.numberOfProfitTakersTriggered++;
     double profitBalance = getFillPriceWithSign(profitOrder);
-    orderBalance += profitBalance;
-    accumulator.maxUpTurn = std::max(accumulator.maxUpTurn, orderBalance);
+    double diff = entryPrice + profitBalance;
+    orderBalance += diff * 2;
+    accumulator.maxUpTurn = std::max(accumulator.maxUpTurn, std::abs(diff * 2));
   } else {
     throw std::logic_error("Attempted to get summary for bracket order that "
                            "has neither stop or profit taker filled");
