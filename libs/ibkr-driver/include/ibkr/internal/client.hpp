@@ -36,11 +36,11 @@ public:
   /**
    * Does nothing if not connected
    */
-  void connect();
+  void disconnect();
   /**
    * Does nothing if connected
    */
-  void disconnect();
+  void connect();
   bool isConnected() const;
   inline bool isReady() const { return connectionState.ready(); }
   virtual void nextValidId(OrderId order);

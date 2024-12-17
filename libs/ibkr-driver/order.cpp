@@ -58,7 +58,7 @@ void ibkr::internal::Client::orderStatus(
     } else if (status == "Inactive") {
       // ignore
     } else {
-      CRITICAL_LOG(logger) << "Received undknown order status event: " << status
+      CRITICAL_LOG(logger) << "Received unknown order status event: " << status
                            << " orderId: " << orderId;
     }
   });
