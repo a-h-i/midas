@@ -18,18 +18,18 @@ ibkr::internal::ExecutionEntry::ExecutionEntry(const native_execution_t &native)
       averagePrice(native.avgPrice) {}
 
 std::string ibkr::internal::ExecutionEntry::getBaseId() const {
-  const auto pos = id.find(".");
+  const auto pos = id.find_last_of(".");
   if (pos == id.npos) {
     return id;
   } else {
-    return id.substr(0, pos);
+    return id.substr(0, pos + 1);
   }
 }
 
 bool ibkr::internal::ExecutionEntry::corrects(
     const ExecutionEntry &other) const {
-  const auto posSelf = id.find(".");
-  const auto posOther = other.id.find(".");
+  const auto posSelf = id.find_last_of(".");
+  const auto posOther = other.id.find_last_of(".");
   if (posSelf == id.npos || posOther == other.id.npos) {
     return false;
   }
