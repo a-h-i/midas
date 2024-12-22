@@ -68,6 +68,7 @@ class NativeOrder {
   std::unique_ptr<NativeOrderSignals> events;
   std::list<ExecutionEntry> executions;
   NativeOrderState state;
+  std::recursive_mutex stateMutex;
 
 public:
   NativeOrder(Order native, midas::Order &order, std::shared_ptr<logging::thread_safe_logger_t> &logger);

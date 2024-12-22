@@ -32,17 +32,16 @@ struct NativeOrderTest : public testing::Test {
   std::unique_ptr<NativeOrder> orderPtr;
   boost::signals2::scoped_connection fillSignalConnection;
 
-  void handleFilled([[maybe_unused]] double, [[maybe_unused]] double,
-                    [[maybe_unused]] double) {
-    fillCount.fetch_add(1);
-  }
+
 
   void SetUp() override {
     fillCount.store(0);
     mockOrder.addFillEventListener(
         [this]([[maybe_unused]] midas::Order &,
                [[maybe_unused]] midas::Order::FillEvent event) {
-          handleFilled(1, 1, 1);
+         if (event.isCompletelyFilled) {
+           fillCount.fetch_add(1);
+         }
         });
     Order order;
     order.totalQuantity = DecimalFunctions::doubleToDecimal(2);
@@ -58,7 +57,7 @@ TEST_F(NativeOrderTest, DoesNotSendFilledSignal) {
   nativeExecution.shares = DecimalFunctions::doubleToDecimal(1);
   nativeExecution.cumQty = DecimalFunctions::doubleToDecimal(1);
   nativeExecution.execId = "145";
-  nativeExecution.side = "BUY";
+  nativeExecution.side = "BOT";
   nativeExecution.time = "2011-10-05T14:48:00.000Z";
   ExecutionEntry parsed(nativeExecution);
   orderPtr->addExecutionEntry(parsed);
@@ -69,13 +68,14 @@ TEST_F(NativeOrderTest, DoesNotSendFilledSignal) {
 TEST_F(NativeOrderTest, SendsFilledSignal) {
   EXPECT_FALSE(orderPtr->inCompletelyFilledState());
   Execution nativeExecution;
-  nativeExecution.price = 10;
-  nativeExecution.avgPrice = 10;
+  nativeExecution.price = 22108.8;
+  nativeExecution.avgPrice = 22108.8;
   nativeExecution.shares = DecimalFunctions::doubleToDecimal(2);
   nativeExecution.cumQty = DecimalFunctions::doubleToDecimal(2);
-  nativeExecution.execId = "145";
-  nativeExecution.side = "BUY";
+  nativeExecution.execId = "00019125.675f61e6.01.01";
+  nativeExecution.side = "BOT";
   nativeExecution.time = "2011-10-05T14:48:00.000Z";
+  nativeExecution.orderId = 13;
   ExecutionEntry parsed(nativeExecution);
   orderPtr->addExecutionEntry(parsed);
   EXPECT_FALSE(orderPtr->inCompletelyFilledState());

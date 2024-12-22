@@ -10,7 +10,7 @@
 
 ibkr::internal::ExecutionEntry::ExecutionEntry(const native_execution_t &native)
     : id(native.execId), exchange(native.exchange),
-      direction(native.side == "BUY" ? midas::OrderDirection::BUY
+      direction(native.side == "BOT" ? midas::OrderDirection::BUY
                                      : midas::OrderDirection::SELL),
       quantity(DecimalFunctions::decimalToDouble(native.shares)),
       totalPrice(native.price),

@@ -6,6 +6,7 @@
 #include <boost/unordered/unordered_flat_set.hpp>
 #include <iterator>
 #include <numeric>
+#include <utility>
 #include <vector>
 
 using namespace ibkr::internal;
@@ -26,13 +27,13 @@ NativeOrderSignals::NativeOrderSignals(midas::Order &order) {
 }
 
 NativeOrder::NativeOrder(Order native, midas::Order &order, std::shared_ptr<logging::thread_safe_logger_t> & logger)
-    : logger(logger), events(new NativeOrderSignals(order)), nativeOrder(native),
+    : logger(logger), events(std::make_unique<NativeOrderSignals>(order)), nativeOrder(std::move(native)),
       instrument(order.instrument),
       ibkrContract(ibkr::internal::build_futures_contract(order.instrument)) {}
 
 bool NativeOrder::addCommissionEntry(const CommissionEntry &entry) {
-  auto pos = std::find_if(
-      std::begin(executions), std::end(executions),
+  std::scoped_lock lock(stateMutex);
+  const auto pos = std::ranges::find_if(executions,
       [&entry](const auto &exec) { return exec.id == entry.executionId; });
   if (pos == std::end(executions)) {
     return false;
@@ -45,11 +46,12 @@ bool NativeOrder::addCommissionEntry(const CommissionEntry &entry) {
 }
 
 void NativeOrder::cleanCorrectedExecutions() {
-
+  std::scoped_lock lock(stateMutex);
   std::erase_if(executions, [this](const ExecutionEntry &execution) {
     const auto baseId = execution.getBaseId();
     // we want to remove if others have same id and this doesn't correct others
-    return std::any_of(std::begin(executions), std::end(executions),
+    return std::ranges::any_of(
+        executions,
                        [&execution, &baseId](const ExecutionEntry &other) {
                          return baseId == other.getBaseId() &&
                                 !execution.corrects(other);
@@ -58,7 +60,8 @@ void NativeOrder::cleanCorrectedExecutions() {
 }
 
 void NativeOrder::checkCommissionsComplete() {
-  // we don't really care about comissions right now
+  std::scoped_lock lock(stateMutex);
+  // we don't really care about commissions right now
   // TODO: actually implement
   state.commissionsCompletelyReceived.store(true);
 }
@@ -69,6 +72,7 @@ void NativeOrder::setCompletelyFilled() {
 }
 
 void NativeOrder::addExecutionEntry(const ExecutionEntry &execution) {
+  std::scoped_lock lock(stateMutex);
   state.commissionsCompletelyReceived.store(false);
   executions.push_back(execution);
   auto totalExecuted = std::accumulate(
@@ -81,8 +85,8 @@ void NativeOrder::addExecutionEntry(const ExecutionEntry &execution) {
 }
 
 void NativeOrder::processStateChange() {
-
-  if (!inCompletelyFilledState()) {
+  std::scoped_lock lock(stateMutex);
+  if (!inCompletelyFilledState() || executions.empty()) {
     return;
   }
 

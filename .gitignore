@@ -10,3 +10,4 @@ build
 TODO.md
 docs
 .cache
+/cmake-build-debug/
