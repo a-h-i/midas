@@ -18,7 +18,7 @@ MomentumTrader::MomentumTrader(
     std::shared_ptr<midas::OrderManager> orderManager,
     midas::InstrumentEnum instrument,
     std::shared_ptr<logging::thread_safe_logger_t> logger)
-    : Trader(100, 120, source, orderManager, logger), instrument(instrument) {
+    : Trader(100, 5, source, orderManager, logger), instrument(instrument) {
   closePrices.reserve(data.lookBackSize);
   volumes.reserve(data.lookBackSize);
   highs.reserve(data.lookBackSize);
@@ -76,10 +76,10 @@ void MomentumTrader::decide() {
   } else if (normalizedAtr <= 1.0) {
     atrMultiplier *= 1.1;
   }
-  double entryPrice =
-      std::round(closePrices.back() * roundingCoeff) / roundingCoeff;
-  double takeProfitLimit = entryPrice + 20;
-  double stopLossLimit = entryPrice - 50;
+  double entryPrice = (highs.back() - lows.back() ) * 0.7 + lows.back();
+  entryPrice = std::round(entryPrice * roundingCoeff) / roundingCoeff;
+  double takeProfitLimit = entryPrice + 5;
+  double stopLossLimit = entryPrice - 15;
   stopLossLimit = std::min(stopLossLimit, entryPrice - 100);
   takeProfitLimit = std::round(takeProfitLimit * roundingCoeff) / roundingCoeff;
   stopLossLimit = std::round(stopLossLimit * roundingCoeff) / roundingCoeff;
@@ -98,7 +98,7 @@ void MomentumTrader::decide() {
 
   int numberIndicators = static_cast<int>(bullishMa) + bullishMacd;
 
-  if (coversCommission && bullishVolume && numberIndicators >= 1) {
+  if (coversCommission && bullishVolume && numberIndicators >= 2) {
     INFO_LOG(*logger) << "entering bracket atr: " << currentAtr
                       << " bar time: " << timestamps.back();
     enterBracket(instrument, entryQuantity, midas::OrderDirection::BUY,

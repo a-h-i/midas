@@ -79,5 +79,4 @@ void ibkr::internal::Client::handleOrderCompletelyFilledEvent(OrderId orderId) {
   });
   order->cleanCorrectedExecutions();
   activeOrders.erase(orderId);
-  order->setCompletelyFilled();
 }

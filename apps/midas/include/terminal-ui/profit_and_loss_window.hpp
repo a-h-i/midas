@@ -9,6 +9,7 @@
 namespace ui {
 using namespace ftxui;
 class ProfitAndLossWindow : public UIComponenet {
+  std::recursive_mutex mutex;
   std::atomic<double> realizedPnL{0};
   boost::signals2::scoped_connection slotConn;
   std::optional<std::chrono::seconds> updatedAt, lastPaintedAt;

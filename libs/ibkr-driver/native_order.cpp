@@ -63,25 +63,26 @@ void NativeOrder::checkCommissionsComplete() {
   std::scoped_lock lock(stateMutex);
   // we don't really care about commissions right now
   // TODO: actually implement
+  std::atomic_thread_fence(std::memory_order_acq_rel);
   state.commissionsCompletelyReceived.store(true);
 }
 
-void NativeOrder::setCompletelyFilled() {
-  state.fillEventReceived.store(true);
-  processStateChange();
-}
+
 
 void NativeOrder::addExecutionEntry(const ExecutionEntry &execution) {
   std::scoped_lock lock(stateMutex);
-  state.commissionsCompletelyReceived.store(false);
+
   executions.push_back(execution);
-  auto totalExecuted = std::accumulate(
+  double totalExecuted = std::accumulate(
       std::begin(executions), std::end(executions), 0.0,
       [](const auto &lhs, const auto &rhs) { return lhs + rhs.quantity; });
+  std::atomic_thread_fence(std::memory_order_acq_rel);
+  state.commissionsCompletelyReceived.store(false);
   state.executionsCompletelyReceived.store(
       totalExecuted >=
       DecimalFunctions::decimalToDouble(nativeOrder.totalQuantity));
   checkCommissionsComplete();
+  processStateChange();
 }
 
 void NativeOrder::processStateChange() {
@@ -89,7 +90,7 @@ void NativeOrder::processStateChange() {
   if (!inCompletelyFilledState() || executions.empty()) {
     return;
   }
-
+  std::atomic_thread_fence(std::memory_order_acq_rel);
   double avgFill = std::accumulate(
       std::begin(executions), std::end(executions), 0.0,
       [](const auto &lhs, const auto &rhs) { return lhs + rhs.averagePrice; });

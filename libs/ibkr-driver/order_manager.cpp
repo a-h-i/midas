@@ -17,7 +17,7 @@ void ibkr::internal::OrderManager::transmit(
   // we need to listen for order fill status and cancel events
   orderPtr->addStatusChangeListener(
       midas::Order::status_change_signal_t::slot_type(
-          [this, &orderPtr](midas::Order &order,
+          [this, orderPtr](midas::Order &order,
                             midas::Order::StatusChangeEvent event) {
             std::scoped_lock ordersLock(ordersMutex);
             INFO_LOG(*logger) << "IBKR order manager status change listener "
@@ -67,7 +67,8 @@ void ibkr::internal::OrderManager::handlePnLUpdate(
     unrealizedPnl[instrument] = adjustedPrice;
     return;
   }
-  double diff = unrealizedPnl[instrument] - adjustedPrice;
+  double diff = unrealizedPnl[instrument] + adjustedPrice;
+  unrealizedPnl.erase(instrument);
   const double realized = realizedPnl.fetch_add(diff);
   realizedPnlSignal(realized);
 }

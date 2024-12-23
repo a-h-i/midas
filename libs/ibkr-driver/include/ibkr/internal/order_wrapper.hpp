@@ -7,11 +7,9 @@
 #include "broker-interface/order.hpp"
 #include "logging/logging.hpp"
 #include <atomic>
-#include <boost/signals2.hpp>
-#include <boost/signals2/connection.hpp>
 #include <boost/signals2/variadic_signal.hpp>
-#include <list>
 #include <memory>
+#include <list>
 typedef Execution native_execution_t;
 namespace ibkr::internal {
 
@@ -62,7 +60,7 @@ public:
 class NativeOrder {
   struct NativeOrderState {
     std::atomic<bool> executionsCompletelyReceived{false},
-        commissionsCompletelyReceived{false}, fillEventReceived{false};
+        commissionsCompletelyReceived{false};
   };
   std::shared_ptr<logging::thread_safe_logger_t> logger;
   std::unique_ptr<NativeOrderSignals> events;
@@ -83,13 +81,13 @@ public:
   void cleanCorrectedExecutions();
   inline void setTransmitted() { events->setTransmitted(); }
   inline void setCancelled() { events->setCancelled(); }
-  void setCompletelyFilled();
   void checkCommissionsComplete();
   void addExecutionEntry(const ExecutionEntry &execution);
   inline bool inCompletelyFilledState() {
-    return state.commissionsCompletelyReceived.load() &&
-           state.executionsCompletelyReceived.load() &&
-           state.fillEventReceived.load();
+    bool result = state.commissionsCompletelyReceived.load() &&
+           state.executionsCompletelyReceived.load();
+    std::atomic_thread_fence(std::memory_order_acq_rel);
+    return result;
   }
   void processStateChange();
 };

@@ -79,7 +79,6 @@ TEST_F(NativeOrderTest, SendsFilledSignal) {
   ExecutionEntry parsed(nativeExecution);
   orderPtr->addExecutionEntry(parsed);
   EXPECT_FALSE(orderPtr->inCompletelyFilledState());
-  orderPtr->setCompletelyFilled();
   EXPECT_TRUE(orderPtr->inCompletelyFilledState());
   EXPECT_EQ(fillCount.load(), 1);
 }

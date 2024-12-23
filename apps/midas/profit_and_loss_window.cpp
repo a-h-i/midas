@@ -9,6 +9,7 @@ using namespace ftxui;
 ProfitAndLossWindow::ProfitAndLossWindow(midas::OrderManager &manager) {
 
   slotConn = manager.addPnLListener([this](double pnlNew) {
+    std::scoped_lock lock(mutex);
     realizedPnL.store(pnlNew);
     updatedAt = std::chrono::duration_cast<std::chrono::seconds>(
         std::chrono::utc_clock::now().time_since_epoch());
@@ -16,7 +17,7 @@ ProfitAndLossWindow::ProfitAndLossWindow(midas::OrderManager &manager) {
 }
 
 Component ProfitAndLossWindow::paint() {
-
+  std::scoped_lock lock(mutex);
   auto renderer = Renderer([this] {
     auto realizedPnlLabel = text("Realized: ");
     std::stringstream formatter;

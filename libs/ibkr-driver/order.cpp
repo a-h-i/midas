@@ -47,14 +47,20 @@ void ibkr::internal::Client::orderStatus(
       order->setTransmitted();
     } else if (status == "ApiCancelled") {
       order->setCancelled();
-      activeOrders.erase(orderId);
+      pendingCommands.push_back([this, orderId]() {
+        activeOrders.erase(orderId);
+      });
     } else if (status == "Cancelled") {
       order->setCancelled();
-      activeOrders.erase(orderId);
+      pendingCommands.push_back([this, orderId]() {
+        activeOrders.erase(orderId);
+      });
     } else if (status == "Filled") {
       // indicates that the order has been completely filled. Market orders
       // executions will not always trigger a Filled status.
-      handleOrderCompletelyFilledEvent(orderId); // erases order
+      pendingCommands.push_back([this, orderId]() {
+        handleOrderCompletelyFilledEvent(orderId); // erases order
+      });
     } else if (status == "Inactive") {
       // ignore
     } else {
