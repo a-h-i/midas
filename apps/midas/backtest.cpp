@@ -12,10 +12,11 @@
 using namespace midas::backtest::literals;
 
 void backtestMomentumTrader() {
-  auto traderFactory = [](std::shared_ptr<midas::DataStream> streamPtr,
+  midas::InstrumentEnum instrument = midas::InstrumentEnum::MicroNasdaqFutures;
+  auto traderFactory = [instrument](std::shared_ptr<midas::DataStream> streamPtr,
                           std::shared_ptr<midas::OrderManager> orderManager) {
     return midas::trader::momentumExploit(
-        streamPtr, orderManager, midas::InstrumentEnum::NVDA);
+        streamPtr, orderManager, instrument);
   };
 
   boost::asio::ip::tcp::endpoint ibkrServer(
@@ -29,7 +30,7 @@ void backtestMomentumTrader() {
     }
   });
   midas::backtest::BacktestResult results = midas::backtest::performBacktest(
-      midas::InstrumentEnum::NVDA, 86400_seconds, traderFactory,
+      instrument, 86400_seconds, traderFactory,
       *broker);
   std::cout << "Trade Summary"
             << "\nnumber entry orders: "

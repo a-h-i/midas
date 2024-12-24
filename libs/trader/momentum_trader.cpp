@@ -94,11 +94,8 @@ void MomentumTrader::decide() {
   entryPrice = std::round(entryPrice * roundingCoeff) / roundingCoeff;
 
   const std::size_t entryQuantity = decideEntryQuantity();
-  const double commissionEstimate =
-      commissionEstimatePerUnit * entryQuantity * 2;
-  bool coversCommission = commissionEstimate < 2 * currentAtr;
+
   Trader::decision_params_t decisionParams{
-      {"covers comission", coversCommission},
       {"Bullish MA", bullishMA},
       {"Bullish MACD", bullishMACD},
       {"Bullish Volume", volumeAcceptable},
@@ -111,12 +108,12 @@ void MomentumTrader::decide() {
 
   double bullishIndicator = static_cast<double>(bullishMA) + bullishMACD +
                             bullishRSI + volumeAcceptable +
-                            atrAcceptable + coversCommission;
+                            atrAcceptable;
   double bearishIndicator = static_cast<double>(bearishMA) + bearishMACD +
                             bearishRSI + volumeAcceptable +
-                            atrAcceptable + coversCommission;
-  bool enterLong = bullishIndicator == 6;
-  bool enterShort = bearishIndicator == 6;
+                            atrAcceptable;
+  bool enterLong = bullishIndicator == 5;
+  bool enterShort = bearishIndicator == 5;
 
   if (enterLong) {
     INFO_LOG(*logger) << "entering long bracket atr: " << currentAtr
