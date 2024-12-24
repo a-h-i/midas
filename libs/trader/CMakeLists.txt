@@ -5,6 +5,7 @@ SET(SOURCE_LIST
   trader_data.cpp
   base_trader.cpp
   momentum_factory.cpp
+        stock_momentum_trader.cpp
 )
 
 add_library(trader ${SOURCE_LIST})

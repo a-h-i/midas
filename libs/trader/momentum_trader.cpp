@@ -5,7 +5,6 @@
 
 #include <algorithm>
 #include <array>
-#include <boost/date_time/posix_time/time_formatters.hpp>
 #include <cmath>
 #include <memory>
 #include <string>
@@ -78,41 +77,50 @@ void MomentumTrader::decide() {
 
   calculateTechnicalAnalysis();
 
-  bool bullishMa = fastMa[fastMAOutSize - 1] > slowMa[slowMAOutSize - 1];
-  bool bullishVolume = volumes.back() > volumeMa[volumeMAOutSize - 1];
-  bool bullishMacd = macd[macdOutSize - 1] > macdSignal[macdOutSize - 1];
+  bool bullishMA = fastMa[fastMAOutSize - 1] > slowMa[slowMAOutSize - 1];
+  bool bullishMACD = macd[macdOutSize - 1] > macdSignal[macdOutSize - 1];
+  bool bullishRSI = rsi[rsiOutSize - 1] < 65;
+
+  bool bearishMA = fastMa[fastMAOutSize - 1] < slowMa[slowMAOutSize - 1];
+  bool bearishMACD =  macd[macdOutSize - 1] < macdSignal[macdOutSize - 1];
+  bool bearishRSI = rsi[rsiOutSize - 1] > 25;
+
   double currentAtr = atrMA[atrMAOutSize - 1];
-  double baseMultiplier = 1;
   double normalizedAtr = (currentAtr / closePrices.back()) * 100;
-  double atrMultiplier = baseMultiplier;
-  if (normalizedAtr >= 3.0) {
-    atrMultiplier *= 0.5;
-  } else if (normalizedAtr <= 1.0) {
-    atrMultiplier *= 1.1;
-  }
+
+  bool normalizedAtrAcceptable = normalizedAtr > 1.0;
+  bool volumeAcceptable = volumes.back() > volumeMa[volumeMAOutSize - 1];
+
   double entryPrice = (highs.back() - lows.back()) * 0.7 + lows.back();
   entryPrice = std::round(entryPrice * roundingCoeff) / roundingCoeff;
-  const auto bracketBoundaries = decideProfitAndStopLossLevels(entryPrice);
+
   const std::size_t entryQuantity = decideEntryQuantity();
   const double commissionEstimate =
       commissionEstimatePerUnit * entryQuantity * 2;
   bool coversCommission = commissionEstimate < 2 * currentAtr;
-  bool bullishRSI = rsi[rsiOutSize - 1] < 65;
   Trader::decision_params_t decisionParams{
       {"covers comission", coversCommission},
-      {"Bullish MA", bullishMa},
-      {"Bullish MACD", bullishMacd},
-      {"Bullish Volume", bullishVolume},
+      {"Bullish MA", bullishMA},
+      {"Bullish MACD", bullishMACD},
+      {"Bullish Volume", volumeAcceptable},
       {"Bullish RSI", bullishRSI}};
   decisionParamsSignal(decisionParams);
 
-  int numberIndicators =
-      static_cast<double>(bullishMa) + bullishMacd + bullishRSI;
+  double bullishIndicator =
+      static_cast<double>(bullishMA) + bullishMACD + bullishRSI + volumeAcceptable + normalizedAtrAcceptable + coversCommission;
+  double bearishIndicator = static_cast<double>(bearishMA) + bearishMACD + bearishRSI + volumeAcceptable + normalizedAtrAcceptable + coversCommission;
+  bool enterLong = bullishIndicator == 6;
+  bool enterShort = bearishIndicator == 6;
 
-  if (coversCommission && bullishVolume && numberIndicators >= 3) {
-    INFO_LOG(*logger) << "entering bracket atr: " << currentAtr
+  if (enterLong) {
+    INFO_LOG(*logger) << "entering long bracket atr: " << currentAtr
                       << " bar time: " << timestamps.back();
+    const auto bracketBoundaries = decideProfitAndStopLossLevels(entryPrice, OrderDirection::BUY);
     enterBracket(instrument, entryQuantity, midas::OrderDirection::BUY,
+                 entryPrice, bracketBoundaries.second, bracketBoundaries.first);
+  } else if (enterShort) {
+    const auto bracketBoundaries = decideProfitAndStopLossLevels(entryPrice, OrderDirection::SELL);
+    enterBracket(instrument, entryQuantity, midas::OrderDirection::SELL,
                  entryPrice, bracketBoundaries.second, bracketBoundaries.first);
   }
 }
@@ -120,10 +128,17 @@ void MomentumTrader::decide() {
 std::size_t MomentumTrader::decideEntryQuantity() { return 2; }
 
 std::pair<double, double>
-MomentumTrader::decideProfitAndStopLossLevels(double entryPrice) {
-  double takeProfitLimit = entryPrice + 10;
-  double stopLossLimit = entryPrice - 50;
-  stopLossLimit = std::max(stopLossLimit, entryPrice - 100);
+MomentumTrader::decideProfitAndStopLossLevels(double entryPrice, OrderDirection orderDirection) {
+  double profitOffset = 10;
+  double stopLossOffset = -50;
+  if (orderDirection == OrderDirection::SELL) {
+    profitOffset *= -1;
+    stopLossOffset *= -1;
+  }
+
+  double takeProfitLimit = entryPrice + profitOffset;
+  double stopLossLimit = entryPrice + stopLossOffset;
+
   takeProfitLimit = std::round(takeProfitLimit * roundingCoeff) / roundingCoeff;
   stopLossLimit = std::round(stopLossLimit * roundingCoeff) / roundingCoeff;
   return {takeProfitLimit, stopLossLimit};
@@ -144,3 +159,5 @@ void MomentumTrader::clearBuffers() {
 std::string MomentumTrader::traderName() const {
   return std::string("Momentum trader - ") + instrument;
 }
+
+

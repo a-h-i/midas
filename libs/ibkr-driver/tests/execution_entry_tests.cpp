@@ -11,7 +11,7 @@ TEST(IBKRDriver, ExecutionEntryCorrection) {
   nativeExecution.shares = DecimalFunctions::doubleToDecimal(2.0);
   nativeExecution.cumQty = DecimalFunctions::doubleToDecimal(2.0);
   nativeExecution.execId = "145.01";
-  nativeExecution.side = "BUY";
+  nativeExecution.side = "BOT";
   nativeExecution.time = "2011-10-05T14:48:00.000Z";
   Execution nativeCorrection(nativeExecution);
   nativeCorrection.avgPrice = 249;
@@ -31,7 +31,7 @@ TEST(IBKRDriver, ExecutionEntryParsing) {
   nativeExecution.shares = DecimalFunctions::doubleToDecimal(2.0);
   nativeExecution.cumQty = DecimalFunctions::doubleToDecimal(2.0);
   nativeExecution.execId = "145.01";
-  nativeExecution.side = "BUY";
+  nativeExecution.side = "BOT";
   nativeExecution.time = "2011-10-05T14:48:00.000Z";
   ExecutionEntry parsed(nativeExecution);
   EXPECT_EQ(parsed.averagePrice, 250);

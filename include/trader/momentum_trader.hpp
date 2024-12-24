@@ -37,7 +37,7 @@ private:
   void clearBuffers();
 
 public:
-  MomentumTrader(const std::shared_ptr<midas::DataStream> & source,
+  MomentumTrader(const std::shared_ptr<midas::DataStream> &source,
                  const std::shared_ptr<midas::OrderManager> &orderManager,
                  midas::InstrumentEnum instrument,
                  const std::shared_ptr<logging::thread_safe_logger_t> &logger);
@@ -48,19 +48,28 @@ public:
 
 protected:
   MomentumTrader(std::size_t bufferSize,
-                 const std::shared_ptr<midas::DataStream> & source,
-                 const std::shared_ptr<midas::OrderManager> & orderManager,
+                 const std::shared_ptr<midas::DataStream> &source,
+                 const std::shared_ptr<midas::OrderManager> &orderManager,
                  midas::InstrumentEnum instrument,
                  const std::shared_ptr<logging::thread_safe_logger_t> &logger);
   /**
    *
-   * @param entryPrice
+   * @param entryPrice decided entry price
+   * @param direction are we going long or short
    * @return pair where first is profit limit and second is stop loss
    */
   virtual std::pair<double, double>
-  decideProfitAndStopLossLevels(double entryPrice);
+  decideProfitAndStopLossLevels(double entryPrice, OrderDirection direction);
 
   virtual std::size_t decideEntryQuantity();
   virtual void calculateTechnicalAnalysis();
+};
+
+class StockMomentumTrader : public MomentumTrader {
+
+protected:
+  std::size_t decideEntryQuantity() override;
+  std::pair<double, double>
+  decideProfitAndStopLossLevels(double entryPrice, OrderDirection direction) override;
 };
 } // namespace midas::trader

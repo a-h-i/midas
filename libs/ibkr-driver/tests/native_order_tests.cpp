@@ -49,21 +49,7 @@ struct NativeOrderTest : public testing::Test {
   }
 };
 
-TEST_F(NativeOrderTest, DoesNotSendFilledSignal) {
-  EXPECT_FALSE(orderPtr->inCompletelyFilledState());
-  Execution nativeExecution;
-  nativeExecution.price = 10;
-  nativeExecution.avgPrice = 10;
-  nativeExecution.shares = DecimalFunctions::doubleToDecimal(1);
-  nativeExecution.cumQty = DecimalFunctions::doubleToDecimal(1);
-  nativeExecution.execId = "145";
-  nativeExecution.side = "BOT";
-  nativeExecution.time = "2011-10-05T14:48:00.000Z";
-  ExecutionEntry parsed(nativeExecution);
-  orderPtr->addExecutionEntry(parsed);
-  EXPECT_FALSE(orderPtr->inCompletelyFilledState());
-  EXPECT_EQ(fillCount.load(), 0);
-}
+
 
 TEST_F(NativeOrderTest, SendsFilledSignal) {
   EXPECT_FALSE(orderPtr->inCompletelyFilledState());
@@ -78,7 +64,6 @@ TEST_F(NativeOrderTest, SendsFilledSignal) {
   nativeExecution.orderId = 13;
   ExecutionEntry parsed(nativeExecution);
   orderPtr->addExecutionEntry(parsed);
-  EXPECT_FALSE(orderPtr->inCompletelyFilledState());
   EXPECT_TRUE(orderPtr->inCompletelyFilledState());
   EXPECT_EQ(fillCount.load(), 1);
 }

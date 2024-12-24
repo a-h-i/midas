@@ -9,10 +9,19 @@
 #include <ftxui/component/loop.hpp>
 #include <ftxui/component/screen_interactive.hpp>
 #include <ftxui/dom/elements.hpp>
-#include <ftxui/screen/screen.hpp>
 #include <memory>
 using namespace ftxui;
 using namespace std::chrono_literals;
+
+static void createTraders(std::list<TraderContext> &traders,
+                          TradingContext *ctx, std::atomic<bool> *stop) {
+  auto instruments = {midas::InstrumentEnum::MicroNasdaqFutures,
+                      midas::InstrumentEnum::MicroSPXFutures,
+                      midas::InstrumentEnum::NVDA, midas::InstrumentEnum::TSLA};
+  for (auto instrument : instruments) {
+    traders.emplace_back(stop, 100 * 120, ctx, instrument);
+  }
+}
 
 void ui::startTerminalUI(midas::SignalHandler &globalSignalHandler) {
   std::atomic<bool> quitLoop{false};
@@ -27,19 +36,17 @@ void ui::startTerminalUI(midas::SignalHandler &globalSignalHandler) {
     TradingContext tradingContext(&quitLoop);
     auto orderManager = tradingContext.orderManager;
     auto broker = tradingContext.broker;
-
-    TraderContext mnqTraderContext(&quitLoop, 100 * 120, &tradingContext,
-                                   midas::InstrumentEnum::MicroNasdaqFutures);
-    TraderContext mesTraderContext(&quitLoop, 100 * 120, &tradingContext,
-                                   midas::InstrumentEnum::MicroSPXFutures);
-    auto &mnqTrader = mnqTraderContext.trader;
-    auto &mesTrader = mesTraderContext.trader;
+    std::list<TraderContext> traders;
+    createTraders(traders, &tradingContext, &quitLoop);
     ;
     ProfitAndLossWindow pnlWindow(*orderManager);
-    TraderSummaryView mnqSummaryView(*mnqTrader), mesSummaryView(*mesTrader);
-
+    std::list<TraderSummaryView> summaryViews;
+    for (auto &traderContext : traders) {
+      summaryViews.emplace_back(*traderContext.trader);
+    }
+    bool isPaused = false;
     auto pauseBtn = Renderer([&](bool focused) {
-      auto btnClr = mnqTrader->paused() ? Color::DarkRed : Color::DarkGreen;
+      auto btnClr = isPaused ? Color::DarkRed : Color::DarkGreen;
       auto traderPauseButtonOptions = ButtonOption::Animated(btnClr);
       traderPauseButtonOptions.transform = [](const EntryState &s) {
         auto element = text(s.label) | flex;
@@ -49,7 +56,7 @@ void ui::startTerminalUI(midas::SignalHandler &globalSignalHandler) {
           return element | borderEmpty;
         }
       };
-      std::string labelStr = mnqTrader->paused() ? "continue" : "pause";
+      std::string labelStr = isPaused ? "continue" : "pause";
       auto label = text(labelStr) | bgcolor(btnClr) | center | flex;
       if (focused) {
         label = label | bold | border;
@@ -59,27 +66,26 @@ void ui::startTerminalUI(midas::SignalHandler &globalSignalHandler) {
       return label;
     });
     int selectedTab = 0;
-
+    std::vector<std::string> tabNames;
+    for (auto &trader : traders) {
+      tabNames.push_back(trader.trader->traderName());
+    }
     auto renderer =
         Renderer([&] {
-          std::vector<std::string> tabNames{mnqTrader->traderName(),
-                                            mesTrader->traderName()};
           auto tabToggle = Toggle(&tabNames, &selectedTab);
-          auto traderSummaries = Container::Tab(
-              {
-                  mnqSummaryView.renderer(),
-                  mesSummaryView.renderer(),
-              },
-              &selectedTab);
+          std::vector<Component> summaryRenderers;
+          for (auto &view : summaryViews) {
+            summaryRenderers.push_back(view.renderer());
+          }
+          auto traderSummaries = Container::Tab(summaryRenderers, &selectedTab);
           auto traderContainer = Container::Vertical({traderSummaries});
           auto mainView = Container::Vertical({
               traderContainer | flex,
               pauseBtn,
 
           });
-          auto traderWindow = Renderer([&mnqTrader, &traderContainer]() {
-            return window(text(mnqTrader->traderName()),
-                          traderContainer->Render());
+          auto traderWindow = Renderer([&traderContainer]() {
+            return window(text("Active Traders"), traderContainer->Render());
           });
           auto mainWindow = Container::Horizontal(
               {pnlWindow.renderer(), traderWindow | flex});
@@ -87,15 +93,17 @@ void ui::startTerminalUI(midas::SignalHandler &globalSignalHandler) {
           return window(text("Midas Algo Trader") | center,
                         mainWindow->Render());
         }) |
-        CatchEvent([&mnqTrader, &mesTrader, &selectedTab](Event event) {
+        CatchEvent([&isPaused, &traders, &selectedTab, &tabNames](Event event) {
           if (event == Event::Character('\n')) {
-            mnqTrader->togglePause();
-            mesTrader->togglePause();
+            isPaused = !isPaused;
+            for (auto &traderContext : traders) {
+              traderContext.trader->togglePause();
+            }
             return true;
           } else if (event == Event::Character('\t')) {
-            selectedTab = (selectedTab + 1) % 2;
+            selectedTab = (selectedTab + 1) % tabNames.size();
             return true;
-          }else {
+          } else {
             return false;
           }
         });
