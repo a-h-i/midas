@@ -55,6 +55,18 @@ ibkr::internal::build_futures_contract(const midas::InstrumentEnum &future, cons
                     contractLastTradeMonth.month.as_number());
     break;
   }
+  case midas::InstrumentEnum::MicroSPXFutures: {
+    contract.symbol = "MES";
+    contract.exchange = "CME";
+    contract.currency = "USD";
+    contract.secType = "FUT";
+    contract.tradingClass = "MES";
+    contract.multiplier = "5";
+    contract.lastTradeDateOrContractMonth =
+        std::format("{}{:0>2}", static_cast<int>(contractLastTradeMonth.year),
+                    contractLastTradeMonth.month.as_number());
+    break;
+  }
   default:
     throw std::runtime_error("Unsupported future: " +
                              std::to_string(static_cast<int>(future)));

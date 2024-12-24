@@ -18,11 +18,11 @@ void ibkr::internal::OrderManager::transmit(
   orderPtr->addStatusChangeListener(
       midas::Order::status_change_signal_t::slot_type(
           [this, orderPtr](midas::Order &order,
-                            midas::Order::StatusChangeEvent event) {
+                           midas::Order::StatusChangeEvent event) {
             std::scoped_lock ordersLock(ordersMutex);
             INFO_LOG(*logger) << "IBKR order manager status change listener "
-                                "triggered for internal id: "
-                             << order.id;
+                                 "triggered for internal id: "
+                              << order.id;
             auto removePredicate = [&order](const auto &elemPtr) {
               return (*elemPtr) == order;
             };
@@ -57,18 +57,12 @@ std::list<midas::Order *> ibkr::internal::OrderManager::getFilledOrders() {
 }
 
 void ibkr::internal::OrderManager::handlePnLUpdate(
-    midas::InstrumentEnum instrument, midas::OrderDirection direction,
-    double price) {
+    midas::InstrumentEnum instrument [[maybe_unused]],
+    midas::OrderDirection direction, double price) {
   INFO_LOG(*logger) << "IBKR order manager handling pnl update";
   double directionModifier = direction == midas::OrderDirection::BUY ? 1 : -1;
   double adjustedPrice = price * directionModifier;
-  std::scoped_lock lock(pnlMutex);
-  if (!unrealizedPnl.contains(instrument)) {
-    unrealizedPnl[instrument] = adjustedPrice;
-    return;
-  }
-  double diff = unrealizedPnl[instrument] + adjustedPrice;
-  unrealizedPnl.erase(instrument);
-  const double realized = realizedPnl.fetch_add(diff);
+
+  const double realized = realizedPnl.fetch_add(adjustedPrice);
   realizedPnlSignal(realized);
 }

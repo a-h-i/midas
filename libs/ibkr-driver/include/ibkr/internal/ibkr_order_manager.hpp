@@ -17,7 +17,6 @@ class OrderManager : public midas::OrderManager {
   std::list<std::shared_ptr<midas::Order>> transmittedOrders, filledOrders,
       cancelledOrders;
   std::recursive_mutex pnlMutex, ordersMutex;
-  std::unordered_map<midas::InstrumentEnum, double> unrealizedPnl;
   std::atomic<double> realizedPnl{0};
 
   void handlePnLUpdate(midas::InstrumentEnum, midas::OrderDirection direction,

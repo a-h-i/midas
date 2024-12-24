@@ -43,4 +43,10 @@ public:
       : BracketedOrderState(bracketPtr) {}
   virtual midas::OrderStatusEnum state() const override;
 };
+class BracketCanceledState : public midas::internal::BracketedOrderState {
+public:
+  BracketCanceledState(BracketedOrder *bracketPtr)
+      : BracketedOrderState(bracketPtr) {}
+  virtual midas::OrderStatusEnum state() const override;
+};
 }; // namespace midas::internal

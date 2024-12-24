@@ -46,13 +46,14 @@ void ibkr::internal::Client::orderStatus(
     } else if (status == "Submitted") {
       order->setTransmitted();
     } else if (status == "ApiCancelled") {
-      order->setCancelled();
-      pendingCommands.push_back([this, orderId]() {
+      pendingCommands.push_back([this, orderId, order]() {
+        order->setCancelled();
         activeOrders.erase(orderId);
       });
     } else if (status == "Cancelled") {
-      order->setCancelled();
-      pendingCommands.push_back([this, orderId]() {
+
+      pendingCommands.push_back([this, orderId, order]() {
+        order->setCancelled();
         activeOrders.erase(orderId);
       });
     } else if (status == "Filled") {

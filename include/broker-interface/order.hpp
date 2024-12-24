@@ -279,6 +279,7 @@ public:
   virtual OrderStatusEnum state() const override;
   virtual void visit(OrderVisitor &) override;
   virtual void setTransmitted() override;
+  virtual void setCancelled() override;
   inline SimpleOrder &getEntryOrder() { return *entryOrder; }
   inline SimpleOrder &getStopOrder() { return *stopLossOrder; }
   inline SimpleOrder &getProfitTakerOrder() { return *profitTakerOrder; }

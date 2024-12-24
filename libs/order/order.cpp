@@ -23,10 +23,12 @@ void midas::Order::setTransmitted() {
                           << state();
     return;
   }
-  status = OrderStatusEnum::Accepted;
+  setState(OrderStatusEnum::Accepted);
 }
 
-void midas::Order::setCancelled() { status = OrderStatusEnum::Cancelled; }
+void midas::Order::setCancelled() {
+  setState(OrderStatusEnum::Cancelled);
+}
 
 void midas::Order::setShortLocatingHold() {
   status = OrderStatusEnum::ShortLocatingHold;

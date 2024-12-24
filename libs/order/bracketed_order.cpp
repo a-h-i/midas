@@ -97,6 +97,15 @@ void midas::BracketedOrder::visit(midas::OrderVisitor &transmitter) {
   transmitter.visit(*this);
 }
 
+void midas::BracketedOrder::setCancelled() {
+  profitTakerOrder->setCancelled();
+  entryOrder->setCancelled();
+  stopLossOrder->setCancelled();
+  phasePtr = std::make_unique<internal::BracketCanceledState>(this);
+  setState(OrderStatusEnum::Cancelled);
+}
+
+
 void midas::BracketedOrder::setTransmitted() {
   std::scoped_lock phaseLock(phaseMutex);
   if (!phasePtr->canTransmit()) {
@@ -152,4 +161,8 @@ void midas::BracketedOrder::setFilled(double avgFillPrice,
                                       double totalCommissions,
                                       unsigned int filledQuantity) {
   setFilledNoStatusUpdate(avgFillPrice, totalCommissions, filledQuantity);
+}
+
+midas::OrderStatusEnum midas::internal::BracketCanceledState::state() const {
+  return midas::OrderStatusEnum::Cancelled;
 }

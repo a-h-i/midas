@@ -10,23 +10,24 @@ namespace midas::trader {
 
 class MomentumTrader : public midas::trader::Trader {
 public:
-  static constexpr int fastMATimePeriod = 9;
-  static constexpr int slowMATimePeriod = 21;
-  static constexpr int volumeMATimePeriod = 10;
+  static constexpr int fastMATimePeriod = 5;
+  static constexpr int slowMATimePeriod = 15;
+  static constexpr int volumeMATimePeriod = 15;
   static constexpr int atrTimePeriod = 13;
-  static constexpr int rsiTimePeriod = 9;
-  static constexpr int entryQuantity = 2;
-  static constexpr int macdFastPeriod = 12, macdSlowPeriod = 26,
-                       macdSignalPeriod = 9;
+  static constexpr int rsiTimePeriod = 6;
+
+  static constexpr int macdFastPeriod = 6, macdSlowPeriod = 13,
+                       macdSignalPeriod = 4;
   static constexpr int atrSmoothingPeriod = 20;
   static constexpr double commissionEstimatePerUnit = 0.25;
   static constexpr double roundingCoeff = 4; // minimum of .25 index moves
 private:
   std::array<double, 100> slowMa, fastMa, volumeMa, atr, atrMA, macd,
-      macdSignal, macdHistogram;
+      macdSignal, macdHistogram, rsi;
   int slowMAOutBeg = 0, fastMAOutBeg = 0, volumeMAOutBegin = 0, atrOutBegin = 0,
       atrMAOutBegin = 0, macdOutBegin = 0, slowMAOutSize = 0, fastMAOutSize,
-      volumeMAOutSize = 0, atrOutSize = 0, atrMAOutSize = 0, macdOutSize = 0;
+      volumeMAOutSize = 0, atrOutSize = 0, atrMAOutSize = 0, macdOutSize = 0,
+      rsiOutBegin = 0, rsiOutSize = 0;
   const midas::InstrumentEnum instrument;
   std::vector<unsigned int> trades;
   std::vector<double> closePrices, volumes, highs, lows, opens, vwaps;
@@ -36,13 +37,30 @@ private:
   void clearBuffers();
 
 public:
-  MomentumTrader(std::shared_ptr<midas::DataStream> source,
-                 std::shared_ptr<midas::OrderManager> orderManager,
+  MomentumTrader(const std::shared_ptr<midas::DataStream> & source,
+                 const std::shared_ptr<midas::OrderManager> &orderManager,
                  midas::InstrumentEnum instrument,
-                 std::shared_ptr<logging::thread_safe_logger_t> logger);
+                 const std::shared_ptr<logging::thread_safe_logger_t> &logger);
 
   virtual ~MomentumTrader() = default;
   virtual void decide() override;
   virtual std::string traderName() const override;
+
+protected:
+  MomentumTrader(std::size_t bufferSize,
+                 const std::shared_ptr<midas::DataStream> & source,
+                 const std::shared_ptr<midas::OrderManager> & orderManager,
+                 midas::InstrumentEnum instrument,
+                 const std::shared_ptr<logging::thread_safe_logger_t> &logger);
+  /**
+   *
+   * @param entryPrice
+   * @return pair where first is profit limit and second is stop loss
+   */
+  virtual std::pair<double, double>
+  decideProfitAndStopLossLevels(double entryPrice);
+
+  virtual std::size_t decideEntryQuantity();
+  virtual void calculateTechnicalAnalysis();
 };
 } // namespace midas::trader

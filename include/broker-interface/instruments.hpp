@@ -11,7 +11,7 @@ namespace midas {
 /**
  * Not all instruments are supported
  */
-enum InstrumentEnum { MicroNasdaqFutures };
+enum InstrumentEnum { MicroNasdaqFutures, MicroSPXFutures };
 
 enum InstrumentType { IndexFuture };
 
@@ -25,6 +25,9 @@ inline std::string operator+(const char *lhs, InstrumentEnum instrument) {
 
   case MicroNasdaqFutures:
     instrumentStr = "MNQ";
+    break;
+  case MicroSPXFutures:
+    instrumentStr = "MES";
     break;
   }
   return lhs + instrumentStr;
