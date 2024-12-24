@@ -44,7 +44,7 @@ void MomentumTrader::calculateTechnicalAnalysis() {
   TA_EMA(0, closePrices.size() - 1, closePrices.data(), slowMATimePeriod,
          &slowMAOutBeg, &slowMAOutSize, slowMa.data());
 
-  TA_SMA(0, volumes.size() - 1, volumes.data(), volumeMATimePeriod,
+  TA_EMA(0, volumes.size() - 1, volumes.data(), volumeMATimePeriod,
          &volumeMAOutBegin, &volumeMAOutSize, volumeMa.data());
 
   TA_ATR(0, highs.size() - 1, highs.data(), lows.data(), closePrices.data(),
@@ -52,7 +52,7 @@ void MomentumTrader::calculateTechnicalAnalysis() {
   TA_MACD(0, closePrices.size() - 1, closePrices.data(), macdFastPeriod,
           macdSlowPeriod, macdSignalPeriod, &macdOutBegin, &macdOutSize,
           macd.data(), macdSignal.data(), macdHistogram.data());
-  TA_SMA(0, atrOutSize - 1, atr.data(), atrSmoothingPeriod, &atrMAOutBegin,
+  TA_EMA(0, atrOutSize - 1, atr.data(), atrSmoothingPeriod, &atrMAOutBegin,
          &atrMAOutSize, atrMA.data());
   TA_RSI(0, closePrices.size() - 1, closePrices.data(), rsiTimePeriod,
          &rsiOutBegin, &rsiOutSize, rsi.data());
@@ -86,9 +86,8 @@ void MomentumTrader::decide() {
   bool bearishRSI = rsi[rsiOutSize - 1] > 25;
 
   double currentAtr = atrMA[atrMAOutSize - 1];
-  double normalizedAtr = (currentAtr / closePrices.back()) * 100;
 
-  bool normalizedAtrAcceptable = normalizedAtr >= 0.5;
+  bool atrAcceptable = currentAtr > 0.15;
   bool volumeAcceptable = volumes.back() > volumeMa[volumeMAOutSize - 1];
 
   double entryPrice = (highs.back() - lows.back()) * 0.7 + lows.back();
@@ -107,15 +106,15 @@ void MomentumTrader::decide() {
       {"Bearish MA", bearishMA},
       {"Bearish MACD", bearishMACD},
       {"Bearish RSI", bearishRSI},
-      {"ATR acceptable", normalizedAtrAcceptable}};
+      {"ATR acceptable", atrAcceptable}};
   decisionParamsSignal(decisionParams);
 
   double bullishIndicator = static_cast<double>(bullishMA) + bullishMACD +
                             bullishRSI + volumeAcceptable +
-                            normalizedAtrAcceptable + coversCommission;
+                            atrAcceptable + coversCommission;
   double bearishIndicator = static_cast<double>(bearishMA) + bearishMACD +
                             bearishRSI + volumeAcceptable +
-                            normalizedAtrAcceptable + coversCommission;
+                            atrAcceptable + coversCommission;
   bool enterLong = bullishIndicator == 6;
   bool enterShort = bearishIndicator == 6;
 
@@ -127,6 +126,8 @@ void MomentumTrader::decide() {
     enterBracket(instrument, entryQuantity, midas::OrderDirection::BUY,
                  entryPrice, bracketBoundaries.second, bracketBoundaries.first);
   } else if (enterShort) {
+    INFO_LOG(*logger) << "entering short bracket atr: " << currentAtr
+                     << " bar time: " << timestamps.back();
     const auto bracketBoundaries =
         decideProfitAndStopLossLevels(entryPrice, OrderDirection::SELL);
     enterBracket(instrument, entryQuantity, midas::OrderDirection::SELL,

@@ -13,12 +13,12 @@ public:
   static constexpr int fastMATimePeriod = 5;
   static constexpr int slowMATimePeriod = 15;
   static constexpr int volumeMATimePeriod = 15;
-  static constexpr int atrTimePeriod = 13;
+  static constexpr int atrTimePeriod = 50;
   static constexpr int rsiTimePeriod = 6;
 
   static constexpr int macdFastPeriod = 6, macdSlowPeriod = 13,
                        macdSignalPeriod = 4;
-  static constexpr int atrSmoothingPeriod = 20;
+  static constexpr int atrSmoothingPeriod = 9;
   static constexpr double commissionEstimatePerUnit = 0.25;
   static constexpr double roundingCoeff = 4; // minimum of .25 index moves
 private:
@@ -43,8 +43,8 @@ public:
                  const std::shared_ptr<logging::thread_safe_logger_t> &logger);
 
   virtual ~MomentumTrader() = default;
-  virtual void decide() override;
-  virtual std::string traderName() const override;
+  void decide() override;
+  std::string traderName() const override;
 
 protected:
   MomentumTrader(std::size_t bufferSize,
@@ -66,10 +66,18 @@ protected:
 };
 
 class StockMomentumTrader : public MomentumTrader {
+public:
+  StockMomentumTrader(
+      const std::shared_ptr<midas::DataStream> &source,
+      const std::shared_ptr<midas::OrderManager> &orderManager,
+      midas::InstrumentEnum instrument,
+      const std::shared_ptr<logging::thread_safe_logger_t> &logger)
+      : MomentumTrader(100, source, orderManager, instrument, logger) {}
 
 protected:
   std::size_t decideEntryQuantity() override;
   std::pair<double, double>
-  decideProfitAndStopLossLevels(double entryPrice, OrderDirection direction) override;
+  decideProfitAndStopLossLevels(double entryPrice,
+                                OrderDirection direction) override;
 };
 } // namespace midas::trader

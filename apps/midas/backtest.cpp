@@ -15,7 +15,7 @@ void backtestMomentumTrader() {
   auto traderFactory = [](std::shared_ptr<midas::DataStream> streamPtr,
                           std::shared_ptr<midas::OrderManager> orderManager) {
     return midas::trader::momentumExploit(
-        streamPtr, orderManager, midas::InstrumentEnum::MicroNasdaqFutures);
+        streamPtr, orderManager, midas::InstrumentEnum::NVDA);
   };
 
   boost::asio::ip::tcp::endpoint ibkrServer(
@@ -29,7 +29,7 @@ void backtestMomentumTrader() {
     }
   });
   midas::backtest::BacktestResult results = midas::backtest::performBacktest(
-      midas::InstrumentEnum::MicroNasdaqFutures, 1_months, traderFactory,
+      midas::InstrumentEnum::NVDA, 86400_seconds, traderFactory,
       *broker);
   std::cout << "Trade Summary"
             << "\nnumber entry orders: "
