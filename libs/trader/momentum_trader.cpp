@@ -88,7 +88,7 @@ void MomentumTrader::decide() {
   double currentAtr = atrMA[atrMAOutSize - 1];
   double normalizedAtr = (currentAtr / closePrices.back()) * 100;
 
-  bool normalizedAtrAcceptable = normalizedAtr > 1.0;
+  bool normalizedAtrAcceptable = normalizedAtr >= 0.5;
   bool volumeAcceptable = volumes.back() > volumeMa[volumeMAOutSize - 1];
 
   double entryPrice = (highs.back() - lows.back()) * 0.7 + lows.back();
