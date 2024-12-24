@@ -28,15 +28,18 @@ void ui::startTerminalUI(midas::SignalHandler &globalSignalHandler) {
     auto orderManager = tradingContext.orderManager;
     auto broker = tradingContext.broker;
 
-    TraderContext traderContext(&quitLoop, 100 * 120, &tradingContext,
-                                midas::InstrumentEnum::MicroNasdaqFutures);
-    auto &trader = traderContext.trader;
-
+    TraderContext mnqTraderContext(&quitLoop, 100 * 120, &tradingContext,
+                                   midas::InstrumentEnum::MicroNasdaqFutures);
+    TraderContext mesTraderContext(&quitLoop, 100 * 120, &tradingContext,
+                                   midas::InstrumentEnum::MicroSPXFutures);
+    auto &mnqTrader = mnqTraderContext.trader;
+    auto &mesTrader = mesTraderContext.trader;
+    ;
     ProfitAndLossWindow pnlWindow(*orderManager);
-    TraderSummaryView traderSummary(*trader);
+    TraderSummaryView mnqSummaryView(*mnqTrader), mesSummaryView(*mesTrader);
 
     auto pauseBtn = Renderer([&](bool focused) {
-      auto btnClr = trader->paused() ? Color::DarkRed : Color::DarkGreen;
+      auto btnClr = mnqTrader->paused() ? Color::DarkRed : Color::DarkGreen;
       auto traderPauseButtonOptions = ButtonOption::Animated(btnClr);
       traderPauseButtonOptions.transform = [](const EntryState &s) {
         auto element = text(s.label) | flex;
@@ -46,7 +49,7 @@ void ui::startTerminalUI(midas::SignalHandler &globalSignalHandler) {
           return element | borderEmpty;
         }
       };
-      std::string labelStr = trader->paused() ? "continue" : "pause";
+      std::string labelStr = mnqTrader->paused() ? "continue" : "pause";
       auto label = text(labelStr) | bgcolor(btnClr) | center | flex;
       if (focused) {
         label = label | bold | border;
@@ -55,32 +58,47 @@ void ui::startTerminalUI(midas::SignalHandler &globalSignalHandler) {
       }
       return label;
     });
+    int selectedTab = 0;
 
-    auto renderer = Renderer([&] {
-                      auto traderContainer = Container::Vertical({
-                          traderSummary.renderer() | flex,
-                          pauseBtn,
+    auto renderer =
+        Renderer([&] {
+          std::vector<std::string> tabNames{mnqTrader->traderName(),
+                                            mesTrader->traderName()};
+          auto tabToggle = Toggle(&tabNames, &selectedTab);
+          auto traderSummaries = Container::Tab(
+              {
+                  mnqSummaryView.renderer(),
+                  mesSummaryView.renderer(),
+              },
+              &selectedTab);
+          auto traderContainer = Container::Vertical({traderSummaries});
+          auto mainView = Container::Vertical({
+              traderContainer | flex,
+              pauseBtn,
 
-                      });
-                      auto traderWindow =
-                          Renderer([&trader, &traderContainer]() {
-                            return window(text(trader->traderName()),
-                                          traderContainer->Render());
-                          });
-                      auto mainWindow = Container::Horizontal(
-                          {pnlWindow.renderer(), traderWindow | flex});
+          });
+          auto traderWindow = Renderer([&mnqTrader, &traderContainer]() {
+            return window(text(mnqTrader->traderName()),
+                          traderContainer->Render());
+          });
+          auto mainWindow = Container::Horizontal(
+              {pnlWindow.renderer(), traderWindow | flex});
 
-                      return window(text("Midas Algo Trader") | center,
-                                    mainWindow->Render());
-                    }) |
-                    CatchEvent([&trader](Event event) {
-                      if (event == Event::Character('\n')) {
-                        trader->togglePause();
-                        return true;
-                      } else {
-                        return false;
-                      }
-                    });
+          return window(text("Midas Algo Trader") | center,
+                        mainWindow->Render());
+        }) |
+        CatchEvent([&mnqTrader, &mesTrader, &selectedTab](Event event) {
+          if (event == Event::Character('\n')) {
+            mnqTrader->togglePause();
+            mesTrader->togglePause();
+            return true;
+          } else if (event == Event::Character('\t')) {
+            selectedTab = (selectedTab + 1) % 2;
+            return true;
+          }else {
+            return false;
+          }
+        });
     Loop loop(&screen, renderer);
     screen.TrackMouse(true);
     while (!quitLoop.load()) {

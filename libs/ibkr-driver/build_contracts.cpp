@@ -21,7 +21,7 @@ int calcMonthsOffset(int currentQuarter, int currentMonth) {
 }
 
 Contract
-ibkr::internal::build_futures_contract(const midas::InstrumentEnum &future, const std::function<boost::gregorian::date ()> &getToday) {
+ibkr::internal::build_contract(const midas::InstrumentEnum &instrument, const std::function<boost::gregorian::date ()> &getToday) {
   Contract contract;
   auto today = getToday();
 
@@ -42,7 +42,7 @@ ibkr::internal::build_futures_contract(const midas::InstrumentEnum &future, cons
           .year_month_day();
   }
 
-  switch (future) {
+  switch (instrument) {
   case midas::InstrumentEnum::MicroNasdaqFutures: {
     contract.symbol = "MNQ";
     contract.exchange = "CME";
@@ -69,7 +69,7 @@ ibkr::internal::build_futures_contract(const midas::InstrumentEnum &future, cons
   }
   default:
     throw std::runtime_error("Unsupported future: " +
-                             std::to_string(static_cast<int>(future)));
+                             std::to_string(static_cast<int>(instrument)));
   }
   return contract;
 }

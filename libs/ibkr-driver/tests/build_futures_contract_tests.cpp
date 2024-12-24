@@ -8,7 +8,7 @@ using namespace midas;
 using namespace ibkr::internal;
 TEST(BuildFuturesContract, lastTradeDate) {
   const Contract contract =
-      build_futures_contract(InstrumentEnum::MicroNasdaqFutures);
+      build_contract(InstrumentEnum::MicroNasdaqFutures);
   std::regex dateRegex("^20\\d\\d[10]\\d$");
   EXPECT_TRUE(
       std::regex_match(contract.lastTradeDateOrContractMonth, dateRegex));
@@ -20,7 +20,7 @@ protected:
 
   Contract buildContract(const InstrumentEnum &future, int year, int month,
                          int day) {
-    return build_futures_contract(future, [year, month, day]() {
+    return build_contract(future, [year, month, day]() {
       return boost::gregorian::date(year, month, day);
     }); // Call the function being tested
   }

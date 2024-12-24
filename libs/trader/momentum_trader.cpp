@@ -97,7 +97,7 @@ void MomentumTrader::decide() {
   const double commissionEstimate =
       commissionEstimatePerUnit * entryQuantity * 2;
   bool coversCommission = commissionEstimate < 2 * currentAtr;
-  bool bullishRSI = rsi[rsiOutSize - 1] < 50;
+  bool bullishRSI = rsi[rsiOutSize - 1] < 70;
   Trader::decision_params_t decisionParams{
       {"covers comission", coversCommission},
       {"Bullish MA", bullishMa},

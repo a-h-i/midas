@@ -100,7 +100,7 @@ void ibkr::internal::Client::processPendingSubscriptions() {
             "Unable to insert entry into active subscriptions");
       }
       auto &activeSub = insertedPair.first->second;
-      const Contract contract = build_futures_contract(sub->symbol);
+      const Contract contract = build_contract(sub->symbol);
       if (sub->isRealtime) {
         std::vector<int> realTimeRequestIds = requestRealtimeData(
             contract, tickerId, connectionState.clientSocket.get(),

@@ -29,7 +29,7 @@ NativeOrderSignals::NativeOrderSignals(midas::Order &order) {
 NativeOrder::NativeOrder(Order native, midas::Order &order, std::shared_ptr<logging::thread_safe_logger_t> & logger)
     : logger(logger), events(std::make_unique<NativeOrderSignals>(order)), nativeOrder(std::move(native)),
       instrument(order.instrument),
-      ibkrContract(ibkr::internal::build_futures_contract(order.instrument)) {}
+      ibkrContract(ibkr::internal::build_contract(order.instrument)) {}
 
 bool NativeOrder::addCommissionEntry(const CommissionEntry &entry) {
   std::scoped_lock lock(stateMutex);
