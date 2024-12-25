@@ -13,7 +13,6 @@ namespace midas {
  */
 enum InstrumentEnum { MicroNasdaqFutures, MicroSPXFutures, NVDA, TSLA };
 
-enum InstrumentType { IndexFuture };
 
 enum SupportedCurrencies { USD };
 
@@ -61,33 +60,6 @@ struct TradingHours {
   std::optional<boost::local_time::local_time_period> extended_period;
 };
 
-class Exchange {
-
-public:
-  inline boost::local_time::time_zone_ptr timezone() const { return tz; };
-
-  inline SupportedCurrencies supported_currency() const { return currency; };
-  inline const std::string &exchange_name() const { return name; }
-  inline const std::string &exchange_symbol() const { return symbol; }
-  /**
-   * Returns the trading hours (if any) for the date specified
-   */
-  TradingHours days_trading_hours(const boost::gregorian::date &date) const;
-  /**
-   * Singleton factory
-   */
-  friend std::shared_ptr<Exchange>
-  exchange_from_symbol(SupportedExchanges symbol);
-  const SupportedExchanges exchange_t;
-
-private:
-  Exchange(SupportedExchanges exch);
-  boost::local_time::time_zone_ptr tz;
-  std::string name;
-  std::string symbol;
-
-  SupportedCurrencies currency;
-};
 
 template <typename CharT, typename TraitsT>
 std::basic_ostream<CharT, TraitsT> &
@@ -101,26 +73,8 @@ operator<<(std::basic_ostream<CharT, TraitsT> &stream,
   return stream;
 }
 
-template <typename CharT, typename TraitsT>
-std::basic_ostream<CharT, TraitsT> &
-operator<<(std::basic_ostream<CharT, TraitsT> &stream, Exchange exchange) {
-  return stream << "[Exchange: " << exchange.exchange_name() << " - "
-                << exchange.exchange_symbol() << " - "
-                << exchange.supported_currency() << "]";
-}
 
-/**
- * A representation of a financial instrument.
- * Contains static information about the instrument itself
- */
-struct FinancialInstrument {
 
-  std::string name;
-  InstrumentType sub_type;
-  InstrumentEnum symbol;
-  std::shared_ptr<const Exchange> exchange;
-  virtual ~FinancialInstrument() = default;
-};
 
-std::shared_ptr<Exchange> exchange_from_symbol(SupportedExchanges symbol);
+
 } // namespace midas

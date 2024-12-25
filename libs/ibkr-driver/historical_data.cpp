@@ -21,6 +21,10 @@ void ibkr::internal::requestHistoricalData(
     break;
   case midas::SubscriptionDurationUnits::Seconds:
     historicalDuration << " S";
+    break;
+  case midas::SubscriptionDurationUnits::Days:
+    historicalDuration << " D";
+    break;
   }
   const auto durationStr = historicalDuration.str();
   barSize = historicalBarSize(start);
@@ -30,14 +34,9 @@ void ibkr::internal::requestHistoricalData(
 }
 
 ibkr::internal::BarSizeSetting ibkr::internal::historicalBarSize(
-    const midas::HistorySubscriptionStartPoint &start) {
-  if (start.unit == midas::SubscriptionDurationUnits::Years) {
-    return {.settingString = "1 min", .sizeSeconds = 60};
-  } else if (start.unit == midas::SubscriptionDurationUnits::Seconds) {
-    return {.settingString = "5 secs", .sizeSeconds = 5};
-  } else {
-    return {.settingString = "30 secs", .sizeSeconds = 30};
-  }
+    const midas::HistorySubscriptionStartPoint &start [[maybe_unused]]) {
+  // always use 5 seconds so that we can downsample later if we want. Giving us the greatest versatility
+  return {.settingString = "5 secs", .sizeSeconds = 5};
 }
 
 void ibkr::internal::Client::historicalDataEnd(

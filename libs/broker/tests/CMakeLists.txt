@@ -1,6 +1,5 @@
 
 SET(TEST_SRCS 
-exchange_test.cpp 
 bar_test.cpp
 )
 

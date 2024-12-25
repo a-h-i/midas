@@ -13,7 +13,7 @@ public:
   static constexpr int fastMATimePeriod = 5;
   static constexpr int slowMATimePeriod = 15;
   static constexpr int volumeMATimePeriod = 15;
-  static constexpr int atrTimePeriod = 50;
+  static constexpr int atrTimePeriod = 21;
   static constexpr int rsiTimePeriod = 6;
 
   static constexpr int macdFastPeriod = 6, macdSlowPeriod = 13,

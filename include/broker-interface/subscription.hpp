@@ -18,6 +18,7 @@ enum class SubscriptionDurationUnits {
   Years,
   Months,
   Seconds,
+  Days,
 };
 
 inline std::string to_string(SubscriptionDurationUnits unit) {
@@ -28,7 +29,10 @@ inline std::string to_string(SubscriptionDurationUnits unit) {
     return "Months";
   case midas::SubscriptionDurationUnits::Seconds:
     return "Seconds";
+  case SubscriptionDurationUnits::Days:
+    return "Days";
   }
+
   throw std::runtime_error("Unknown unit");
 }
 

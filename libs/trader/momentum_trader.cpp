@@ -85,9 +85,9 @@ void MomentumTrader::decide() {
   bool bearishMACD = macd[macdOutSize - 1] < macdSignal[macdOutSize - 1];
   bool bearishRSI = rsi[rsiOutSize - 1] > 25;
 
-  double currentAtr = atrMA[atrMAOutSize - 1];
+  double currentAtr = atr[atrOutSize - 1];
 
-  bool atrAcceptable = currentAtr > 0.15;
+  bool atrAcceptable = currentAtr >= 0.05;
   bool volumeAcceptable = volumes.back() > volumeMa[volumeMAOutSize - 1];
 
   double entryPrice = (highs.back() - lows.back()) * 0.7 + lows.back();

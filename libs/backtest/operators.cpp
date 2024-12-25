@@ -19,3 +19,9 @@ BacktestInterval literals::operator""_seconds(unsigned long long durationTime) {
   .duration = {
   .unit = SubscriptionDurationUnits::Seconds, .quantity = static_cast<unsigned int>(durationTime)}};
 }
+
+BacktestInterval literals::operator""_days(unsigned long long durationTime) {
+  return {
+    .duration = {
+      .unit = SubscriptionDurationUnits::Days, .quantity = static_cast<unsigned int>(durationTime)}};
+}

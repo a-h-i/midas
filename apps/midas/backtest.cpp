@@ -12,7 +12,7 @@
 using namespace midas::backtest::literals;
 
 void backtestMomentumTrader() {
-  midas::InstrumentEnum instrument = midas::InstrumentEnum::MicroNasdaqFutures;
+  midas::InstrumentEnum instrument = midas::InstrumentEnum::TSLA;
   auto traderFactory = [instrument](std::shared_ptr<midas::DataStream> streamPtr,
                           std::shared_ptr<midas::OrderManager> orderManager) {
     return midas::trader::momentumExploit(
@@ -30,7 +30,7 @@ void backtestMomentumTrader() {
     }
   });
   midas::backtest::BacktestResult results = midas::backtest::performBacktest(
-      instrument, 86400_seconds, traderFactory,
+      instrument, 10_days, traderFactory,
       *broker);
   std::cout << "Trade Summary"
             << "\nnumber entry orders: "

@@ -26,6 +26,7 @@ namespace literals {
 BacktestInterval operator""_years(unsigned long long durationTime);
 BacktestInterval operator""_months(unsigned long long durationTime);
 BacktestInterval operator""_seconds(unsigned long long durationTime);
+BacktestInterval operator""_days(unsigned long long durationTime);
 
 }; // namespace literals
 
