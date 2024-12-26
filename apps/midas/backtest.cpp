@@ -29,8 +29,9 @@ void backtestMomentumTrader() {
     auto traderFactory =
         [instrument](std::shared_ptr<midas::DataStream> streamPtr,
                      std::shared_ptr<midas::OrderManager> orderManager) {
-          return midas::trader::momentumExploit(streamPtr, orderManager,
-                                                instrument, midas::getDefaultEntryQuantity(instrument));
+          return midas::trader::momentumExploit(
+              streamPtr, orderManager, instrument,
+              midas::getDefaultEntryQuantity(instrument));
         };
     midas::backtest::BacktestResult results = midas::backtest::performBacktest(
         instrument, 10_days, traderFactory, *broker);

@@ -1,6 +1,6 @@
 
-SET(TEST_SRCS 
-simulation_order_transmitter_tests.cpp
+SET(TEST_SRCS
+        simulation_order_transmitter_tests.cpp
 )
 
 

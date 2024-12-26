@@ -20,8 +20,9 @@ int calcMonthsOffset(int currentQuarter, int currentMonth) {
   return monthsOffset;
 }
 
-Contract
-ibkr::internal::build_contract(const midas::InstrumentEnum &instrument, const std::function<boost::gregorian::date ()> &getToday) {
+Contract ibkr::internal::build_contract(
+    const midas::InstrumentEnum &instrument,
+    const std::function<boost::gregorian::date()> &getToday) {
   Contract contract;
   auto today = getToday();
 
@@ -35,11 +36,10 @@ ibkr::internal::build_contract(const midas::InstrumentEnum &instrument, const st
           .year_month_day();
 
   if (contractLastTradeMonth.month == currentMonth) {
-    currentQuarter = (currentQuarter  % 4) + 1;
-    contractLastTradeMonth =
-      (today +
-       boost::gregorian::months(calcMonthsOffset(currentQuarter, currentMonth)))
-          .year_month_day();
+    currentQuarter = (currentQuarter % 4) + 1;
+    contractLastTradeMonth = (today + boost::gregorian::months(calcMonthsOffset(
+                                          currentQuarter, currentMonth)))
+                                 .year_month_day();
   }
 
   switch (instrument) {
@@ -66,7 +66,6 @@ ibkr::internal::build_contract(const midas::InstrumentEnum &instrument, const st
         std::format("{}{:0>2}", static_cast<int>(contractLastTradeMonth.year),
                     contractLastTradeMonth.month.as_number());
     break;
-
   }
   case midas::InstrumentEnum::NVDA: {
     contract.symbol = "NVDA";

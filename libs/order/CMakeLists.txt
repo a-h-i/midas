@@ -2,12 +2,12 @@ file(GLOB HEADER_FILES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/include/broker-i
 
 
 set(SOURCE_LIST
-  order.cpp
-  simple_order.cpp
-  bracketed_order.cpp
-  operators.cpp
-  summary_tracker.cpp
-  order_printer.cpp
+        order.cpp
+        simple_order.cpp
+        bracketed_order.cpp
+        operators.cpp
+        summary_tracker.cpp
+        order_printer.cpp
 )
 
 add_library(order ${SOURCE_LIST} ${HEADER_FILES})

@@ -1,6 +1,6 @@
 
-SET(TEST_SRCS 
-bar_test.cpp
+SET(TEST_SRCS
+        bar_test.cpp
 )
 
 add_executable(broker_tests ${TEST_SRCS})

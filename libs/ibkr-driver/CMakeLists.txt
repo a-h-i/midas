@@ -2,21 +2,21 @@
 file(GLOB HEADER_FILES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/include/broker/*.hpp")
 file(GLOB INTERNAL_HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/ibkr/internal/*.hpp")
 
-set(SOURCE_LIST 
-  client.cpp errors.cpp order.cpp 
-  account.cpp contract.cpp
-  ticks.cpp
-  build_contracts.cpp
-  connectivity_state.cpp
-  subscriptions.cpp
-  bar_conversion.cpp
-  driver.cpp
-  active_sub_state.cpp
-  order_manager.cpp
-  transform_order.cpp
-  historical_data.cpp
-  native_order.cpp
-  order_execution.cpp
+set(SOURCE_LIST
+        client.cpp errors.cpp order.cpp
+        account.cpp contract.cpp
+        ticks.cpp
+        build_contracts.cpp
+        connectivity_state.cpp
+        subscriptions.cpp
+        bar_conversion.cpp
+        driver.cpp
+        active_sub_state.cpp
+        order_manager.cpp
+        transform_order.cpp
+        historical_data.cpp
+        native_order.cpp
+        order_execution.cpp
 )
 add_library(ibkr_driver ${SOURCE_LIST} ${HEADER_FILES} ${INTERNAL_HEADERS})
 
@@ -28,8 +28,6 @@ target_compile_options(ibkr_driver PRIVATE -Wall -Wextra -Wpedantic)
 target_include_directories(ibkr_driver PUBLIC ../../include)
 # Internal headers
 target_include_directories(ibkr_driver PRIVATE include)
-
-
 
 
 # ibkr tws api
@@ -45,7 +43,6 @@ target_link_libraries(ibkr_driver PUBLIC Threads::Threads)
 
 find_package(TBB REQUIRED)
 target_link_libraries(ibkr_driver PUBLIC TBB::tbb)
-
 
 
 # Boost

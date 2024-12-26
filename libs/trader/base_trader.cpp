@@ -52,7 +52,8 @@ boost::signals2::connection midas::trader::Trader::connectDecisionParamsSlot(
 
 void midas::trader::Trader::handleOrderStatusChangeEvent(
     Order &order, Order::StatusChangeEvent event) {
-  DEBUG_LOG(*logger) << "Base trader handling order status change new state: " << event.newStatus;
+  DEBUG_LOG(*logger) << "Base trader handling order status change new state: "
+                     << event.newStatus;
   std::optional<TradeSummary> updatedSummary;
   if (event.newStatus == OrderStatusEnum::Filled ||
       event.newStatus == OrderStatusEnum::Cancelled) {
@@ -77,7 +78,8 @@ void midas::trader::Trader::handleOrderStatusChangeEvent(
     } else {
       ERROR_LOG(*logger) << "Base trader could not find order";
     }
-  } { 
+  }
+  {
     DEBUG_LOG(*logger) << "None accepted or filled state " << event.newStatus;
   }
   if (updatedSummary.has_value()) {

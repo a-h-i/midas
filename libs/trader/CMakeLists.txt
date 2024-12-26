@@ -1,10 +1,10 @@
 
 SET(SOURCE_LIST
 
-  momentum_trader.cpp
-  trader_data.cpp
-  base_trader.cpp
-  momentum_factory.cpp
+        momentum_trader.cpp
+        trader_data.cpp
+        base_trader.cpp
+        momentum_factory.cpp
         stock_momentum_trader.cpp
 )
 
@@ -19,7 +19,6 @@ target_include_directories(trader PRIVATE ${TA_INCLUDE_DIR})
 
 find_package(TBB REQUIRED)
 target_link_libraries(trader PUBLIC TBB::tbb)
-
 
 
 target_link_libraries(trader PRIVATE ta-lib)
