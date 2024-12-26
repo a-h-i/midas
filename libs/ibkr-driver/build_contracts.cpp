@@ -88,6 +88,9 @@ Contract ibkr::internal::build_contract(
     contract.secType = "FUT";
     contract.multiplier = "5";
     contract.tradingClass = "M2K";
+    contract.lastTradeDateOrContractMonth =
+       std::format("{}{:0>2}", static_cast<int>(contractLastTradeMonth.year),
+                   contractLastTradeMonth.month.as_number());
     break;
   }
   default:

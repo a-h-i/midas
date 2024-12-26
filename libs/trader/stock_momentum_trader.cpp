@@ -11,7 +11,7 @@ std::size_t midas::trader::StockMomentumTrader::decideEntryQuantity() {
 std::pair<double, double>
   midas::trader::StockMomentumTrader::decideProfitAndStopLossLevels(double entryPrice, midas::OrderDirection orderDirection) {
   double profitOffset = 0.75;
-  double stopOffset = -2.25;
+  double stopOffset = -3.25;
   if (orderDirection == midas::OrderDirection::SELL) {
     profitOffset *= -1;
     stopOffset *= -1;
