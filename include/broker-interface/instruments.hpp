@@ -11,8 +11,26 @@ namespace midas {
 /**
  * Not all instruments are supported
  */
-enum InstrumentEnum { MicroNasdaqFutures, MicroSPXFutures, NVDA, TSLA };
+enum InstrumentEnum {
+  MicroNasdaqFutures,
+  MicroSPXFutures,
+  NVDA,
+  TSLA,
+  MicroRussel
+};
 
+inline std::size_t getDefaultEntryQuantity(InstrumentEnum instrument) {
+  switch (instrument) {
+  case MicroNasdaqFutures:
+  case MicroSPXFutures:
+  case MicroRussel:
+    return 2;
+  case NVDA:
+  case TSLA:
+    return 100;
+  }
+  throw std::runtime_error("Unknown instrument enum");
+}
 
 enum SupportedCurrencies { USD };
 
@@ -34,6 +52,8 @@ inline std::string operator+(const char *lhs, InstrumentEnum instrument) {
   case TSLA:
     instrumentStr = "TSLA";
     break;
+  case MicroRussel:
+    instrumentStr = "M2k";
   }
 
   return lhs + instrumentStr;
@@ -60,7 +80,6 @@ struct TradingHours {
   std::optional<boost::local_time::local_time_period> extended_period;
 };
 
-
 template <typename CharT, typename TraitsT>
 std::basic_ostream<CharT, TraitsT> &
 operator<<(std::basic_ostream<CharT, TraitsT> &stream,
@@ -72,9 +91,5 @@ operator<<(std::basic_ostream<CharT, TraitsT> &stream,
   }
   return stream;
 }
-
-
-
-
 
 } // namespace midas

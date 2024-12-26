@@ -24,7 +24,8 @@ TraderContext::TraderContext(std::atomic<bool> *stopProcessingPtr,
                              midas::InstrumentEnum instrument)
     : streamPtr(new midas::DataStream(5)),
       trader(midas::trader::momentumExploit(streamPtr, context->orderManager,
-                                            instrument)) {
+                                            instrument,
+                                            midas::getDefaultEntryQuantity(instrument))) {
   // Subscribe to data stream
   auto subscriptionDataHandler =
       [this]([[maybe_unused]] const midas::Subscription &sub, midas::Bar bar) {

@@ -66,20 +66,30 @@ ibkr::internal::build_contract(const midas::InstrumentEnum &instrument, const st
         std::format("{}{:0>2}", static_cast<int>(contractLastTradeMonth.year),
                     contractLastTradeMonth.month.as_number());
     break;
-    case midas::InstrumentEnum::NVDA: {
-      contract.symbol = "NVDA";
-      contract.secType = "STK";
-      contract.currency = "USD";
-      contract.exchange = "SMART";
-      break;
-    }
-    case midas::InstrumentEnum::TSLA: {
-      contract.symbol = "TSLA";
-      contract.secType = "STK";
-      contract.currency = "USD";
-      contract.exchange = "SMART";
-      break;
-    }
+
+  }
+  case midas::InstrumentEnum::NVDA: {
+    contract.symbol = "NVDA";
+    contract.secType = "STK";
+    contract.currency = "USD";
+    contract.exchange = "SMART";
+    break;
+  }
+  case midas::InstrumentEnum::TSLA: {
+    contract.symbol = "TSLA";
+    contract.secType = "STK";
+    contract.currency = "USD";
+    contract.exchange = "SMART";
+    break;
+  }
+  case midas::InstrumentEnum::MicroRussel: {
+    contract.symbol = "M2k";
+    contract.exchange = "CME";
+    contract.currency = "USD";
+    contract.secType = "FUT";
+    contract.multiplier = "5";
+    contract.tradingClass = "M2K";
+    break;
   }
   default:
     throw std::runtime_error("Unsupported future: " +

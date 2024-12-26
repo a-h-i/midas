@@ -5,7 +5,7 @@
 
 
 std::size_t midas::trader::StockMomentumTrader::decideEntryQuantity() {
-  return 100;
+  return entryQuantity;
 }
 
 std::pair<double, double>

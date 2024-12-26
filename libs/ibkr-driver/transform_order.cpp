@@ -58,6 +58,7 @@ struct TransformationVisitor : public midas::OrderVisitor {
     nativeOrder.tif = "GTC"; // for now all our orders are GTC. We may want to
                              // make it configurable on midas orders later
     nativeOrder.outsideRth = true;
+    nativeOrder.conditionsIgnoreRth = true;
     nativeOrder.rule80A = "I";
     ibkrOrders.emplace_back(std::make_shared<ibkr::internal::NativeOrder>(
         nativeOrder, order, logger));

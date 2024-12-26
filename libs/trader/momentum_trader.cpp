@@ -15,17 +15,17 @@ using namespace midas::trader;
 MomentumTrader::MomentumTrader(
     const std::shared_ptr<midas::DataStream> &source,
     const std::shared_ptr<midas::OrderManager> &orderManager,
-    midas::InstrumentEnum instrument,
+    midas::InstrumentEnum instrument, std::size_t entryQuantity,
     const std::shared_ptr<logging::thread_safe_logger_t> &logger)
-    : MomentumTrader(100, source, orderManager, instrument, logger) {}
+    : MomentumTrader(100, source, orderManager, instrument, entryQuantity, logger) {}
 
 MomentumTrader::MomentumTrader(
     std::size_t bufferSize, const std::shared_ptr<midas::DataStream> &source,
     const std::shared_ptr<midas::OrderManager> &orderManager,
-    midas::InstrumentEnum instrument,
+    midas::InstrumentEnum instrument, std::size_t entryQuantity,
     const std::shared_ptr<logging::thread_safe_logger_t> &logger)
     : Trader(bufferSize, 5, source, orderManager, logger),
-      instrument(instrument) {
+      instrument(instrument), entryQuantity(entryQuantity) {
   closePrices.reserve(data.lookBackSize);
   volumes.reserve(data.lookBackSize);
   highs.reserve(data.lookBackSize);
@@ -132,7 +132,7 @@ void MomentumTrader::decide() {
   }
 }
 
-std::size_t MomentumTrader::decideEntryQuantity() { return 2; }
+std::size_t MomentumTrader::decideEntryQuantity() { return entryQuantity; }
 
 std::pair<double, double>
 MomentumTrader::decideProfitAndStopLossLevels(double entryPrice,

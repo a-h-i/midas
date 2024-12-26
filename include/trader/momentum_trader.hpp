@@ -39,7 +39,7 @@ private:
 public:
   MomentumTrader(const std::shared_ptr<midas::DataStream> &source,
                  const std::shared_ptr<midas::OrderManager> &orderManager,
-                 midas::InstrumentEnum instrument,
+                 midas::InstrumentEnum instrument, std::size_t entryQuantity,
                  const std::shared_ptr<logging::thread_safe_logger_t> &logger);
 
   virtual ~MomentumTrader() = default;
@@ -50,13 +50,15 @@ protected:
   MomentumTrader(std::size_t bufferSize,
                  const std::shared_ptr<midas::DataStream> &source,
                  const std::shared_ptr<midas::OrderManager> &orderManager,
-                 midas::InstrumentEnum instrument,
+                 midas::InstrumentEnum instrument, std::size_t entryQuantity,
                  const std::shared_ptr<logging::thread_safe_logger_t> &logger);
+  const std::size_t entryQuantity;
   /**
    *
    * @param entryPrice decided entry price
    * @param direction are we going long or short
    * @return pair where first is profit limit and second is stop loss
+   *
    */
   virtual std::pair<double, double>
   decideProfitAndStopLossLevels(double entryPrice, OrderDirection direction);
@@ -70,9 +72,9 @@ public:
   StockMomentumTrader(
       const std::shared_ptr<midas::DataStream> &source,
       const std::shared_ptr<midas::OrderManager> &orderManager,
-      midas::InstrumentEnum instrument,
+      midas::InstrumentEnum instrument, std::size_t entryQuantity,
       const std::shared_ptr<logging::thread_safe_logger_t> &logger)
-      : MomentumTrader(100, source, orderManager, instrument, logger) {}
+      : MomentumTrader(100, source, orderManager, instrument, entryQuantity, logger) {}
 
 protected:
   std::size_t decideEntryQuantity() override;
