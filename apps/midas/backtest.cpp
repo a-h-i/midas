@@ -12,13 +12,9 @@
 using namespace midas::backtest::literals;
 
 void backtestMomentumTrader() {
-  midas::InstrumentEnum instrument = midas::InstrumentEnum::TSLA;
-  auto traderFactory = [instrument](std::shared_ptr<midas::DataStream> streamPtr,
-                          std::shared_ptr<midas::OrderManager> orderManager) {
-    return midas::trader::momentumExploit(
-        streamPtr, orderManager, instrument);
-  };
-
+  std::vector<midas::InstrumentEnum> isntruments{
+      midas::InstrumentEnum::MicroSPXFutures, midas::InstrumentEnum::NVDA,
+      midas::InstrumentEnum::TSLA, midas::InstrumentEnum::MicroNasdaqFutures};
   boost::asio::ip::tcp::endpoint ibkrServer(
       boost::asio::ip::make_address("127.0.0.1"), 7496);
   std::unique_ptr<midas::Broker> broker(new ibkr::Driver(ibkrServer));
@@ -29,25 +25,32 @@ void backtestMomentumTrader() {
       broker->processCycle();
     }
   });
-  midas::backtest::BacktestResult results = midas::backtest::performBacktest(
-      instrument, 10_days, traderFactory,
-      *broker);
-  std::cout << "Trade Summary"
-            << "\nnumber entry orders: "
-            << results.summary.numberOfEntryOrdersTriggered
-            << "\nnumber of stop loss orders triggered "
-            << results.summary.numberOfStopLossTriggered
-            << "\nnumber of profit takers triggered "
-            << results.summary.numberOfProfitTakersTriggered
-            << "\nsuccess ratio " << results.summary.successRatio
-            << "\nmax down turn " << results.summary.maxDownTurn
-            << "\nmax up turn " << results.summary.maxUpTurn
-            << "\nending balance " << results.summary.endingBalance
-            << std::endl;
-  std::ofstream sourceCsv("source.csv", std::ios::out),
-      downSampledCsv("down_sampled.csv", std::ios::out),
-      orderDetails("orders.txt", std::ios::out);
-  sourceCsv << *results.originalStream;
-  orderDetails << results.orderDetails;
+  for (auto instrument : isntruments) {
+    auto traderFactory =
+        [instrument](std::shared_ptr<midas::DataStream> streamPtr,
+                     std::shared_ptr<midas::OrderManager> orderManager) {
+          return midas::trader::momentumExploit(streamPtr, orderManager,
+                                                instrument);
+        };
+    midas::backtest::BacktestResult results = midas::backtest::performBacktest(
+        instrument, 10_days, traderFactory, *broker);
+    std::cout << "Trade Summary for " << instrument << "\nnumber entry orders: "
+              << results.summary.numberOfEntryOrdersTriggered
+              << "\nnumber of stop loss orders triggered "
+              << results.summary.numberOfStopLossTriggered
+              << "\nnumber of profit takers triggered "
+              << results.summary.numberOfProfitTakersTriggered
+              << "\nsuccess ratio " << results.summary.successRatio
+              << "\nmax down turn " << results.summary.maxDownTurn
+              << "\nmax up turn " << results.summary.maxUpTurn
+              << "\nending balance " << results.summary.endingBalance
+              << std::endl;
+    std::ofstream sourceCsv("source.csv", std::ios::out),
+        downSampledCsv("down_sampled.csv", std::ios::out),
+        orderDetails("orders.txt", std::ios::out);
+    sourceCsv << *results.originalStream;
+    orderDetails << results.orderDetails;
+  }
+
   driverWorkerTermination.store(true);
 }

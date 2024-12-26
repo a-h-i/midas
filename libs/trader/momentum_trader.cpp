@@ -87,10 +87,10 @@ void MomentumTrader::decide() {
 
   double currentAtr = atr[atrOutSize - 1];
 
-  bool atrAcceptable = currentAtr >= 0.05;
+  bool atrAcceptable = true;
   bool volumeAcceptable = volumes.back() > volumeMa[volumeMAOutSize - 1];
 
-  double entryPrice = (highs.back() - lows.back()) * 0.7 + lows.back();
+  double entryPrice = vwaps.back();
   entryPrice = std::round(entryPrice * roundingCoeff) / roundingCoeff;
 
   const std::size_t entryQuantity = decideEntryQuantity();

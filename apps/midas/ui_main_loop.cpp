@@ -81,7 +81,7 @@ void ui::startTerminalUI(midas::SignalHandler &globalSignalHandler) {
           auto traderContainer = Container::Vertical({traderSummaries});
           auto mainView = Container::Vertical({
               traderContainer | flex,
-              pauseBtn,
+              pauseBtn | flex,
 
           });
           auto traderWindow = Renderer([&traderContainer]() {
