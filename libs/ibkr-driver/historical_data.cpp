@@ -35,8 +35,12 @@ void ibkr::internal::requestHistoricalData(
 
 ibkr::internal::BarSizeSetting ibkr::internal::historicalBarSize(
     const midas::HistorySubscriptionStartPoint &start [[maybe_unused]]) {
-  // always use 5 seconds so that we can downsample later if we want. Giving us the greatest versatility
-  return {.settingString = "5 secs", .sizeSeconds = 5};
+  if (start.unit == midas::SubscriptionDurationUnits::Years) {
+    return {.settingString = "1 days", .sizeSeconds = 24 * 60 * 60};
+  } else {
+    // always use 5 seconds so that we can downsample later if we want. Giving us the greatest versatility
+    return {.settingString = "5 secs", .sizeSeconds = 5};
+  }
 }
 
 void ibkr::internal::Client::historicalDataEnd(
