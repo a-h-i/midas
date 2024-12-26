@@ -14,7 +14,7 @@ using namespace midas::backtest::literals;
 void backtestMomentumTrader() {
   std::vector<midas::InstrumentEnum> isntruments{
       midas::InstrumentEnum::MicroSPXFutures, midas::InstrumentEnum::NVDA,
-      midas::InstrumentEnum::TSLA, midas::InstrumentEnum::MicroNasdaqFutures};
+      midas::InstrumentEnum::TSLA, midas::InstrumentEnum::MicroNasdaqFutures, midas::InstrumentEnum::MicroRussel};
   boost::asio::ip::tcp::endpoint ibkrServer(
       boost::asio::ip::make_address("127.0.0.1"), 7496);
   std::unique_ptr<midas::Broker> broker(new ibkr::Driver(ibkrServer));
