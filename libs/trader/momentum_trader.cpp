@@ -194,10 +194,10 @@ MomentumTrader::decideProfitAndStopLossLevels(double entryPrice,
   double takeProfitLimit = entryPrice + profitOffset;
   double stopLossLimit = entryPrice + stopLossOffset;
 
-  if (std::fmodl(takeProfitLimit, 5) == 0) {
+  if (std::fmod(takeProfitLimit, 5) == 0) {
     takeProfitLimit -= 0.25;
   }
-  if (std::fmodl(stopLossLimit, 5) == 0) {
+  if (std::fmod(stopLossLimit, 5) == 0) {
     stopLossLimit += 0.25;
   };
 
