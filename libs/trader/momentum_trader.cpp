@@ -17,7 +17,8 @@ MomentumTrader::MomentumTrader(
     const std::shared_ptr<midas::OrderManager> &orderManager,
     midas::InstrumentEnum instrument, std::size_t entryQuantity,
     const std::shared_ptr<logging::thread_safe_logger_t> &logger)
-    : MomentumTrader(100, source, orderManager, instrument, entryQuantity, logger) {}
+    : MomentumTrader(100, source, orderManager, instrument, entryQuantity,
+                     logger) {}
 
 MomentumTrader::MomentumTrader(
     std::size_t bufferSize, const std::shared_ptr<midas::DataStream> &source,
@@ -56,6 +57,66 @@ void MomentumTrader::calculateTechnicalAnalysis() {
          &atrMAOutSize, atrMA.data());
   TA_RSI(0, closePrices.size() - 1, closePrices.data(), rsiTimePeriod,
          &rsiOutBegin, &rsiOutSize, rsi.data());
+  TA_BBANDS(0, closePrices.size() - 1, closePrices.data(), 20, 2.0, 2.0,
+            TA_MAType_SMA, &bbBegIndex, &bbOutSize, bbUpper.data(),
+            bbMiddle.data(), bbLower.data());
+}
+
+MomentumTrader::candle_decision_t
+MomentumTrader::decideCandle(std::size_t candleEndOffset) {
+  int sizeOffset = -1 - candleEndOffset;
+  
+  bool bullishMA = fastMa[fastMAOutSize + sizeOffset] >
+                   slowMa[slowMAOutSize + sizeOffset];
+  bool bullishMACD = macd[macdOutSize + sizeOffset] >
+                     macdSignal[macdOutSize + sizeOffset];
+  bool bullishRSI = rsi[rsiOutSize + sizeOffset] < 65;
+
+  bool bearishMA = fastMa[fastMAOutSize + sizeOffset] <
+                   slowMa[slowMAOutSize + sizeOffset];
+  bool bearishMACD = macd[macdOutSize + sizeOffset] <
+                     macdSignal[macdOutSize + sizeOffset];
+  bool bearishRSI = rsi[rsiOutSize + sizeOffset] > 25;
+
+  bool volumeAcceptable = volumes[volumes.size() + sizeOffset] >
+                          volumeMa[volumeMAOutSize + sizeOffset];
+  bool aboveUpper = closePrices[closePrices.size() + sizeOffset] >= bbUpper[bbOutSize + sizeOffset];
+  bool belowLower = closePrices[closePrices.size() + sizeOffset] <= bbLower[bbOutSize + sizeOffset];
+  
+  double bullishIndicator = static_cast<double>(bullishMA) + bullishMACD +
+                            bullishRSI + volumeAcceptable;
+  double bearishIndicator = static_cast<double>(bearishMA) + bearishMACD +
+                            bearishRSI + volumeAcceptable;
+  if (aboveUpper) {
+    bearishIndicator += 1;
+    bullishIndicator = 0;
+  }
+  if (belowLower) {
+    bearishIndicator = 0;
+    bullishIndicator += 1;
+  }
+
+
+  if (bullishIndicator >= 4) {
+    ++bullishCandlesinARow;
+  } else {
+    bullishCandlesinARow.store(0);
+  }
+  if (bearishIndicator >= 4) {
+    ++bearishCandlesInARow;
+  } else {
+    bearishCandlesInARow.store(0);
+  }
+
+  bullishIndicator += static_cast<double>(bullishCandlesinARow) / 3;
+  bearishIndicator += static_cast<double>(bearishCandlesInARow) / 3;
+
+  return {
+      .bullishIndicator = bullishIndicator,
+      .bearishIndicator = bearishIndicator,
+      .maxBullish = 5,
+      .maxBearish = 5,
+  };
 }
 
 void MomentumTrader::decide() {
@@ -69,7 +130,7 @@ void MomentumTrader::decide() {
     } else {
       statusString = "Not enough data";
     }
-    Trader::decision_params_t decisionParams{{statusString, true}};
+    Trader::decision_params_t decisionParams{{statusString, "true"}};
     decisionParamsSignal(decisionParams);
     // We do not have enough data to satisfy look back requirements
     return;
@@ -77,54 +138,35 @@ void MomentumTrader::decide() {
 
   calculateTechnicalAnalysis();
 
-  bool bullishMA = fastMa[fastMAOutSize - 1] > slowMa[slowMAOutSize - 1];
-  bool bullishMACD = macd[macdOutSize - 1] > macdSignal[macdOutSize - 1];
-  bool bullishRSI = rsi[rsiOutSize - 1] < 65;
-
-  bool bearishMA = fastMa[fastMAOutSize - 1] < slowMa[slowMAOutSize - 1];
-  bool bearishMACD = macd[macdOutSize - 1] < macdSignal[macdOutSize - 1];
-  bool bearishRSI = rsi[rsiOutSize - 1] > 25;
-
-  double currentAtr = atr[atrOutSize - 1];
-
-  bool atrAcceptable = true;
-  bool volumeAcceptable = volumes.back() > volumeMa[volumeMAOutSize - 1];
-
-  double entryPrice = vwaps.back();
-  entryPrice = std::round(entryPrice * roundingCoeff) / roundingCoeff;
+  double entryPrice = decideEntryPrice();
 
   const std::size_t entryQuantity = decideEntryQuantity();
+  candle_decision_t candle_decision;
+  for (int i = 5; i >= 0; i -= 1) {
+    candle_decision = decideCandle(i);
+  }
 
   Trader::decision_params_t decisionParams{
-      {"Bullish MA", bullishMA},
-      {"Bullish MACD", bullishMACD},
-      {"Bullish Volume", volumeAcceptable},
-      {"Bullish RSI", bullishRSI},
-      {"Bearish MA", bearishMA},
-      {"Bearish MACD", bearishMACD},
-      {"Bearish RSI", bearishRSI},
-      {"ATR acceptable", atrAcceptable}};
+      {{"Bullish Indicator", std::to_string(candle_decision.bullishIndicator)},
+       {"Bearish Indicator",
+        std::to_string(candle_decision.bearishIndicator)}}};
   decisionParamsSignal(decisionParams);
 
-  double bullishIndicator = static_cast<double>(bullishMA) + bullishMACD +
-                            bullishRSI + volumeAcceptable +
-                            atrAcceptable;
-  double bearishIndicator = static_cast<double>(bearishMA) + bearishMACD +
-                            bearishRSI + volumeAcceptable +
-                            atrAcceptable;
-  bool enterLong = bullishIndicator == 5;
-  bool enterShort = bearishIndicator == 5;
+  bool enterLong =
+      candle_decision.bullishIndicator == candle_decision.maxBullish;
+  bool enterShort =
+      candle_decision.bearishIndicator == candle_decision.maxBearish;
 
   if (enterLong) {
-    INFO_LOG(*logger) << "entering long bracket atr: " << currentAtr
+    INFO_LOG(*logger) << "entering long bracket "
                       << " bar time: " << timestamps.back();
     const auto bracketBoundaries =
         decideProfitAndStopLossLevels(entryPrice, OrderDirection::BUY);
     enterBracket(instrument, entryQuantity, midas::OrderDirection::BUY,
                  entryPrice, bracketBoundaries.second, bracketBoundaries.first);
   } else if (enterShort) {
-    INFO_LOG(*logger) << "entering short bracket atr: " << currentAtr
-                     << " bar time: " << timestamps.back();
+    INFO_LOG(*logger) << "entering short bracket "
+                      << " bar time: " << timestamps.back();
     const auto bracketBoundaries =
         decideProfitAndStopLossLevels(entryPrice, OrderDirection::SELL);
     enterBracket(instrument, entryQuantity, midas::OrderDirection::SELL,
@@ -132,13 +174,18 @@ void MomentumTrader::decide() {
   }
 }
 
+double MomentumTrader::decideEntryPrice() {
+  double entryPrice = vwaps.back();
+  return std::round(entryPrice * roundingCoeff) / roundingCoeff;
+}
+
 std::size_t MomentumTrader::decideEntryQuantity() { return entryQuantity; }
 
 std::pair<double, double>
 MomentumTrader::decideProfitAndStopLossLevels(double entryPrice,
                                               OrderDirection orderDirection) {
-  double profitOffset = 10;
-  double stopLossOffset = -50;
+  double profitOffset = 5;
+  double stopLossOffset = -15;
   if (orderDirection == OrderDirection::SELL) {
     profitOffset *= -1;
     stopLossOffset *= -1;
@@ -146,6 +193,13 @@ MomentumTrader::decideProfitAndStopLossLevels(double entryPrice,
 
   double takeProfitLimit = entryPrice + profitOffset;
   double stopLossLimit = entryPrice + stopLossOffset;
+
+  if (std::fmodl(takeProfitLimit, 5) == 0) {
+    takeProfitLimit -= 0.25;
+  }
+  if (std::fmodl(stopLossLimit, 5) == 0) {
+    stopLossLimit += 0.25;
+  };
 
   takeProfitLimit = std::round(takeProfitLimit * roundingCoeff) / roundingCoeff;
   stopLossLimit = std::round(stopLossLimit * roundingCoeff) / roundingCoeff;

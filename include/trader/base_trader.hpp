@@ -22,7 +22,7 @@ namespace midas::trader {
 class Trader {
 public:
   typedef boost::signals2::signal<void(TradeSummary)> trade_summary_signal_t;
-  typedef std::pair<std::string, bool> decision_param_t;
+  typedef std::pair<std::string, std::string> decision_param_t;
   typedef std::vector<decision_param_t> decision_params_t;
   typedef boost::signals2::signal<void(decision_params_t &)>
       decision_params_signal_t;

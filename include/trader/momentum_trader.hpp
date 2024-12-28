@@ -21,13 +21,17 @@ public:
   static constexpr int atrSmoothingPeriod = 9;
   static constexpr double commissionEstimatePerUnit = 0.25;
   static constexpr double roundingCoeff = 4; // minimum of .25 index moves
-private:
+protected:
+  std::atomic<int> bullishCandlesinARow{0}, bearishCandlesInARow{0};
+  struct candle_decision_t {
+    double bullishIndicator{-1}, bearishIndicator{-1}, maxBullish{0}, maxBearish{0};
+  };
   std::array<double, 100> slowMa, fastMa, volumeMa, atr, atrMA, macd,
-      macdSignal, macdHistogram, rsi;
+      macdSignal, macdHistogram, rsi, bbUpper, bbMiddle, bbLower;
   int slowMAOutBeg = 0, fastMAOutBeg = 0, volumeMAOutBegin = 0, atrOutBegin = 0,
       atrMAOutBegin = 0, macdOutBegin = 0, slowMAOutSize = 0, fastMAOutSize,
       volumeMAOutSize = 0, atrOutSize = 0, atrMAOutSize = 0, macdOutSize = 0,
-      rsiOutBegin = 0, rsiOutSize = 0;
+      rsiOutBegin = 0, rsiOutSize = 0, bbBegIndex = 0, bbOutSize = 0;
   const midas::InstrumentEnum instrument;
   std::vector<unsigned int> trades;
   std::vector<double> closePrices, volumes, highs, lows, opens, vwaps;
@@ -62,8 +66,14 @@ protected:
    */
   virtual std::pair<double, double>
   decideProfitAndStopLossLevels(double entryPrice, OrderDirection direction);
-
+  /**
+   *
+   * @param candleEndOffset offset from the end of array. 0 implies last element
+   * @return candle decision
+   */
+  virtual candle_decision_t decideCandle(std::size_t candleEndOffset);
   virtual std::size_t decideEntryQuantity();
+  virtual double decideEntryPrice();
   virtual void calculateTechnicalAnalysis();
 };
 
@@ -81,5 +91,6 @@ protected:
   std::pair<double, double>
   decideProfitAndStopLossLevels(double entryPrice,
                                 OrderDirection direction) override;
+  double decideEntryPrice() override;
 };
 } // namespace midas::trader

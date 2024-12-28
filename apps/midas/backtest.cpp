@@ -14,7 +14,8 @@ using namespace midas::backtest::literals;
 void backtestMomentumTrader() {
   std::vector<midas::InstrumentEnum> isntruments{
       midas::InstrumentEnum::MicroSPXFutures, midas::InstrumentEnum::NVDA,
-      midas::InstrumentEnum::TSLA, midas::InstrumentEnum::MicroNasdaqFutures, midas::InstrumentEnum::MicroRussel};
+      midas::InstrumentEnum::TSLA, midas::InstrumentEnum::MicroNasdaqFutures,
+      midas::InstrumentEnum::MicroRussel};
   boost::asio::ip::tcp::endpoint ibkrServer(
       boost::asio::ip::make_address("127.0.0.1"), 7496);
   std::unique_ptr<midas::Broker> broker(new ibkr::Driver(ibkrServer));
@@ -35,7 +36,8 @@ void backtestMomentumTrader() {
         };
     midas::backtest::BacktestResult results = midas::backtest::performBacktest(
         instrument, 10_days, traderFactory, *broker);
-    std::cout << "Trade Summary for " << instrument << "\nnumber entry orders: "
+    std::cout << "------------------------\n"
+              << "Trade Summary for " << instrument << "\nnumber entry orders: "
               << results.summary.numberOfEntryOrdersTriggered
               << "\nnumber of stop loss orders triggered "
               << results.summary.numberOfStopLossTriggered
@@ -45,7 +47,7 @@ void backtestMomentumTrader() {
               << "\nmax down turn " << results.summary.maxDownTurn
               << "\nmax up turn " << results.summary.maxUpTurn
               << "\nending balance " << results.summary.endingBalance
-              << std::endl;
+              << "\n------------------------" << std::endl;
     std::ofstream sourceCsv("source.csv", std::ios::out),
         downSampledCsv("down_sampled.csv", std::ios::out),
         orderDetails("orders.txt", std::ios::out);

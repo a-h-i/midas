@@ -15,8 +15,7 @@ using namespace std::chrono_literals;
 
 static void createTraders(std::list<TraderContext> &traders,
                           TradingContext *ctx, std::atomic<bool> *stop) {
-  auto instruments = {
-                      midas::InstrumentEnum::NVDA, midas::InstrumentEnum::TSLA};
+  auto instruments = {midas::InstrumentEnum::TSLA, midas::MicroNasdaqFutures};
   for (auto instrument : instruments) {
     traders.emplace_back(stop, 100 * 120, ctx, instrument);
   }

@@ -12,8 +12,8 @@ midas::BracketedOrder::BracketedOrder(
     std::shared_ptr<logging::thread_safe_logger_t> logger)
     : Order(quantity, direction, instrument, ExecutionType::Limit, logger) {
 
-  if ((direction == OrderDirection::BUY && profitPrice < entryPrice) ||
-      (direction == OrderDirection::SELL && profitPrice > entryPrice)) {
+  if ((direction == OrderDirection::BUY && profitPrice <= entryPrice) ||
+      (direction == OrderDirection::SELL && profitPrice >= entryPrice)) {
     // taking profit below requested  buy or above sale
     CRITICAL_LOG(*logger) << "Requested to attach profit taker to " << direction
                           << " type order with profit taker price of "
