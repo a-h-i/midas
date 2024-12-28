@@ -61,7 +61,8 @@ FetchContent_MakeAvailable(ftxui)
 ExternalProject_Get_Property(IntelFloatingPointDownload BINARY_DIR)
 SET(INTEL_BUILD_DIR ${BINARY_DIR})
 
-add_library(IntelFloatingPoint STATIC IMPORTED)
+add_library(IntelFloatingPoint STATIC IMPORTED
+        include/trader/mean_reversion_trader.hpp)
 set_target_properties(IntelFloatingPoint PROPERTIES IMPORTED_LOCATION ${INTEL_BUILD_DIR}/libbid.a)
 
 ExternalProject_Get_Property(TechnicalAnalysisDownload BINARY_DIR)
