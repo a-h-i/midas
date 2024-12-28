@@ -41,6 +41,7 @@ public:
   inline void copy(auto &trades, auto &highs, auto &lows, auto &opens,
                    auto &closes, auto &vwaps, auto &volumes, auto &timestamps) {
     std::scoped_lock buffersLock(buffersMutex);
+
     std::copy(std::execution::unseq, tradeCounts.begin(), tradeCounts.end(),
               std::back_inserter(trades));
 

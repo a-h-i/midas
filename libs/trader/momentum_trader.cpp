@@ -45,7 +45,7 @@ void MomentumTrader::calculateTechnicalAnalysis() {
   TA_EMA(0, closePrices.size() - 1, closePrices.data(), slowMATimePeriod,
          &slowMAOutBeg, &slowMAOutSize, slowMa.data());
 
-  TA_EMA(0, volumes.size() - 1, volumes.data(), volumeMATimePeriod,
+  TA_SMA(0, volumes.size() - 1, volumes.data(), volumeMATimePeriod,
          &volumeMAOutBegin, &volumeMAOutSize, volumeMa.data());
 
   TA_ATR(0, highs.size() - 1, highs.data(), lows.data(), closePrices.data(),
@@ -175,7 +175,7 @@ void MomentumTrader::decide() {
 }
 
 double MomentumTrader::decideEntryPrice() {
-  double entryPrice = vwaps.back();
+  double entryPrice = opens.back() + (highs.back() - lows.back()) / 2;
   return std::round(entryPrice * roundingCoeff) / roundingCoeff;
 }
 

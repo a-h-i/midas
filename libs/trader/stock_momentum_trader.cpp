@@ -11,17 +11,17 @@ std::size_t midas::trader::StockMomentumTrader::decideEntryQuantity() {
 std::pair<double, double>
   midas::trader::StockMomentumTrader::decideProfitAndStopLossLevels(double entryPrice, midas::OrderDirection orderDirection) {
   double profitOffset = 0.5;
-  double stopOffset = -3.25;
+  double stopOffset = -2.25;
   if (orderDirection == midas::OrderDirection::SELL) {
     profitOffset *= -1;
     stopOffset *= -1;
   }
   double takeProfitLimit = entryPrice + profitOffset;
   double stopLossLimit = entryPrice + stopOffset;
-  if (std::fmodl(takeProfitLimit, 5) == 0) {
+  if (std::fmod(takeProfitLimit, 5) == 0) {
     takeProfitLimit -= 0.25;
   }
-  if (std::fmodl(stopLossLimit, 5) == 0) {
+  if (std::fmod(stopLossLimit, 5) == 0) {
     stopLossLimit += 0.25;
   };
   takeProfitLimit = std::round(takeProfitLimit * roundingCoeff) / roundingCoeff;
@@ -30,5 +30,6 @@ std::pair<double, double>
 }
 
 double midas::trader::StockMomentumTrader::decideEntryPrice() {
-  return std::round(vwaps.back() * roundingCoeff) / roundingCoeff;
+  double entryPrice = opens.back() + (highs.back() - lows.back()) / 2;
+  return std::round(entryPrice * roundingCoeff) / roundingCoeff;
 }

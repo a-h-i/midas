@@ -14,4 +14,7 @@ std::unique_ptr<Trader>
 momentumExploit(std::shared_ptr<DataStream> source,
                 std::shared_ptr<midas::OrderManager> orderManager,
                 InstrumentEnum instrument, std::size_t entryQuantity);
+std::unique_ptr<Trader> meanReversion(std::shared_ptr<DataStream> source,
+                std::shared_ptr<midas::OrderManager> orderManager,
+                InstrumentEnum instrument, std::size_t entryQuantity);
 } // namespace midas::trader

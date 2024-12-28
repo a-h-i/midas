@@ -33,7 +33,11 @@ midas::trader::TraderData::~TraderData() {
 bool midas::trader::TraderData::ok() {
   std::scoped_lock lock(buffersMutex);
   // Depends on the vectors being kept at the same
-  return tradeCounts.size() >= lookBackSize;
+  return tradeCounts.size() >= lookBackSize && highs.size() >= lookBackSize &&
+         lows.size() >= lookBackSize && opens.size() >= lookBackSize &&
+         closes.size() >= lookBackSize && closes.size() >= lookBackSize &&
+         vwaps.size() >= lookBackSize && volumes.size() >= lookBackSize &&
+         timestamps.size() >= lookBackSize;
 }
 
 void midas::trader::TraderData::clear() {
