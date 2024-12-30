@@ -14,6 +14,7 @@
 
 namespace gui {
 class TraderWidget : public QWidget {
+  Q_OBJECT
 public:
   explicit TraderWidget(const std::shared_ptr<midas::TraderContext> &context);
   QString getName() const;
@@ -26,6 +27,8 @@ private:
 
 private slots:
   void slotPause();
+
+private:
   void refresh(midas::TradeSummary summary);
   QLabel *entryOrdersTriggered, *stopLossTriggered, *profitTakersTriggered,
       *successRatio, *hasOpenPosition, *isPaused;

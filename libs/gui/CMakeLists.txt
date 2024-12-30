@@ -5,6 +5,7 @@ set(SOURCE_LIST
         main_window.cpp
         new_trader_dialog.cpp
         trader_widget.cpp
+        backtest_widget.cpp
 )
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core)
 
@@ -16,5 +17,5 @@ target_compile_options(gui PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
 target_include_directories(gui PUBLIC ../../include)
 target_include_directories(gui PRIVATE ./include)
-target_link_libraries(gui PUBLIC Qt6::Widgets Qt6::Core trader broker)
+target_link_libraries(gui PUBLIC Qt6::Widgets Qt6::Core trader broker backtest)
 

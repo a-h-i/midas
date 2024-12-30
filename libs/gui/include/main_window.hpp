@@ -19,12 +19,13 @@ public:
   virtual ~MainWindow();
 
 private slots:
-  void newTrader();
+  void newActiveTrader();
+  void newBacktest();
 private:
   QTabWidget* traderTabs;
   std::list<std::shared_ptr<midas::TraderContext>> traders;
   std::atomic<bool> *quitSignal;
-  midas::TradingContext tradingContext;
+  std::shared_ptr<midas::TradingContext> tradingContext;
 
 };
 }
