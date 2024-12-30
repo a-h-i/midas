@@ -50,11 +50,13 @@ void TraderWidget::slotPause() {
 
 void TraderWidget::refresh(midas::TradeSummary summary) {
   std::scoped_lock lock(mutex);
-  entryOrdersTriggered->setText("Entry Orders: " +
-                                summary.numberOfEntryOrdersTriggered);
-  stopLossTriggered->setText("Stop Loss: " + summary.numberOfStopLossTriggered);
-  profitTakersTriggered->setText("Profit triggers: " +
-                                 summary.numberOfProfitTakersTriggered);
+  entryOrdersTriggered->setText(
+      "Entry Orders: " + QString::number(summary.numberOfEntryOrdersTriggered));
+  stopLossTriggered->setText(
+      "Stop Loss: " + QString::number(summary.numberOfStopLossTriggered));
+  profitTakersTriggered->setText(
+      "Profit triggers: " +
+      QString::number(summary.numberOfProfitTakersTriggered));
   successRatio->setText(
       "Ratio: " + QString::number(summary.successRatio * 100, 'f', 3) + "%");
   hasOpenPosition->setText("Open Position? " +

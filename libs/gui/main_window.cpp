@@ -15,6 +15,7 @@ gui::MainWindow::MainWindow(std::atomic<bool> *quitSignal)
     : quitSignal(quitSignal), tradingContext(std::make_shared<midas::TradingContext>(quitSignal)) {
   setMinimumSize(600, 400);
   traderTabs = new QTabWidget(this);
+  traderTabs->setTabsClosable(true);
   setCentralWidget(traderTabs);
   QMenu *menu = menuBar()->addMenu("Traders");
   QAction *newTraderAction = menu->addAction("New Active");
@@ -25,6 +26,11 @@ gui::MainWindow::MainWindow(std::atomic<bool> *quitSignal)
   QAction *newBacktestAction = menu->addAction("New Backtest");
   newBacktestAction->setStatusTip("Start a new backtest");
   connect(newBacktestAction, SIGNAL(triggered()), this, SLOT(newBacktest()));
+  connect(traderTabs, &QTabWidget::tabCloseRequested, this, [this, traderTabs](int index) {
+    QWidget *tab = traderTabs->widget(index);
+    traderTabs->removeTab(index);
+    delete tab; // Free the memory
+  });
 }
 
 void gui::MainWindow::newActiveTrader() {
