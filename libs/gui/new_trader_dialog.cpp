@@ -35,8 +35,11 @@ gui::NewTraderDialog::NewTraderDialog(QWidget *parent) : QDialog(parent) {
   layout->addWidget(entryQuantity);
 
   QPushButton *okButton = new QPushButton("OK", this);
+  QPushButton *cancelButton = new QPushButton("Cancel", this);
   layout->addWidget(okButton);
+  layout->addWidget(cancelButton);
   connect(okButton, SIGNAL(clicked()), this, SLOT(accept()));
+  connect(cancelButton, SIGNAL(clicked()), this, SLOT(reject()));
 }
 
 void gui::NewTraderDialog::accept() {
@@ -45,4 +48,9 @@ void gui::NewTraderDialog::accept() {
                   instrumentComboBox->currentText().toStdString())};
   this->data = data;
   QDialog::accept();
+}
+
+void gui::NewTraderDialog::reject() {
+  this->data.reset();
+  QDialog::reject();
 }

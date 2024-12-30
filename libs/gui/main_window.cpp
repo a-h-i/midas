@@ -20,7 +20,7 @@ gui::MainWindow::MainWindow(std::atomic<bool> *quitSignal)
   QAction *newTraderAction = menu->addAction("New Active");
   newTraderAction->setShortcut(QKeySequence::New);
   newTraderAction->setStatusTip("Create a new active trader");
-  connect(newTraderAction, SIGNAL(triggered()), this, SLOT(newTrader()));
+  connect(newTraderAction, SIGNAL(triggered()), this, SLOT(newActiveTrader()));
 
   QAction *newBacktestAction = menu->addAction("New Backtest");
   newBacktestAction->setStatusTip("Start a new backtest");
@@ -32,6 +32,9 @@ void gui::MainWindow::newActiveTrader() {
   dialog.exec();
 
   auto data = dialog.getData();
+  if (!data.has_value()) {
+    return;
+  }
   traders.emplace_back(std::make_shared<midas::TraderContext>(
       quitSignal, 100 * 120, tradingContext.get(), data->instrument,
       data->quantity));
@@ -43,8 +46,10 @@ void gui::MainWindow::newActiveTrader() {
 void gui::MainWindow::newBacktest() {
   NewTraderDialog dialog(this);
   dialog.exec();
-
   auto data = dialog.getData();
+  if (!data.has_value()) {
+    return;
+  }
  BacktestWidget *backtestWidget = new BacktestWidget(tradingContext, data->instrument, data->quantity, traderTabs);
   traderTabs->addTab(backtestWidget, backtestWidget->getName());
 }

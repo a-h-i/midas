@@ -9,7 +9,7 @@
 #include <QComboBox>
 #include <QDialog>
 #include <QLineEdit>
-#undef emit //tbb compatability
+#undef emit // tbb compatability
 namespace gui {
 class NewTraderDialog : public QDialog {
   Q_OBJECT
@@ -21,7 +21,9 @@ public:
     midas::InstrumentEnum instrument;
   };
   inline std::optional<data_t> getData() const { return data; }
-void accept() override;
+  void accept() override;
+  void reject() override;
+
 private:
   QComboBox *instrumentComboBox;
   QLineEdit *entryQuantity;

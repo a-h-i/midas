@@ -97,6 +97,7 @@ MomentumTrader::decideCandle(std::size_t candleEndOffset) {
   }
 
 
+
   if (bullishIndicator >= 4) {
     ++bullishCandlesinARow;
   } else {

@@ -35,7 +35,7 @@ void ibkr::internal::ConnectivityState::connect(
   // attempt to connect
   auto addressView = std::string(host.view());
   bool connected =
-      clientSocket->eConnect(addressView.c_str(), endpoint.port(), 1, false);
+      clientSocket->eConnect(addressView.c_str(), endpoint.port(), 5, false);
 
   if (!connected) {
     host << " port: " << endpoint.port();
