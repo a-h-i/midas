@@ -97,7 +97,6 @@ MomentumTrader::decideCandle(std::size_t candleEndOffset) {
   }
 
 
-
   if (bullishIndicator >= 4) {
     ++bullishCandlesinARow;
   } else {
@@ -154,9 +153,9 @@ void MomentumTrader::decide() {
   decisionParamsSignal(decisionParams);
 
   bool enterLong =
-      candle_decision.bullishIndicator == candle_decision.maxBullish;
+      candle_decision.bullishIndicator >= candle_decision.maxBullish;
   bool enterShort =
-      candle_decision.bearishIndicator == candle_decision.maxBearish;
+      candle_decision.bearishIndicator >= candle_decision.maxBearish;
 
   if (enterLong) {
     INFO_LOG(*logger) << "entering long bracket "

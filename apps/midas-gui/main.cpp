@@ -4,6 +4,8 @@
 #include "gui/gui.hpp"
 #include "logging/logging.hpp"
 
+#include <qlocale.h>
+
 int main(int argc, char **argv) {
   logging::initialize_logging();
   gui::start(argc, argv);
