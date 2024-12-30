@@ -4,6 +4,7 @@ set(SOURCE_LIST
         start_gui.cpp
         main_window.cpp
         new_trader_dialog.cpp
+        trader_widget.cpp
 )
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core)
 

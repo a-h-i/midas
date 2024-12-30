@@ -5,6 +5,7 @@
 #include "main_window.hpp"
 #include <QMenuBar>
 #include <new_trader_dialog.hpp>
+#include <trader_widget.hpp>
 #include <trader/trader.hpp>
 
 gui::MainWindow::MainWindow(std::atomic<bool> *quitSignal)
@@ -27,5 +28,7 @@ void gui::MainWindow::newTrader() {
   traders.emplace_back(std::make_shared<midas::TraderContext>(
       quitSignal, 100 * 120, &tradingContext, data->instrument,
       data->quantity));
+  TraderWidget *traderWidget = new TraderWidget(traders.back());
+  traderTabs->addTab(traderWidget, traderWidget->getName());
 }
 gui::MainWindow::~MainWindow() { quitSignal->store(true); }
