@@ -4,6 +4,7 @@ SET(SOURCE_LIST
         data_stream.cpp
         data_stream_export.cpp
         bar_import.cpp
+        broker_factory.cpp
 )
 
 add_library(broker ${SOURCE_LIST})

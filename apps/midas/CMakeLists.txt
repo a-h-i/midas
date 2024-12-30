@@ -3,11 +3,9 @@ SET(SOURCES_LIST
         ui_main_loop.cpp
         trader_view.cpp
         backtest.cpp
-        broker_factory.cpp
         profit_and_loss_window.cpp
         ui-component.cpp
         decision_params_view.cpp
-        trader_context.cpp
 )
 
 file(GLOB HEADER_FILES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/**/*.hpp")
@@ -30,3 +28,4 @@ target_link_libraries(midas PRIVATE trader)
 target_link_libraries(midas PRIVATE backtest)
 target_link_libraries(midas PRIVATE signal_handling)
 target_link_libraries(midas PRIVATE ftxui::screen ftxui::dom ftxui::component)
+target_link_libraries(midas PRIVATE gui)

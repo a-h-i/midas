@@ -28,7 +28,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: install tbb
+      - name: install deps
         run: | 
           sudo apt update
           sudo apt upgrade

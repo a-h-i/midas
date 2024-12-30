@@ -1,8 +1,9 @@
 #include "broker-interface/instruments.hpp"
-#include "broker/trader_context.hpp"
 #include "terminal-ui/profit_and_loss_window.hpp"
 #include "terminal-ui/teriminal.hpp"
 #include "terminal-ui/trader_view.hpp"
+#include "trader/trader_context.hpp"
+
 #include <boost/signals2/connection.hpp>
 #include <ftxui/component/component.hpp>
 #include <ftxui/component/component_options.hpp>
@@ -13,11 +14,12 @@
 using namespace ftxui;
 using namespace std::chrono_literals;
 
-static void createTraders(std::list<TraderContext> &traders,
-                          TradingContext *ctx, std::atomic<bool> *stop) {
+static void createTraders(std::list<midas::TraderContext> &traders,
+                          midas::TradingContext *ctx, std::atomic<bool> *stop) {
   auto instruments = {midas::InstrumentEnum::TSLA, midas::NVDA};
   for (auto instrument : instruments) {
-    traders.emplace_back(stop, 100 * 120, ctx, instrument);
+    traders.emplace_back(stop, 100 * 120, ctx, instrument,
+                         midas::getDefaultEntryQuantity(instrument));
   }
 }
 
@@ -31,10 +33,10 @@ void ui::startTerminalUI(midas::SignalHandler &globalSignalHandler) {
             [&quitLoop] { quitLoop.store(true); });
 
     // Create broker and driver
-    TradingContext tradingContext(&quitLoop);
+    midas::TradingContext tradingContext(&quitLoop);
     auto orderManager = tradingContext.orderManager;
     auto broker = tradingContext.broker;
-    std::list<TraderContext> traders;
+    std::list<midas::TraderContext> traders;
     createTraders(traders, &tradingContext, &quitLoop);
     ;
     ProfitAndLossWindow pnlWindow(*orderManager);

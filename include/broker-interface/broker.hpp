@@ -35,4 +35,7 @@ public:
       const HistorySubscriptionStartPoint &duration) const = 0;
   virtual std::shared_ptr<OrderManager> getOrderManager() = 0;
 };
+
+std::shared_ptr<midas::Broker> createIBKRBroker();
+
 } // namespace midas

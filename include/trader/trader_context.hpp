@@ -1,15 +1,16 @@
 #pragma once
 
-#include "broker-interface/broker.hpp"
-#include "broker-interface/instruments.hpp"
-#include "broker-interface/order.hpp"
-#include "data/data_stream.hpp"
-#include "trader/base_trader.hpp"
+#include "broker-interface/subscription.hpp"
+
 #include <atomic>
 #include <boost/signals2/connection.hpp>
+#include <data/data_stream.hpp>
 #include <memory>
 #include <thread>
+#include <trader/base_trader.hpp>
 
+namespace midas {
+class Broker;
 struct TradingContext {
   std::shared_ptr<midas::Broker> broker;
   std::shared_ptr<midas::OrderManager> orderManager;
@@ -27,5 +28,6 @@ struct TraderContext {
   std::shared_ptr<midas::Subscription> historicalSubscription,
       realtimeSubscription;
   TraderContext(std::atomic<bool> *, unsigned int numSecondsHistory,
-                TradingContext *, midas::InstrumentEnum);
+                TradingContext *, midas::InstrumentEnum, int entryQuantity);
 };
+}

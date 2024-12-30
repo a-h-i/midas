@@ -1,12 +1,15 @@
-#include "broker/trader_context.hpp"
-#include "broker/broker_factory.hpp"
-#include "data/data_stream.hpp"
-#include "trader/trader.hpp"
+
+
+#include "trader/trader_context.hpp"
+#include "broker-interface/broker.hpp"
+
 #include <atomic>
 #include <memory>
 #include <thread>
-using namespace std::chrono_literals;
+#include <trader/trader.hpp>
 
+using namespace std::chrono_literals;
+using namespace midas;
 TradingContext::TradingContext(std::atomic<bool> *stopProcessingPtr) {
   broker = createIBKRBroker();
   broker->connect();
@@ -21,30 +24,29 @@ TradingContext::TradingContext(std::atomic<bool> *stopProcessingPtr) {
 TraderContext::TraderContext(std::atomic<bool> *stopProcessingPtr,
                              unsigned int numSecondsHistory,
                              TradingContext *context,
-                             midas::InstrumentEnum instrument)
+                             midas::InstrumentEnum instrument,
+                             int entryQuantity)
     : streamPtr(new midas::DataStream(5)),
       trader(midas::trader::momentumExploit(streamPtr, context->orderManager,
-                                            instrument,
-                                            midas::getDefaultEntryQuantity(instrument))) {
+                                            instrument, entryQuantity)) {
   // Subscribe to data stream
   auto subscriptionDataHandler =
       [this]([[maybe_unused]] const midas::Subscription &sub, midas::Bar bar) {
         streamPtr->addBars(bar);
       };
-   historicalSubscription =
-      std::make_shared<midas::Subscription>(
-          instrument,
-          midas::HistorySubscriptionStartPoint{
-              .unit = midas::SubscriptionDurationUnits::Seconds,
-              .quantity = numSecondsHistory},
-          false);
+  historicalSubscription = std::make_shared<midas::Subscription>(
+      instrument,
+      midas::HistorySubscriptionStartPoint{
+          .unit = midas::SubscriptionDurationUnits::Seconds,
+          .quantity = numSecondsHistory},
+      false);
   historicalBarConn =
       historicalSubscription->barSignal.connect(subscriptionDataHandler);
-  
+
   historicalEndCon = historicalSubscription->endSignal.connect(
       [this, context, stopProcessingPtr, subscriptionDataHandler,
        instrument]([[maybe_unused]] const midas::Subscription &sub) {
-         realtimeSubscription =
+        realtimeSubscription =
             std::make_shared<midas::Subscription>(instrument, false);
         realtimeBarCon =
             realtimeSubscription->barSignal.connect(subscriptionDataHandler);

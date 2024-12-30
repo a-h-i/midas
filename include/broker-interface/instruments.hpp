@@ -19,6 +19,7 @@ enum InstrumentEnum {
   MicroRussel
 };
 
+
 inline std::size_t getDefaultEntryQuantity(InstrumentEnum instrument) {
   switch (instrument) {
   case MicroNasdaqFutures:
@@ -53,7 +54,7 @@ inline std::string operator+(const char *lhs, InstrumentEnum instrument) {
     instrumentStr = "TSLA";
     break;
   case MicroRussel:
-    instrumentStr = "M2k";
+    instrumentStr = "M2K";
   }
 
   return lhs + instrumentStr;
@@ -63,6 +64,28 @@ inline std::string operator+(const std::string &lhs,
                              InstrumentEnum instrument) {
   return lhs.c_str() + instrument;
 }
+
+inline std::string to_string(midas::InstrumentEnum instrument) {
+  return "" + instrument;
+}
+
+
+inline InstrumentEnum stringToInstrument(const std::string &instrument) {
+  if (instrument == to_string(midas::MicroNasdaqFutures)) {
+    return InstrumentEnum::MicroNasdaqFutures;
+  } else if (instrument == to_string(InstrumentEnum::MicroSPXFutures)) {
+    return InstrumentEnum::MicroSPXFutures;
+  } else if (instrument == to_string(InstrumentEnum::NVDA)) {
+    return InstrumentEnum::NVDA;
+  } else if (instrument == to_string(InstrumentEnum::TSLA)) {
+    return InstrumentEnum::TSLA;
+  } else if (instrument == to_string(InstrumentEnum::MicroRussel)) {
+    return InstrumentEnum::MicroRussel;
+  } else {
+    throw std::invalid_argument("Invalid InstrumentEnum value");
+  }
+}
+
 
 template <typename stream>
 stream &operator<<(stream &s, InstrumentEnum instrument) {

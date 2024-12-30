@@ -2,12 +2,14 @@ cmake_minimum_required(VERSION 3.28)
 enable_testing()
 include(ExternalProject)
 include(FetchContent)
+
 if(POLICY CMP0167)
   cmake_policy(SET CMP0167 NEW)
 endif()
 set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "")
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 set (BOOST_REQUIRED_VERSION 1.83)
+
 add_compile_definitions(BOOST_ALL_NO_LIB)
 project(
         Midas
@@ -15,6 +17,7 @@ project(
         DESCRIPTION "Algorithmic Trading"
         LANGUAGES CXX C
     )
+
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 ExternalProject_Add(IntelFloatingPointDownload
@@ -62,7 +65,11 @@ ExternalProject_Get_Property(IntelFloatingPointDownload BINARY_DIR)
 SET(INTEL_BUILD_DIR ${BINARY_DIR})
 
 add_library(IntelFloatingPoint STATIC IMPORTED
-        include/trader/mean_reversion_trader.hpp)
+        include/trader/mean_reversion_trader.hpp
+        libs/gui/start_gui.cpp
+        include/gui/gui.hpp
+        apps/midas-gui/main.cpp
+)
 set_target_properties(IntelFloatingPoint PROPERTIES IMPORTED_LOCATION ${INTEL_BUILD_DIR}/libbid.a)
 
 ExternalProject_Get_Property(TechnicalAnalysisDownload BINARY_DIR)
