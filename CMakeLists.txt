@@ -94,4 +94,4 @@ source_group(
     FILES ${PROJECT_BINARY_DIR}/include/midas/version.h
 )
 
-install(TARGETS midas)
+install(TARGETS midas-gui)

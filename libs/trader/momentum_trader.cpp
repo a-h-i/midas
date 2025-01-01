@@ -92,18 +92,20 @@ MomentumTrader::decideCandle(std::size_t candleEndOffset) {
     bullishIndicator = 0;
   }
   if (belowLower) {
-    bearishIndicator = 0;
     bullishIndicator += 1;
+    bearishIndicator = 0;
   }
 
 
   if (bullishIndicator >= 4) {
     ++bullishCandlesinARow;
+    bearishCandlesInARow.store(0);
   } else {
     bullishCandlesinARow.store(0);
   }
   if (bearishIndicator >= 4) {
     ++bearishCandlesInARow;
+    bullishCandlesinARow.store(0);
   } else {
     bearishCandlesInARow.store(0);
   }

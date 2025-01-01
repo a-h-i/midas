@@ -26,7 +26,7 @@ gui::MainWindow::MainWindow(std::atomic<bool> *quitSignal)
   QAction *newBacktestAction = menu->addAction("New Backtest");
   newBacktestAction->setStatusTip("Start a new backtest");
   connect(newBacktestAction, SIGNAL(triggered()), this, SLOT(newBacktest()));
-  connect(traderTabs, &QTabWidget::tabCloseRequested, this, [this, traderTabs](int index) {
+  connect(traderTabs, &QTabWidget::tabCloseRequested, this, [this](int index) {
     QWidget *tab = traderTabs->widget(index);
     traderTabs->removeTab(index);
     delete tab; // Free the memory
