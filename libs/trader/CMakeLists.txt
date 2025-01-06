@@ -4,10 +4,10 @@ SET(SOURCE_LIST
         momentum_trader.cpp
         trader_data.cpp
         base_trader.cpp
-        momentum_factory.cpp
         stock_momentum_trader.cpp
         mean_reversion_trader.cpp
         trader_context.cpp
+        trader_factory.cpp
 )
 
 add_library(trader ${SOURCE_LIST})

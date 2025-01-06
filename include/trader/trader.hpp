@@ -10,11 +10,26 @@
 namespace midas::trader {
 
 
+enum class TraderType {
+  MomentumTrader,
+  MACDTrader,
+  MeanReversionTrader,
+};
+
+
 std::unique_ptr<Trader>
 momentumExploit(std::shared_ptr<DataStream> source,
                 std::shared_ptr<midas::OrderManager> orderManager,
                 InstrumentEnum instrument, std::size_t entryQuantity);
 std::unique_ptr<Trader> meanReversion(std::shared_ptr<DataStream> source,
+                std::shared_ptr<midas::OrderManager> orderManager,
+                InstrumentEnum instrument, std::size_t entryQuantity);
+
+std::unique_ptr<Trader> macdExploit(std::shared_ptr<DataStream> source,
+                std::shared_ptr<midas::OrderManager> orderManager,
+                InstrumentEnum instrument, std::size_t entryQuantity);
+
+std::unique_ptr<Trader> createTrader(TraderType type, std::shared_ptr<DataStream> source,
                 std::shared_ptr<midas::OrderManager> orderManager,
                 InstrumentEnum instrument, std::size_t entryQuantity);
 } // namespace midas::trader

@@ -3,5 +3,6 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/ftxui-src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/third-party/src/TechnicalAnalysisDownload" vcs="Git" />
   </component>
 </project>
