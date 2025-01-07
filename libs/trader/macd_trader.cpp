@@ -167,7 +167,7 @@ void MacdTrader::decideEntry() {
         } else if (event.newStatus == OrderStatusEnum::Cancelled) {
           currentState = TraderState::NoPosition;
         }
-      }
+      };
 
   if (macdCrossPositive) {
     currentState = TraderState::Waiting;

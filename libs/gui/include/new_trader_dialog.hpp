@@ -9,6 +9,7 @@
 #include <QComboBox>
 #include <QDialog>
 #include <QLineEdit>
+#include <trader/trader.hpp>
 #undef emit // tbb compatability
 namespace gui {
 class NewTraderDialog : public QDialog {
@@ -19,13 +20,14 @@ public:
   struct data_t {
     int quantity;
     midas::InstrumentEnum instrument;
+    midas::trader::TraderType traderType;
   };
-  inline std::optional<data_t> getData() const { return data; }
+  [[nodiscard]] inline std::optional<data_t> getData() const { return data; }
   void accept() override;
   void reject() override;
 
 private:
-  QComboBox *instrumentComboBox;
+  QComboBox *instrumentComboBox, *traderTypeComboBox;
   QLineEdit *entryQuantity;
   std::optional<data_t> data;
 };

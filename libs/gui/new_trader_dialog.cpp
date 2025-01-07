@@ -13,6 +13,18 @@ gui::NewTraderDialog::NewTraderDialog(QWidget *parent) : QDialog(parent) {
   setWindowTitle("New Trader");
   QVBoxLayout *layout = new QVBoxLayout(this);
 
+  QLabel *traderLabel = new QLabel("Trader type", this);
+  layout->addWidget(traderLabel);
+  traderTypeComboBox = new QComboBox(this);
+  traderTypeComboBox->addItems(
+      {QString::fromStdString(
+           midas::trader::to_string(midas::trader::TraderType::MomentumTrader)),
+       QString::fromStdString(midas::trader::to_string(
+           midas::trader::TraderType::MeanReversionTrader)),
+       QString::fromStdString(
+           midas::trader::to_string(midas::trader::TraderType::MACDTrader))});
+  layout->addWidget(traderTypeComboBox);
+
   QLabel *instrumentLabel = new QLabel("Select instrument", this);
   layout->addWidget(instrumentLabel);
   instrumentComboBox = new QComboBox(this);
@@ -45,7 +57,9 @@ gui::NewTraderDialog::NewTraderDialog(QWidget *parent) : QDialog(parent) {
 void gui::NewTraderDialog::accept() {
   data_t data{.quantity = entryQuantity->text().toInt(),
               .instrument = midas::stringToInstrument(
-                  instrumentComboBox->currentText().toStdString())};
+                  instrumentComboBox->currentText().toStdString()),
+              .traderType = midas::trader::trader_from_string(
+                  traderTypeComboBox->currentText().toStdString())};
   this->data = data;
   QDialog::accept();
 }

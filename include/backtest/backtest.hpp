@@ -30,7 +30,7 @@ BacktestInterval operator""_days(unsigned long long durationTime);
 
 }; // namespace literals
 
-BacktestResult performBacktest(trader::TraderType traderType,
+BacktestResult performBacktest(
     InstrumentEnum instrument, BacktestInterval interval,
     std::function<std::unique_ptr<trader::Trader>(
         std::shared_ptr<DataStream>, std::shared_ptr<midas::OrderManager>)>
