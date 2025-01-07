@@ -92,6 +92,8 @@ void MacdTrader::decide() {
 }
 
 void MacdTrader::decideLongExit() {
+  // We exit our long position when the macd histogram starts declining
+  // or macd MA drops below signal or we are in overbought territory
   if (currentState != TraderState::LongPosition) {
     return;
   }
@@ -125,9 +127,19 @@ void MacdTrader::decideEntry() {
   if (currentState != TraderState::NoPosition) {
     return;
   }
+  // We want to enter near when the macd crosses over the signal.
+  // for longs we are looking for change in histogram from negative to positive
+  // for shorts we are looking for change from positive to negative
 
-  bool macdCrossPositive = macd[macdOutSize - 1] > macdSignal[macdOutSize - 1];
-  bool macdCrossNegative = macd[macdOutSize - 1] < macdSignal[macdOutSize - 1];
+  const std::size_t maxCrossOverDistance = 3;
+  auto lastNegativeHistogramItr = std::find_if(macdHistogram.rbegin(), macdHistogram.rend(),[](double x){return x < 0;});
+  std::size_t lastNegativeHistogramEndDistance =  std::distance(macdHistogram.rbegin(), lastNegativeHistogramItr);
+  bool macdCrossPositive = lastNegativeHistogramEndDistance > 1 && lastNegativeHistogramEndDistance <= maxCrossOverDistance;
+
+  auto lastPositiveHistogramItr = std::find_if(macdHistogram.rbegin(), macdHistogram.rend(),[](double x){return x > 0;});
+  std::size_t lastPositiveHistogramEndDistance =  std::distance(macdHistogram.rbegin(), lastPositiveHistogramItr);
+  bool macdCrossNegative = lastPositiveHistogramEndDistance > 1 && lastPositiveHistogramEndDistance <= maxCrossOverDistance;
+
   if (macdCrossPositive) {
     currentState = TraderState::Waiting;
     executeMarket(instrument, entryQuantity, OrderDirection::BUY,
