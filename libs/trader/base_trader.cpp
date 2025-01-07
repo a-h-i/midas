@@ -87,3 +87,16 @@ void midas::trader::Trader::handleOrderStatusChangeEvent(
     summarySignal(updatedSummary.value());
   }
 }
+
+void midas::trader::Trader::executeMarket(InstrumentEnum instrument,
+                                          unsigned int quantity,
+                                          OrderDirection direction,
+                                          std::function<void( Order::StatusChangeEvent)> callback) {
+
+  auto orderPtr = std::make_shared<SimpleOrder>(quantity, direction, instrument,
+                                                ExecutionType::MKT, logger, 0);
+  orderPtr->addStatusChangeListener([callback](Order &order [[maybe_unused]],
+                                               Order::StatusChangeEvent event) {
+    callback(event);
+  });
+}

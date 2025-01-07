@@ -92,9 +92,7 @@ operator<<(std::basic_ostream<CharT, TraitsT> &stream,
 
 OrderDirection operator~(OrderDirection original);
 
-
-
-enum class ExecutionType { Limit, Stop };
+enum class ExecutionType { Limit, Stop, MKT };
 
 template <typename CharT, typename TraitsT>
 std::basic_ostream<CharT, TraitsT> &
@@ -106,6 +104,9 @@ operator<<(std::basic_ostream<CharT, TraitsT> &stream,
     break;
   case ExecutionType::Stop:
     stream << "STP";
+    break;
+  case ExecutionType::MKT:
+    stream << "MKT";
     break;
   }
   return stream;

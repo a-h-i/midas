@@ -14,9 +14,11 @@ inline std::string orderType(midas::ExecutionType execution) {
   case midas::ExecutionType::Stop:
     return "STP";
   case midas::ExecutionType::Limit:
-  default:
     return "LMT";
+  case midas::ExecutionType::MKT:
+    return "MKT";
   }
+  throw std::runtime_error("Unknown execution type");
 }
 inline std::string orderActionFromDirection(midas::OrderDirection direction) {
   switch (direction) {
@@ -24,9 +26,9 @@ inline std::string orderActionFromDirection(midas::OrderDirection direction) {
   case midas::OrderDirection::BUY:
     return "BUY";
   case midas::OrderDirection::SELL:
-  default:
     return "SELL";
   }
+  throw std::runtime_error("Unknown order direction");
 }
 
 struct TransformationVisitor : public midas::OrderVisitor {
@@ -52,9 +54,11 @@ struct TransformationVisitor : public midas::OrderVisitor {
     case midas::ExecutionType::Stop:
       nativeOrder.auxPrice = order.targetPrice;
       break;
+    case midas::ExecutionType::MKT:
+      break;
     }
     nativeOrder.orderId = orderCounter.fetch_add(1);
-    nativeOrder.transmit = false;
+    nativeOrder.transmit = true;
     nativeOrder.tif = "GTC"; // for now all our orders are GTC. We may want to
                              // make it configurable on midas orders later
     nativeOrder.outsideRth = true;
@@ -74,14 +78,17 @@ struct TransformationVisitor : public midas::OrderVisitor {
         std::next(parentItr), std::end(ibkrOrders),
         [parentId](std::shared_ptr<ibkr::internal::NativeOrder> &order) {
           order->nativeOrder.parentId = parentId;
+          // only parent has transmit flag set
+          order->nativeOrder.transmit = false;
         });
     ibkrOrders.back()->nativeOrder.transmit = true;
   }
 };
 
 std::list<std::shared_ptr<ibkr::internal::NativeOrder>>
-ibkr::internal::transformOrder(midas::Order &order,
-                               std::atomic<OrderId> &orderCtr, std::shared_ptr<logging::thread_safe_logger_t> logger) {
+ibkr::internal::transformOrder(
+    midas::Order &order, std::atomic<OrderId> &orderCtr,
+    std::shared_ptr<logging::thread_safe_logger_t> logger) {
   std::list<std::shared_ptr<NativeOrder>> transformed;
   TransformationVisitor transformer(transformed, orderCtr, logger);
   order.visit(transformer);

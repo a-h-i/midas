@@ -57,7 +57,9 @@ protected:
                     double stopLossPrice, double profitPrice);
   void enterBracket(std::shared_ptr<BracketedOrder> order);
 
-  void executeMarket(InstrumentEnum instrument, unsigned int quantity, OrderDirection direction, const std::function<void()> &postExecute);
+  void executeMarket(InstrumentEnum instrument, unsigned int quantity,
+                     OrderDirection direction,
+                     std::function<void(Order::StatusChangeEvent)> callback);
 
 public:
   virtual ~Trader() = default;
