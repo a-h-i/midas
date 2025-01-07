@@ -1,6 +1,7 @@
 #include "trader/momentum_trader.hpp"
 #include "trader/trader.hpp"
 
+#include <trader/macd_trader.hpp>
 #include <trader/mean_reversion_trader.hpp>
 using namespace midas::trader;
 using namespace midas;
@@ -35,20 +36,31 @@ midas::trader::meanReversion(std::shared_ptr<midas::DataStream> source,
                                          instrument)));
 }
 
+std::unique_ptr<Trader>
+midas::trader::macdExploit(std::shared_ptr<DataStream> source,
+                           std::shared_ptr<midas::OrderManager> orderManager,
+                           InstrumentEnum instrument,
+                           std::size_t entryQuantity) {
+  return std::make_unique<MacdTrader>(
+      source, orderManager, instrument, entryQuantity,
+      std::make_shared<logging::thread_safe_logger_t>(
+          logging::create_channel_logger("MACD Trader " + instrument)));
+}
 
-std::unique_ptr<Trader> createTrader(TraderType type, std::shared_ptr<DataStream> source,
-                std::shared_ptr<midas::OrderManager> orderManager,
-                InstrumentEnum instrument, std::size_t entryQuantity) {
+std::unique_ptr<Trader>
+midas::trader::createTrader(TraderType type, std::shared_ptr<DataStream> source,
+                            std::shared_ptr<midas::OrderManager> orderManager,
+                            InstrumentEnum instrument,
+                            std::size_t entryQuantity) {
 
   switch (type) {
   case TraderType::MomentumTrader:
-      return momentumExploit(source, orderManager, instrument, entryQuantity);
+    return momentumExploit(source, orderManager, instrument, entryQuantity);
   case TraderType::MACDTrader:
-      throw std::runtime_error("MACD Trader not implemented yet.");
+    return macdExploit(source, orderManager, instrument, entryQuantity);
   case TraderType::MeanReversionTrader:
-      return meanReversion(source, orderManager, instrument, entryQuantity);
+    return meanReversion(source, orderManager, instrument, entryQuantity);
   default:
-      throw std::invalid_argument("Unknown TraderType provided.");
+    throw std::invalid_argument("Unknown TraderType provided.");
   };
-
-                }
+}

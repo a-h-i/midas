@@ -57,6 +57,8 @@ protected:
                     double stopLossPrice, double profitPrice);
   void enterBracket(std::shared_ptr<BracketedOrder> order);
 
+  void executeMarket(InstrumentEnum instrument, unsigned int quantity, OrderDirection direction, const std::function<void()> &postExecute);
+
 public:
   virtual ~Trader() = default;
   inline void triggerSourceProcessing() { data.processSource(); }

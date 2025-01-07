@@ -8,6 +8,7 @@ SET(SOURCE_LIST
         mean_reversion_trader.cpp
         trader_context.cpp
         trader_factory.cpp
+        macd_trader.cpp
 )
 
 add_library(trader ${SOURCE_LIST})
