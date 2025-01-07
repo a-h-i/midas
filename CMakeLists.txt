@@ -13,7 +13,7 @@ set (BOOST_REQUIRED_VERSION 1.83)
 add_compile_definitions(BOOST_ALL_NO_LIB)
 project(
         Midas
-        VERSION 0.1.0
+        VERSION 0.2.0
         DESCRIPTION "Algorithmic Trading"
         LANGUAGES CXX C
     )

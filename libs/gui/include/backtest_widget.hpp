@@ -14,12 +14,13 @@ class BacktestWidget: public QWidget {
   Q_OBJECT
 public:
   explicit BacktestWidget(const std::shared_ptr<midas::TradingContext> &context,
-    midas::InstrumentEnum instrument, int entryQuantity, QWidget *parent = nullptr);
+    midas::InstrumentEnum instrument, int entryQuantity, midas::trader::TraderType type, QWidget *parent = nullptr);
   QString getName() const;
 private:
   std::shared_ptr<midas::TradingContext> context;
   midas::InstrumentEnum instrument;
   int entryQuantity;
+  midas::trader::TraderType traderType;
   std::jthread thread;
   QLabel *content;
 };

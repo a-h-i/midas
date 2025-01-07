@@ -9,8 +9,9 @@
 #include <QComboBox>
 #include <QDialog>
 #include <QLineEdit>
-#include <trader/trader.hpp>
 #undef emit // tbb compatability
+
+#include <trader/trader.hpp>
 namespace gui {
 class NewTraderDialog : public QDialog {
   Q_OBJECT

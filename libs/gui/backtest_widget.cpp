@@ -13,9 +13,9 @@ using namespace midas::backtest::literals;
 
 BacktestWidget::BacktestWidget(
     const std::shared_ptr<midas::TradingContext> &context,
-    midas::InstrumentEnum instrument, int entryQuantity, QWidget *parent)
+    midas::InstrumentEnum instrument, int entryQuantity, midas::trader::TraderType type, QWidget *parent)
     : QWidget(parent), context(context), instrument(instrument),
-      entryQuantity(entryQuantity) {
+      entryQuantity(entryQuantity), traderType(type) {
   content = new QLabel("Waiting for results", this);
   auto layout = new QGridLayout(this);
   content->setAlignment(Qt::AlignCenter);
@@ -25,7 +25,7 @@ BacktestWidget::BacktestWidget(
     auto traderFactory =
         [this](std::shared_ptr<midas::DataStream> streamPtr,
                std::shared_ptr<midas::OrderManager> orderManager) {
-          return midas::trader::momentumExploit(
+          return midas::trader::createTrader(this->traderType,
               streamPtr, orderManager, this->instrument, this->entryQuantity);
         };
     midas::backtest::BacktestResult results = midas::backtest::performBacktest(

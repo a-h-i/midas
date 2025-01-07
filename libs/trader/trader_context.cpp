@@ -25,9 +25,9 @@ TraderContext::TraderContext(std::atomic<bool> *stopProcessingPtr,
                              unsigned int numSecondsHistory,
                              TradingContext *context,
                              midas::InstrumentEnum instrument,
-                             int entryQuantity)
+                             int entryQuantity, midas::trader::TraderType type)
     : streamPtr(new midas::DataStream(5)),
-      trader(midas::trader::momentumExploit(streamPtr, context->orderManager,
+      trader(midas::trader::createTrader(type, streamPtr, context->orderManager,
                                             instrument, entryQuantity)) {
   // Subscribe to data stream
   auto subscriptionDataHandler =

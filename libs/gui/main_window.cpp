@@ -7,12 +7,14 @@
 #include "backtest_widget.hpp"
 
 #include <QMenuBar>
+#undef emit //tbb compatability
 #include <new_trader_dialog.hpp>
 #include <trader/trader.hpp>
 #include <trader_widget.hpp>
 
 gui::MainWindow::MainWindow(std::atomic<bool> *quitSignal)
-    : quitSignal(quitSignal), tradingContext(std::make_shared<midas::TradingContext>(quitSignal)) {
+    : quitSignal(quitSignal),
+      tradingContext(std::make_shared<midas::TradingContext>(quitSignal)) {
   setMinimumSize(600, 400);
   traderTabs = new QTabWidget(this);
   traderTabs->setTabsClosable(true);
@@ -43,11 +45,10 @@ void gui::MainWindow::newActiveTrader() {
   }
   traders.emplace_back(std::make_shared<midas::TraderContext>(
       quitSignal, 100 * 120, tradingContext.get(), data->instrument,
-      data->quantity));
+      data->quantity, data->traderType));
   TraderWidget *traderWidget = new TraderWidget(traders.back());
   traderTabs->addTab(traderWidget, traderWidget->getName());
 }
-
 
 void gui::MainWindow::newBacktest() {
   NewTraderDialog dialog(this);
@@ -56,7 +57,9 @@ void gui::MainWindow::newBacktest() {
   if (!data.has_value()) {
     return;
   }
- BacktestWidget *backtestWidget = new BacktestWidget(tradingContext, data->instrument, data->quantity, traderTabs);
+  auto *backtestWidget =
+      new BacktestWidget(tradingContext, data->instrument, data->quantity,
+                         data->traderType, traderTabs);
   traderTabs->addTab(backtestWidget, backtestWidget->getName());
 }
 

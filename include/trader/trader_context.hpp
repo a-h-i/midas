@@ -1,6 +1,7 @@
 #pragma once
 
 #include "broker-interface/subscription.hpp"
+#include "trader.hpp"
 
 #include <atomic>
 #include <boost/signals2/connection.hpp>
@@ -16,7 +17,7 @@ struct TradingContext {
   std::shared_ptr<midas::OrderManager> orderManager;
   std::jthread brokerProcessor;
 
-  TradingContext(std::atomic<bool> *stopProcessing);
+  explicit TradingContext(std::atomic<bool> *stopProcessing);
 };
 
 struct TraderContext {
@@ -28,6 +29,6 @@ struct TraderContext {
   std::shared_ptr<midas::Subscription> historicalSubscription,
       realtimeSubscription;
   TraderContext(std::atomic<bool> *, unsigned int numSecondsHistory,
-                TradingContext *, midas::InstrumentEnum, int entryQuantity);
+                TradingContext *, midas::InstrumentEnum, int entryQuantity, midas::trader::TraderType traderType);
 };
 }
