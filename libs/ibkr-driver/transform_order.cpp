@@ -75,11 +75,13 @@ struct TransformationVisitor : public midas::OrderVisitor {
     order.getProfitTakerOrder().visit(*this);
     order.getStopOrder().visit(*this);
     std::ranges::for_each(
-        std::next(parentItr), std::end(ibkrOrders),
+        std::begin(ibkrOrders), std::end(ibkrOrders),
         [parentId](std::shared_ptr<ibkr::internal::NativeOrder> &order) {
-          order->nativeOrder.parentId = parentId;
-          // only parent has transmit flag set
-          order->nativeOrder.transmit = false;
+          if (order->nativeOrder.orderId != parentId) {
+            order->nativeOrder.parentId = parentId;
+            // only parent has transmit flag set
+            order->nativeOrder.transmit = false;
+          }
         });
     ibkrOrders.back()->nativeOrder.transmit = true;
   }

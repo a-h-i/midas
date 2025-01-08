@@ -141,11 +141,11 @@ void MacdTrader::decideEntry() {
   // for longs we are looking for change in histogram from negative to positive
   // for shorts we are looking for change from positive to negative
 
-  const std::size_t maxCrossOverDistance = 3;
+  const std::size_t maxCrossOverDistance = 30;
   auto lastNegativeHistogramItr =
       std::find_if(macdHistogram.rbegin(), macdHistogram.rend(),
                    [](double x) { return x < 0; });
-  std::size_t lastNegativeHistogramEndDistance =
+  std::size_t const lastNegativeHistogramEndDistance =
       std::distance(macdHistogram.rbegin(), lastNegativeHistogramItr);
   bool macdCrossPositive =
       lastNegativeHistogramEndDistance > 1 &&
@@ -154,7 +154,7 @@ void MacdTrader::decideEntry() {
   auto lastPositiveHistogramItr =
       std::find_if(macdHistogram.rbegin(), macdHistogram.rend(),
                    [](double x) { return x > 0; });
-  std::size_t lastPositiveHistogramEndDistance =
+  const std::size_t lastPositiveHistogramEndDistance =
       std::distance(macdHistogram.rbegin(), lastPositiveHistogramItr);
   bool macdCrossNegative =
       lastPositiveHistogramEndDistance > 1 &&
@@ -170,12 +170,14 @@ void MacdTrader::decideEntry() {
       };
 
   if (macdCrossPositive) {
+    INFO_LOG(*logger) << "entering long position ";
     currentState = TraderState::Waiting;
     executeMarket(instrument, entryQuantity, OrderDirection::BUY,
                   std::bind(executeCallback, std::placeholders::_1,
                             TraderState::LongPosition));
   }
   else if (macdCrossNegative) {
+    INFO_LOG(*logger) << "entering short position ";
     currentState = TraderState::Waiting;
     executeMarket(instrument, entryQuantity, OrderDirection::SELL,
                   std::bind(executeCallback, std::placeholders::_1,

@@ -238,7 +238,7 @@ public:
 class SimpleOrder : public Order {
 
 public:
-  const double targetPrice;
+  double targetPrice;
   SimpleOrder(unsigned int requestedQuantity, OrderDirection direction,
               InstrumentEnum instrument, ExecutionType type,
               std::shared_ptr<logging::thread_safe_logger_t> logger,

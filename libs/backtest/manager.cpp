@@ -43,12 +43,17 @@ static bool isTriggered(midas::OrderDirection direction, double targetPrice,
   }
 }
 
-static bool visitHelper(const midas::SimpleOrder &order,
+static bool visitHelper(midas::SimpleOrder &order,
                         const midas::Bar *bar) {
   const midas::OrderDirection direction =
       order.execType == midas::ExecutionType::Stop ? ~order.direction
                                                    : order.direction;
-  return isTriggered(direction, order.targetPrice, bar);
+  if (order.execType == midas::ExecutionType::MKT) {
+    order.targetPrice = direction == midas::OrderDirection::BUY ? bar->high : bar->low;
+    return true;
+  } else {
+    return isTriggered(direction, order.targetPrice, bar);
+  }
 }
 
 void midas::backtest::SimulationOrderTransmitter::visit(

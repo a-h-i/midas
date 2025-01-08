@@ -12,13 +12,19 @@ void OrderSummaryTracker::addToSummary(Order *order) {
     throw std::logic_error("Attempted to add unfilled order to summary");
   }
 }
-void OrderSummaryTracker::visit(SimpleOrder &) {}
 
 double getFillPriceWithSign(Order &order) {
   return order.direction == OrderDirection::SELL
              ? -order.getAvgFillPrice() * order.getFilledQuantity()
              : order.getAvgFillPrice() * order.getFilledQuantity();
 }
+
+void OrderSummaryTracker::visit(SimpleOrder &order) {
+  accumulator.numberOfEntryOrdersTriggered++;
+  accumulator.endingBalance += getFillPriceWithSign(order);
+}
+
+
 
 void OrderSummaryTracker::visit(BracketedOrder &order) {
   accumulator.numberOfEntryOrdersTriggered++;
