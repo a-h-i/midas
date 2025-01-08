@@ -103,10 +103,10 @@ void MacdTrader::decideLongExit() {
     throw std::runtime_error("No entry time set");
   }
   auto timeDiff =  timestamps.back() - entryTime.value();
-  if (  timeDiff.total_seconds() < 5 * 5) {
+  int numberOfConsecutivePeriodsRequired = 5;
+  if (  timeDiff.total_seconds() < numberOfConsecutivePeriodsRequired * 5) {
     return;
   }
-  int numberOfConsecutivePeriodsRequired = 5;
   bool histogramDeclining = true;
   for (int i = macdOutSize - 1; i >= macdOutSize - 1 - numberOfConsecutivePeriodsRequired && i >= 0; i -= 1) {
     histogramDeclining = histogramDeclining && macdHistogram[i] < macdHistogram[i - 1];
@@ -133,10 +133,10 @@ void MacdTrader::decideShortExit() {
     throw std::runtime_error("No entry time set");
   }
   auto timeDiff =  timestamps.back() - entryTime.value();
-  if (  timeDiff.seconds() < 5 * 5) {
+  int numberOfConsecutivePeriodsRequired = 5;
+  if (  timeDiff.total_seconds() < numberOfConsecutivePeriodsRequired * 5) {
     return;
   }
-  int numberOfConsecutivePeriodsRequired = 5;
   // bool oversold = rsi[rsiOutSize - 1] < 25;
   // bool macdCrossing = macd[macdOutSize - 1] > macdSignal[macdOutSize - 1];
   bool histogramIncreasing = true;
