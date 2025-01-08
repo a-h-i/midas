@@ -33,7 +33,8 @@ class MacdTrader: public Trader {
       rsiOutBegin = 0, rsiOutSize = 0;
   TraderState currentState{TraderState::NoPosition};
   const std::size_t entryQuantity;
-  const bool useMKTOrders{false};
+  const bool useMKTOrders{true};
+  std::optional<boost::posix_time::ptime> entryTime;
 
   void clearBuffers();
 

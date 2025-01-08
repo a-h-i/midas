@@ -99,10 +99,18 @@ void MacdTrader::decideLongExit() {
   if (currentState != TraderState::LongPosition) {
     return;
   }
-  // bool overbought = rsi[rsiOutSize - 1] > 80;
-  // bool macdCrossing = macd[macdOutSize - 1] < macdSignal[macdOutSize - 1];
-  bool histogramDeclining = std::abs(macdHistogram[macdOutSize - 1]) <
-                            std::abs(macdHistogram[macdOutSize - 2]);
+  if (!entryTime.has_value()) {
+    throw std::runtime_error("No entry time set");
+  }
+  auto timeDiff =  timestamps.back() - entryTime.value();
+  if (  timeDiff.total_seconds() < 5 * 5) {
+    return;
+  }
+  int numberOfConsecutivePeriodsRequired = 5;
+  bool histogramDeclining = true;
+  for (int i = macdOutSize - 1; i >= macdOutSize - 1 - numberOfConsecutivePeriodsRequired && i >= 0; i -= 1) {
+    histogramDeclining = histogramDeclining && macdHistogram[i] < macdHistogram[i - 1];
+  }
   if ( histogramDeclining) {
     currentState = TraderState::Waiting;
     executeOrder(OrderDirection::SELL, entryQuantity,
@@ -121,11 +129,21 @@ void MacdTrader::decideShortExit() {
   if (currentState != TraderState::ShortPosition) {
     return;
   }
+  if (!entryTime.has_value()) {
+    throw std::runtime_error("No entry time set");
+  }
+  auto timeDiff =  timestamps.back() - entryTime.value();
+  if (  timeDiff.seconds() < 5 * 5) {
+    return;
+  }
+  int numberOfConsecutivePeriodsRequired = 5;
   // bool oversold = rsi[rsiOutSize - 1] < 25;
   // bool macdCrossing = macd[macdOutSize - 1] > macdSignal[macdOutSize - 1];
-  bool histogramDeclining = std::abs(macdHistogram[macdOutSize - 1]) <
-                            std::abs(macdHistogram[macdOutSize - 2]);
-  if ( histogramDeclining) {
+  bool histogramIncreasing = true;
+  for (int i = macdOutSize - 1; i >= macdOutSize - 1 - numberOfConsecutivePeriodsRequired && i >= 0; i -= 1) {
+    histogramIncreasing = histogramIncreasing && macdHistogram[i] > macdHistogram[i - 1];
+  }
+  if ( histogramIncreasing) {
     currentState = TraderState::Waiting;
     executeOrder( OrderDirection::BUY, entryQuantity,
                   [this](Order::StatusChangeEvent event) {
@@ -194,7 +212,7 @@ void MacdTrader::decideEntry() {
 void MacdTrader::executeOrder(
     OrderDirection direction, double quantity,
     std::function<void(Order::StatusChangeEvent)> callback) {
-
+  entryTime = timestamps.back();
   if (useMKTOrders) {
     executeMarket(instrument, quantity, direction, callback);
   } else {
