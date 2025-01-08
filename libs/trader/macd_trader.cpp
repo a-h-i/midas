@@ -103,7 +103,6 @@ void MacdTrader::decideLongExit() {
     throw std::runtime_error("No entry time set");
   }
   auto timeDiff =  timestamps.back() - entryTime.value();
-  int numberOfConsecutivePeriodsRequired = 5;
   if (  timeDiff.total_seconds() < numberOfConsecutivePeriodsRequired * 5) {
     return;
   }
@@ -133,7 +132,6 @@ void MacdTrader::decideShortExit() {
     throw std::runtime_error("No entry time set");
   }
   auto timeDiff =  timestamps.back() - entryTime.value();
-  int numberOfConsecutivePeriodsRequired = 5;
   if (  timeDiff.total_seconds() < numberOfConsecutivePeriodsRequired * 5) {
     return;
   }

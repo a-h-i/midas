@@ -34,6 +34,7 @@ class MacdTrader: public Trader {
   TraderState currentState{TraderState::NoPosition};
   const std::size_t entryQuantity;
   const bool useMKTOrders{true};
+  const int numberOfConsecutivePeriodsRequired{5};
   std::optional<boost::posix_time::ptime> entryTime;
 
   void clearBuffers();
