@@ -63,6 +63,7 @@ std::string MacdTrader::traderName() const {
 }
 
 void MacdTrader::decide() {
+  std::scoped_lock lock(stateMutex);
   if (!data.ok() || paused()) {
     std::string statusString;
     if (paused()) {
@@ -92,19 +93,21 @@ void MacdTrader::decide() {
 }
 
 void MacdTrader::decideLongExit() {
+  std::scoped_lock lock(stateMutex);
   // We exit our long position when the macd histogram starts declining
   // or macd MA drops below signal or we are in overbought territory
   if (currentState != TraderState::LongPosition) {
     return;
   }
-  bool overbought = rsi[rsiOutSize - 1] > 80;
-  bool macdCrossing = macd[macdOutSize - 1] < macdSignal[macdOutSize - 1];
+  // bool overbought = rsi[rsiOutSize - 1] > 80;
+  // bool macdCrossing = macd[macdOutSize - 1] < macdSignal[macdOutSize - 1];
   bool histogramDeclining = std::abs(macdHistogram[macdOutSize - 1]) <
                             std::abs(macdHistogram[macdOutSize - 2]);
-  if (overbought || macdCrossing || histogramDeclining) {
+  if ( histogramDeclining) {
     currentState = TraderState::Waiting;
-    executeMarket(instrument, entryQuantity, OrderDirection::SELL,
+    executeOrder(OrderDirection::SELL, entryQuantity,
                   [this](Order::StatusChangeEvent event) {
+                    std::scoped_lock lock(stateMutex);
                     if (event.newStatus == OrderStatusEnum::Filled ||
                         event.newStatus == OrderStatusEnum::Cancelled) {
                       this->currentState = TraderState::NoPosition;
@@ -114,17 +117,19 @@ void MacdTrader::decideLongExit() {
 }
 
 void MacdTrader::decideShortExit() {
+  std::scoped_lock lock(stateMutex);
   if (currentState != TraderState::ShortPosition) {
     return;
   }
-  bool oversold = rsi[rsiOutSize - 1] < 25;
-  bool macdCrossing = macd[macdOutSize - 1] > macdSignal[macdOutSize - 1];
+  // bool oversold = rsi[rsiOutSize - 1] < 25;
+  // bool macdCrossing = macd[macdOutSize - 1] > macdSignal[macdOutSize - 1];
   bool histogramDeclining = std::abs(macdHistogram[macdOutSize - 1]) <
                             std::abs(macdHistogram[macdOutSize - 2]);
-  if (oversold || macdCrossing || histogramDeclining) {
+  if ( histogramDeclining) {
     currentState = TraderState::Waiting;
-    executeMarket(instrument, entryQuantity, OrderDirection::BUY,
+    executeOrder( OrderDirection::BUY, entryQuantity,
                   [this](Order::StatusChangeEvent event) {
+                    std::scoped_lock lock(stateMutex);
                     if (event.newStatus == OrderStatusEnum::Filled ||
                         event.newStatus == OrderStatusEnum::Cancelled) {
                       this->currentState = TraderState::NoPosition;
@@ -134,6 +139,7 @@ void MacdTrader::decideShortExit() {
 }
 
 void MacdTrader::decideEntry() {
+  std::scoped_lock lock(stateMutex);
   if (currentState != TraderState::NoPosition) {
     return;
   }
@@ -141,7 +147,7 @@ void MacdTrader::decideEntry() {
   // for longs we are looking for change in histogram from negative to positive
   // for shorts we are looking for change from positive to negative
 
-  const std::size_t maxCrossOverDistance = 30;
+  const std::size_t maxCrossOverDistance = 25;
   auto lastNegativeHistogramItr =
       std::find_if(macdHistogram.rbegin(), macdHistogram.rend(),
                    [](double x) { return x < 0; });
@@ -162,25 +168,36 @@ void MacdTrader::decideEntry() {
 
   auto executeCallback =
       [this](Order::StatusChangeEvent event, TraderState targetState) {
+        std::scoped_lock lock(stateMutex);
         if (event.newStatus == OrderStatusEnum::Filled) {
           currentState = targetState;
         } else if (event.newStatus == OrderStatusEnum::Cancelled) {
           currentState = TraderState::NoPosition;
         }
       };
-
   if (macdCrossPositive) {
     INFO_LOG(*logger) << "entering long position ";
     currentState = TraderState::Waiting;
-    executeMarket(instrument, entryQuantity, OrderDirection::BUY,
+    executeOrder(OrderDirection::BUY, entryQuantity,
                   std::bind(executeCallback, std::placeholders::_1,
                             TraderState::LongPosition));
   }
   else if (macdCrossNegative) {
     INFO_LOG(*logger) << "entering short position ";
     currentState = TraderState::Waiting;
-    executeMarket(instrument, entryQuantity, OrderDirection::SELL,
+    executeOrder( OrderDirection::SELL, entryQuantity,
                   std::bind(executeCallback, std::placeholders::_1,
                             TraderState::ShortPosition));
+  }
+}
+
+void MacdTrader::executeOrder(
+    OrderDirection direction, double quantity,
+    std::function<void(Order::StatusChangeEvent)> callback) {
+
+  if (useMKTOrders) {
+    executeMarket(instrument, quantity, direction, callback);
+  } else {
+    executeLimit(instrument, quantity, direction, closePrices.back(), callback);
   }
 }

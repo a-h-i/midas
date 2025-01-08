@@ -11,6 +11,7 @@ namespace midas::trader {
 
 class MacdTrader: public Trader {
   protected:
+  std::recursive_mutex stateMutex;
   enum class TraderState {
     NoPosition,
     LongPosition,
@@ -32,6 +33,8 @@ class MacdTrader: public Trader {
       rsiOutBegin = 0, rsiOutSize = 0;
   TraderState currentState{TraderState::NoPosition};
   const std::size_t entryQuantity;
+  const bool useMKTOrders{false};
+
   void clearBuffers();
 
 
@@ -44,6 +47,7 @@ class MacdTrader: public Trader {
   void decide() override;
   std::string traderName() const override;
 
+
 protected:
   MacdTrader(std::size_t bufferSize,
               const std::shared_ptr<midas::DataStream> &source,
@@ -54,6 +58,7 @@ protected:
   void decideEntry();
   void decideLongExit();
   void decideShortExit();
+  void executeOrder(OrderDirection direction, double quantity, std::function<void(Order::StatusChangeEvent)> callback);
 };
 
 }

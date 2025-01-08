@@ -80,21 +80,12 @@ MomentumTrader::decideCandle(std::size_t candleEndOffset) {
 
   bool volumeAcceptable = volumes[volumes.size() + sizeOffset] >
                           volumeMa[volumeMAOutSize + sizeOffset];
-  bool aboveUpper = closePrices[closePrices.size() + sizeOffset] >= bbUpper[bbOutSize + sizeOffset];
-  bool belowLower = closePrices[closePrices.size() + sizeOffset] <= bbLower[bbOutSize + sizeOffset];
   
   double bullishIndicator = static_cast<double>(bullishMA) + bullishMACD +
                             bullishRSI + volumeAcceptable;
   double bearishIndicator = static_cast<double>(bearishMA) + bearishMACD +
                             bearishRSI + volumeAcceptable;
-  if (aboveUpper) {
-    bearishIndicator += 1;
-    bullishIndicator = 0;
-  }
-  if (belowLower) {
-    bullishIndicator += 1;
-    bearishIndicator = 0;
-  }
+
 
 
   if (bullishIndicator >= 4) {
@@ -116,8 +107,8 @@ MomentumTrader::decideCandle(std::size_t candleEndOffset) {
   return {
       .bullishIndicator = bullishIndicator,
       .bearishIndicator = bearishIndicator,
-      .maxBullish = 5,
-      .maxBearish = 5,
+      .maxBullish = 4,
+      .maxBearish = 4,
   };
 }
 

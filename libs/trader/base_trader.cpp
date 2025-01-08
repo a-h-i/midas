@@ -100,3 +100,19 @@ void midas::trader::Trader::executeMarket(
                  Order::StatusChangeEvent event) { callback(event); });
   orderManager->transmit(orderPtr);
 }
+
+void midas::trader::Trader::executeLimit(
+    InstrumentEnum instrument, unsigned int quantity, OrderDirection direction,
+    double limitPrice, std::function<void(Order::StatusChangeEvent)> callback) {
+  INFO_LOG(*logger) << "Executing limit order for " << instrument << " x"
+                    << quantity << " " << direction << " limitPrice: "
+                    << limitPrice;
+  auto orderPtr = std::make_shared<SimpleOrder>(quantity, direction, instrument,
+                                                ExecutionType::Limit, logger,
+                                                limitPrice);
+  orderPtr->addStatusChangeListener(
+      [callback](Order &order [[maybe_unused]],
+                 Order::StatusChangeEvent event) { callback(event); });
+  orderManager->transmit(orderPtr);
+}
+

@@ -60,6 +60,8 @@ protected:
   void executeMarket(InstrumentEnum instrument, unsigned int quantity,
                      OrderDirection direction,
                      std::function<void(Order::StatusChangeEvent)> callback);
+  void executeLimit(InstrumentEnum instrument, unsigned int quantity,
+                    OrderDirection direction, double limitPrice, std::function<void(Order::StatusChangeEvent)> callback);
 
 public:
   virtual ~Trader() = default;
