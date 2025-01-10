@@ -22,27 +22,28 @@ private:
   std::unique_ptr<internal::Client> implementation;
   std::shared_ptr<midas::OrderManager> orderManager;
   std::atomic<OrderId> &orderCtr();
+
 public:
   Driver(boost::asio::ip::tcp::endpoint endpoint);
   ~Driver();
 
   boost::signals2::connection
   addConnectListener(const std::function<void(bool)> &func);
-  virtual bool processCycle() override;
-  virtual void
+  bool processCycle() override;
+  void
   addSubscription(std::weak_ptr<midas::Subscription> subscription) override;
   /**
    * Does nothing if not connected
    */
-  virtual void connect() override;
+  void connect() override;
   /**
    * Does nothing if connected
    */
-  virtual void disconnect() override;
-  virtual bool isConnected() const override;
-  virtual unsigned int estimateHistoricalBarSizeSeconds(
+  void disconnect() override;
+  bool isConnected() const override;
+  unsigned int estimateHistoricalBarSizeSeconds(
       const midas::HistorySubscriptionStartPoint &duration) const override;
-  virtual std::shared_ptr<midas::OrderManager> getOrderManager() override;
+  std::shared_ptr<midas::OrderManager> getOrderManager() override;
 };
 
 } // namespace ibkr

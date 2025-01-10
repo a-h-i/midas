@@ -1,6 +1,7 @@
 
 SET(TEST_SRCS
         bar_test.cpp
+        position_tracker_tests.cpp
 )
 
 add_executable(broker_tests ${TEST_SRCS})

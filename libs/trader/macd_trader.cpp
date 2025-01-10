@@ -51,7 +51,6 @@ void MacdTrader::clearBuffers() {
   closePrices.clear();
   volumes.clear();
   highs.clear();
-  highs.clear();
   lows.clear();
   opens.clear();
   trades.clear();
@@ -107,7 +106,7 @@ void MacdTrader::decideLongExit() {
     return;
   }
   bool histogramDeclining = true;
-  for (int i = macdOutSize - 1; i >= macdOutSize - 1 - numberOfConsecutivePeriodsRequired && i >= 0; i -= 1) {
+  for (int i = macdOutSize - 1; i >= macdOutSize - 1 - numberOfConsecutivePeriodsRequired && i > 0; i -= 1) {
     histogramDeclining = histogramDeclining && macdHistogram[i] < macdHistogram[i - 1];
   }
   if ( histogramDeclining) {
@@ -138,7 +137,7 @@ void MacdTrader::decideShortExit() {
   // bool oversold = rsi[rsiOutSize - 1] < 25;
   // bool macdCrossing = macd[macdOutSize - 1] > macdSignal[macdOutSize - 1];
   bool histogramIncreasing = true;
-  for (int i = macdOutSize - 1; i >= macdOutSize - 1 - numberOfConsecutivePeriodsRequired && i >= 0; i -= 1) {
+  for (int i = macdOutSize - 1; i >= macdOutSize - 1 - numberOfConsecutivePeriodsRequired && i > 0; i -= 1) {
     histogramIncreasing = histogramIncreasing && macdHistogram[i] > macdHistogram[i - 1];
   }
   if ( histogramIncreasing) {
