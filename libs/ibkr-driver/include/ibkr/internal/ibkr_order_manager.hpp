@@ -19,9 +19,6 @@ class OrderManager : public midas::OrderManager {
   std::recursive_mutex pnlMutex, ordersMutex;
   std::atomic<double> realizedPnl{0};
 
-  void handlePnLUpdate(midas::InstrumentEnum, midas::OrderDirection direction,
-                       double price);
-
 public:
   OrderManager(Driver &, std::shared_ptr<logging::thread_safe_logger_t> &logger);
   virtual void transmit(std::shared_ptr<midas::Order>) override;

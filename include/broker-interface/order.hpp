@@ -1,6 +1,7 @@
 #pragma once
 #include "broker-interface/instruments.hpp"
 #include "logging/logging.hpp"
+#include "position_tracker.hpp"
 #include <atomic>
 #include <boost/signals2.hpp>
 #include <memory>
@@ -294,11 +295,10 @@ public:
 class OrderManager {
 public:
   typedef boost::signals2::signal<void(double pnl)> realized_pnl_signal_t;
-
+  PositionTracker positionTracker;
 protected:
-  realized_pnl_signal_t realizedPnlSignal;
   std::shared_ptr<logging::thread_safe_logger_t> logger;
-
+  virtual void handleRealized(InstrumentEnum instrument, int quantity, double pricePerUnit);
 public:
   OrderManager(std::shared_ptr<logging::thread_safe_logger_t> &logger)
       : logger(logger) {}
@@ -307,8 +307,7 @@ public:
   virtual bool hasActiveOrders() = 0;
   virtual std::list<Order *> getFilledOrders() = 0;
 
-  auto addPnLListener(const realized_pnl_signal_t::slot_type &listener) {
-    return realizedPnlSignal.connect(listener);
-  }
+
+
 };
 } // namespace midas

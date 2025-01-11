@@ -12,6 +12,27 @@ bool midas::backtest::BacktestOrderManager::hasActiveOrders() {
 void midas::backtest::BacktestOrderManager::transmit(
     std::shared_ptr<Order> order) {
   order->setTransmitted();
+  order->addStatusChangeListener([this](Order &order,
+                                        Order::StatusChangeEvent event) {
+    if (event.newStatus == OrderStatusEnum::Filled) {
+      handleRealized(order.instrument,
+                     order.direction == OrderDirection::BUY
+                         ? order.getFilledQuantity()
+                         : -order.getFilledQuantity(),
+                     order.getAvgFillPrice());
+    } else if (event.newStatus == OrderStatusEnum::WaitingForChildren) {
+      BracketedOrder *bracketedOrder = dynamic_cast<BracketedOrder *>(&order);
+      if (bracketedOrder) {
+        auto &entry = bracketedOrder->getEntryOrder();
+        handleRealized(entry.instrument,
+                       entry.direction == OrderDirection::BUY
+                           ? entry.getFilledQuantity()
+                           : -entry.getFilledQuantity(),
+                       entry.getAvgFillPrice());
+      }
+    }
+  });
+
   activeOrdersList.push_back(order);
 }
 
@@ -43,13 +64,13 @@ static bool isTriggered(midas::OrderDirection direction, double targetPrice,
   }
 }
 
-static bool visitHelper(midas::SimpleOrder &order,
-                        const midas::Bar *bar) {
+static bool visitHelper(midas::SimpleOrder &order, const midas::Bar *bar) {
   const midas::OrderDirection direction =
       order.execType == midas::ExecutionType::Stop ? ~order.direction
                                                    : order.direction;
   if (order.execType == midas::ExecutionType::MKT) {
-    order.targetPrice = direction == midas::OrderDirection::BUY ? bar->high : bar->low;
+    order.targetPrice =
+        direction == midas::OrderDirection::BUY ? bar->high : bar->low;
     return true;
   } else {
     return isTriggered(direction, order.targetPrice, bar);

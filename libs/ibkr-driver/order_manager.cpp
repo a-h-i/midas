@@ -33,9 +33,8 @@ void ibkr::internal::OrderManager::transmit(
             } else if (event.newStatus == midas::OrderStatusEnum::Filled) {
               transmittedOrders.remove_if(removePredicate);
               filledOrders.push_back(orderPtr);
-              handlePnLUpdate(order.instrument, order.direction,
-                              order.getAvgFillPrice() *
-                                  order.getFilledQuantity());
+              const int quantity = order.direction == midas::OrderDirection::BUY ? order.getFilledQuantity() : -order.getFilledQuantity();
+              handleRealized(order.instrument, quantity, order.getAvgFillPrice());
             }
           })
           .track_foreign(orderPtr));
@@ -54,15 +53,4 @@ std::list<midas::Order *> ibkr::internal::OrderManager::getFilledOrders() {
     orderPtrs.push_back(orderPtr.get());
   }
   return orderPtrs;
-}
-
-void ibkr::internal::OrderManager::handlePnLUpdate(
-    midas::InstrumentEnum instrument [[maybe_unused]],
-    midas::OrderDirection direction, double price) {
-  INFO_LOG(*logger) << "IBKR order manager handling pnl update";
-  double directionModifier = direction == midas::OrderDirection::BUY ? 1 : -1;
-  double adjustedPrice = price * directionModifier;
-
-  const double realized = realizedPnl.fetch_add(adjustedPrice);
-  realizedPnlSignal(realized);
 }

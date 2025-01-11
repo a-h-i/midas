@@ -6,6 +6,7 @@ SET(SOURCE_LIST
         bar_import.cpp
         broker_factory.cpp
         position_tracker.cpp
+        order_manager.cpp
 )
 
 add_library(broker ${SOURCE_LIST})

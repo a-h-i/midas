@@ -133,9 +133,10 @@ midas::backtest::BacktestResult midas::backtest::performBacktest(
     summaryTracker.addToSummary(orderPtr);
     orderPtr->visit(printer);
   }
-
+  auto summary = summaryTracker.summary();
+  summary.endingBalance = orderManager->positionTracker.getPnl()[instrument];
   BacktestResult result {
-    .summary = summaryTracker.summary(), .originalStream = realtimeSimStream,
+    .summary = summary, .originalStream = realtimeSimStream,
     .orderDetails = printer.str()
   };
   return result;
