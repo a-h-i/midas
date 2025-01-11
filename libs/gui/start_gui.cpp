@@ -12,5 +12,6 @@ void gui::start(int argc, char **argv) {
   std::locale::global(std::locale::classic());
   MainWindow w(&quitSignal);
   w.show();
+
   app.exec();
 }

@@ -62,6 +62,7 @@ void midas::PositionTracker::handle_position_update(InstrumentEnum instrument,
     }
   }
   position.total = profitAccum;
+  realized_pnl_signal();
 }
 
 std::unordered_map<midas::InstrumentEnum, double>

@@ -6,6 +6,7 @@ set(SOURCE_LIST
         new_trader_dialog.cpp
         trader_widget.cpp
         backtest_widget.cpp
+        pnl_widget.cpp
 )
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core)
 

@@ -294,7 +294,7 @@ public:
  */
 class OrderManager {
 public:
-  typedef boost::signals2::signal<void(double pnl)> realized_pnl_signal_t;
+
   PositionTracker positionTracker;
 protected:
   std::shared_ptr<logging::thread_safe_logger_t> logger;

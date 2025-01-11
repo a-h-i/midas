@@ -7,7 +7,9 @@
 
 
 #include <QMainWindow>
-#undef emit //tbb compatability
+#undef emit // tbb compatability
+#include "pnl_widget.hpp"
+
 #include <trader/base_trader.hpp>
 #include <trader/trader_context.hpp>
 
@@ -26,7 +28,7 @@ private:
   std::list<std::shared_ptr<midas::TraderContext>> traders;
   std::atomic<bool> *quitSignal;
   std::shared_ptr<midas::TradingContext> tradingContext;
-
+  PnlWidget *pnlWidget;
 };
 }
 

@@ -48,3 +48,21 @@ TEST(PositionTracking, Future) {
   tracker.handle_position_update(instrument, -10, 101);
   EXPECT_EQ(10 * 5, tracker.getPnl()[midas::MicroRussel]);
 }
+
+TEST(PositionTracking, ShortLoss) {
+  midas::PositionTracker tracker;
+  midas::InstrumentEnum instrument = midas::NVDA;
+  tracker.handle_position_update(instrument, -10, 100);
+  EXPECT_EQ(0, tracker.getPnl()[midas::NVDA]);  // no realized profit
+  tracker.handle_position_update(instrument, 10, 90);
+  EXPECT_EQ(-100, tracker.getPnl()[midas::NVDA]);
+}
+
+TEST(PositionTracking, LongLoss) {
+  midas::PositionTracker tracker;
+  midas::InstrumentEnum instrument = midas::NVDA;
+  tracker.handle_position_update(instrument, 1, 100);
+  EXPECT_EQ(0, tracker.getPnl()[midas::NVDA]);  // no realized profit
+  tracker.handle_position_update(instrument, -1, 90);
+  EXPECT_EQ(-10, tracker.getPnl()[midas::NVDA]);
+}

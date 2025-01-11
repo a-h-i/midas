@@ -45,6 +45,8 @@ void MacdTrader::calculateTechnicalAnalysis() {
          &fastMAOutBeg, &fastMAOutSize, fastMa.data());
   TA_EMA(0, closePrices.size() - 1, closePrices.data(), slowMATimePeriod,
          &slowMAOutBeg, &slowMAOutSize, slowMa.data());
+  TA_EMA(0, volumes.size() - 1, volumes.data(), volumeMATimePeriod,
+         &volumeMAOutBegin, &volumeMAOutSize, volumeMa.data());
 }
 
 void MacdTrader::clearBuffers() {
@@ -105,11 +107,12 @@ void MacdTrader::decideLongExit() {
   if (  timeDiff.total_seconds() < numberOfConsecutivePeriodsRequired * 5) {
     return;
   }
+  bool overbought = rsi[rsiOutSize - 1] > 75;
   bool histogramDeclining = true;
   for (int i = macdOutSize - 1; i >= macdOutSize - 1 - numberOfConsecutivePeriodsRequired && i > 0; i -= 1) {
     histogramDeclining = histogramDeclining && macdHistogram[i] < macdHistogram[i - 1];
   }
-  if ( histogramDeclining) {
+  if ( histogramDeclining && overbought) {
     currentState = TraderState::Waiting;
     executeOrder(OrderDirection::SELL, entryQuantity,
                   [this](Order::StatusChangeEvent event) {
@@ -134,13 +137,12 @@ void MacdTrader::decideShortExit() {
   if (  timeDiff.total_seconds() < numberOfConsecutivePeriodsRequired * 5) {
     return;
   }
-  // bool oversold = rsi[rsiOutSize - 1] < 25;
-  // bool macdCrossing = macd[macdOutSize - 1] > macdSignal[macdOutSize - 1];
+  bool oversold = rsi[rsiOutSize - 1] < 25;
   bool histogramIncreasing = true;
   for (int i = macdOutSize - 1; i >= macdOutSize - 1 - numberOfConsecutivePeriodsRequired && i > 0; i -= 1) {
     histogramIncreasing = histogramIncreasing && macdHistogram[i] > macdHistogram[i - 1];
   }
-  if ( histogramIncreasing) {
+  if ( histogramIncreasing  && oversold) {
     currentState = TraderState::Waiting;
     executeOrder( OrderDirection::BUY, entryQuantity,
                   [this](Order::StatusChangeEvent event) {
@@ -171,7 +173,10 @@ void MacdTrader::decideEntry() {
   bool macdCrossPositive =
       lastNegativeHistogramEndDistance > 1 &&
       lastNegativeHistogramEndDistance <= maxCrossOverDistance;
-
+  bool oversold = rsi[rsiOutSize - 1] < 25;
+  bool overbought = rsi[rsiOutSize - 1] > 75;
+  bool volumeAcceptable = volumes[volumes.size() - 1] >
+                            volumeMa[volumeMAOutSize - 1 ];
   auto lastPositiveHistogramItr =
       std::find_if(macdHistogram.rbegin(), macdHistogram.rend(),
                    [](double x) { return x > 0; });
@@ -190,14 +195,17 @@ void MacdTrader::decideEntry() {
           currentState = TraderState::NoPosition;
         }
       };
-  if (macdCrossPositive) {
+  if (!volumeAcceptable) {
+    return;
+  }
+  if (macdCrossPositive && !overbought) {
     INFO_LOG(*logger) << "entering long position ";
     currentState = TraderState::Waiting;
     executeOrder(OrderDirection::BUY, entryQuantity,
                   std::bind(executeCallback, std::placeholders::_1,
                             TraderState::LongPosition));
   }
-  else if (macdCrossNegative) {
+  else if (macdCrossNegative && !oversold) {
     INFO_LOG(*logger) << "entering short position ";
     currentState = TraderState::Waiting;
     executeOrder( OrderDirection::SELL, entryQuantity,

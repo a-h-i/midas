@@ -24,6 +24,7 @@ TraderWidget::TraderWidget(const std::shared_ptr<midas::TraderContext> &context)
   hasOpenPosition = new QLabel("Open position? false", this);
   isPaused = new QLabel(
       "Paused? " + QString(context->trader->paused() ? "true" : "false"), this);
+  layout->addWidget(isPaused);
   summaryLayout->addWidget(entryOrdersTriggered);
   summaryLayout->addWidget(stopLossTriggered);
   summaryLayout->addWidget(profitTakersTriggered);
@@ -31,6 +32,7 @@ TraderWidget::TraderWidget(const std::shared_ptr<midas::TraderContext> &context)
   summaryLayout->addWidget(hasOpenPosition);
 
   layout->addItem(summaryLayout);
+
 
   QHBoxLayout *buttonLayout = new QHBoxLayout();
 
@@ -40,6 +42,7 @@ TraderWidget::TraderWidget(const std::shared_ptr<midas::TraderContext> &context)
 
   layout->addLayout(buttonLayout);
   this->setLayout(layout);
+
 }
 
 void TraderWidget::slotPause() {

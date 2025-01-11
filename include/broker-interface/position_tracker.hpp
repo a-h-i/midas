@@ -5,12 +5,16 @@
 #ifndef POSITION_TRACKER_HPP
 #define POSITION_TRACKER_HPP
 #include "instruments.hpp"
-
+#include <boost/signals2.hpp>
 #include <mutex>
 
 namespace midas {
 
 class PositionTracker {
+public:
+  typedef boost::signals2::signal<void()> realized_pnl_signal_t;
+
+private:
   struct PositionEntry {
     int quantity{0};
     double price{0};
@@ -21,6 +25,7 @@ class PositionTracker {
   };
   std::unordered_map<InstrumentEnum, Position> positions;
   std::recursive_mutex mutex;
+  realized_pnl_signal_t realized_pnl_signal;
 
 public:
   /**
@@ -33,6 +38,9 @@ public:
                               double pricePerUnit);
 
   std::unordered_map<InstrumentEnum, double> getPnl();
+  boost::signals2::connection connectRealizedPnl(const realized_pnl_signal_t::slot_type &slot) {
+    return realized_pnl_signal.connect(slot);
+  }
 };
 
 } // namespace midas

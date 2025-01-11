@@ -33,6 +33,8 @@ gui::MainWindow::MainWindow(std::atomic<bool> *quitSignal)
     traderTabs->removeTab(index);
     delete tab; // Free the memory
   });
+  pnlWidget = new PnlWidget(tradingContext, nullptr);
+  pnlWidget->show();
 }
 
 void gui::MainWindow::newActiveTrader() {

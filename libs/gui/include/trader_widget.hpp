@@ -4,6 +4,7 @@
 
 #ifndef TRADER_WIDGET_HPP
 #define TRADER_WIDGET_HPP
+#include "pnl_widget.hpp"
 #include "trader/trader_context.hpp"
 
 #include <QLabel>
